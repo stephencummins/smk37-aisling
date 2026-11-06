@@ -1,6 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
-# Build the AMB-1 host simulator (the whole app on this machine) into build/host/amb_host.
+# Build the AMB-1 host simulator (the whole app on this machine) into build/host/amb_host, and the SMK-37 Elite's
+# into build/host/amb_host_smk37.
 # Same sources as the firmware, -ffp-contract=off like the device (no fused multiply-add).
 set -e
 cd "$(dirname "$0")/.."
@@ -12,3 +13,8 @@ $CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wno-unused-function -Wno-unuse
     -DEN_HOST -Ifirmware/src -Ifirmware/src/dsp -Ibuild/gen -o build/host/amb_host host/amb_host.c \
     firmware/src/dsp/amb.c -lm
 echo "host: build/host/amb_host"
+# the same app on the SMK-37 Elite: its controls' names, K1 as MASTER, 37 keys (tests/scenarios_smk37/)
+$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wno-unused-function -Wno-unused-parameter \
+    -DEN_HOST -DAISLING_BOARD_SMK37=1 -Ifirmware/src -Ifirmware/src/dsp -Ibuild/gen -o build/host/amb_host_smk37 \
+    host/amb_host.c firmware/src/dsp/amb.c -lm
+echo "host: build/host/amb_host_smk37"

@@ -1,0 +1,25 @@
+# the SMK-37 Elite's battery: the stock firmware's thresholds on the divider's raw reading (board_caps.h; 530, 560, 602
+# for one, two, three bars, where the FM-1 has 531, 561, 591), and the rough charge over 520..612 (a GUESS until the
+# device is measured). The FM-1's simulator must fail this (tests/run_tests.sh)
+battery 529
+expect battbars 0
+battery 530
+expect battbars 1
+battery 559
+expect battbars 1
+battery 560
+expect battbars 2
+battery 591
+expect battbars 2
+battery 601
+expect battbars 2
+battery 602
+expect battbars 3
+battery 520
+expect battpct 0
+battery 566
+expect battpct 50
+battery 612
+expect battpct 100
+battery 700
+expect battpct 100

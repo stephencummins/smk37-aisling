@@ -1,0 +1,33 @@
+# the SMK-37 Elite's MASTER is K1, an encoder (master.h, as main_fm1.c has it): at power-on the level is MASTER_START
+# (2048, the FM-1's pot at half) and the knob the position nearest it from below (812 of 1023); a detent moves the knob
+# 24 and the level follows it (the cube), so the first turn up is a step from 2048, and one back lands on 2042
+wait 200
+expect masterraw 812
+expect master 2048
+turn K1 1
+expect masterraw 836
+expect master 2228
+turn K1 -1
+expect masterraw 812
+expect master 2042
+# end to end in 43 detents: a spin past either end stops there; all the way down is silence (the peak is taken after
+# MASTER), all the way up the cube's top (4084, the FM-1's at full)
+spin K1 -40
+expect masterraw 0
+expect master 0
+wait 200
+peakreset
+wait 2000
+expect peak_db_max -120
+spin K1 100
+expect masterraw 1023
+expect master 4084
+peakreset
+wait 2000
+expect peak_db_min -20
+# its position is not kept: after a power-on, MASTER_START again
+spin K1 -5
+reboot
+wait 200
+expect masterraw 812
+expect master 2048

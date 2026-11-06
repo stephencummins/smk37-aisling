@@ -1,0 +1,31 @@
+# the SMK-37 Elite's KNOB BANK, FADER BANK, < and > reach nothing in stage 1 (the FM-1's layout; the HAL reads them into
+# fm1_in.extra, tests/host/smk_input_test.c): tapped, and held while others are tapped, on the home page and a layer's;
+# the page, the piece, the play and every setting as they were
+wait 300
+expect view 0
+mark
+tap KNOB_BANK
+tap FADER_BANK
+tap <
+tap >
+wait 300
+expect view 0
+expect piece 0
+expect playing 1
+expect marked 0
+tap CHORD
+wait 300
+expect view 1
+mark
+press KNOB_BANK
+press >
+wait 300
+tap <
+tap FADER_BANK
+wait 300
+release KNOB_BANK
+release >
+wait 300
+expect view 1
+expect playing 1
+expect marked 0

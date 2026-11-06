@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # AMB-1 host tests: the maths, the platform pieces kept from Felucca / X0X, the instrument, and the
 # whole firmware app in the simulator (tests/scenarios/*.amb: UI, chords, rhythm, persistence), with
-# screenshots and audio in build/scenarios/.
+# screenshots and audio in build/scenarios/; and the same on the SMK-37 Elite's simulator (build/scenarios_smk37/).
 #   tests/run_tests.sh
 set -u
 cd "$(dirname "$0")/.."
@@ -101,5 +101,36 @@ for s in tests/scenarios/*.amb; do
     mkdir -p "build/scenarios/$n"
     run "scenario-$n" build/host/amb_host "$s" "build/scenarios/$n"
 done
+# the SMK-37 Elite (build/host/amb_host_smk37): every FM-1 scenario with its controls' names (tests/smk37_scenario.py)
+# must pass and write what the FM-1's run just wrote, file for file (screens, MIDI out, audio): the same app on its
+# controls. Then its own (tests/scenarios_smk37/: K1 as MASTER, the outer keys, the buttons that reach nothing, the
+# battery). The controls must fail: an FM-1 scenario as written, `master N` (and the renamer on it), and its battery
+# scenario on the FM-1's simulator
+smk_same() {
+    sn="$1" sd="build/scenarios_smk37/fm1/$1"
+    rm -rf "$sd" && mkdir -p "$sd" || return 1
+    python3 tests/smk37_scenario.py "tests/scenarios/$sn.amb" > "$sd.amb" || return 1
+    build/host/amb_host_smk37 "$sd.amb" "$sd" || return 1
+    for f in "$sd"/*; do
+        [ -f "$f" ] || continue
+        cmp "$f" "build/scenarios/$sn/${f##*/}" || return 1
+    done
+    echo "the same files as the FM-1's run"
+}
+for s in tests/scenarios/*.amb; do
+    n=$(basename "$s" .amb)
+    run "smk37-$n" smk_same "$n"
+done
+for s in tests/scenarios_smk37/*.amb; do
+    n=$(basename "$s" .amb)
+    mkdir -p "build/scenarios_smk37/$n"
+    run "smk37-own-$n" build/host/amb_host_smk37 "$s" "build/scenarios_smk37/$n"
+done
+C=build/scenarios_smk37/control
+mkdir -p "$C"
+run smk37-control sh -c "! build/host/amb_host_smk37 tests/scenarios/pages.amb $C >/dev/null && \
+    printf 'wait 10\nmaster 100\n' > $C.amb && ! build/host/amb_host_smk37 $C.amb $C >/dev/null && \
+    ! python3 tests/smk37_scenario.py $C.amb >/dev/null 2>&1 && \
+    ! build/host/amb_host tests/scenarios_smk37/battery.amb $C >/dev/null"
 [ $FAIL -eq 0 ] && echo "all tests passed" || echo "TESTS FAILED"
 exit $FAIL

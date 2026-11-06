@@ -12,6 +12,7 @@
  *   turn ENC N [MS]              (ENC: SELECT ALGO PRESET K1 K2 K3 K4; N detents, MS apart, default 80)
  *   spin ENC N                   N detents at once, exactly N (no acceleration)
  *   master N                     MASTER pot 0..4096
+ *   battery N                    the battery's raw reading (plat_battery; else AMB_BATT, else -1: none)
  *   midi B0 B1 B2                incoming USB MIDI message (hex bytes)
  *   wav FILE | wavstop           start / stop recording the output
  *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
@@ -38,6 +39,15 @@
  *   said_none TEXT               no SAY since the last check has TEXT in it: else a failure
  *   speakdump                    every page, knob value, help card, chord and message as the reader gets them
  * AMB_SAID_LOG=FILE: a reader listens from boot, quietly, and every SAY is appended to FILE (the audit).
+ *
+ * amb_host_smk37 (host/build_host.sh, -DAISLING_BOARD_SMK37=1) is the same app on the SMK-37 Elite, its controls
+ * by their printed names (underscores for spaces; tests/scenarios_smk37/):
+ *   buttons  FX SCALE CHORD NOTE_REPEAT PARA GLOBE PATCH BT ARP SEQ SEQ_PLAY SEQ_REC OCT- OCT+ (the FM-1's FX SEL
+ *            ENV LFO EDIT GLO HOME SAVE ARP SEQ PLAY REC OCT- OCT+, in that order), and KNOB_BANK FADER_BANK < >,
+ *            which reach nothing
+ *   encoders K2 K3 K4 K5 K6 K7 K8 (SELECT ALGO PRESET K1 K2 K3 K4); K1 is MASTER, an encoder (turn, spin), so
+ *            `master N` is refused
+ *   keys     0..36 = C3..C6, w0..w21 white, b0..b14 black; AISLING plays 5..31 (F3..G5), the rest nothing
  */
 #define EN_HOST 1
 #include <stdio.h>
@@ -75,7 +85,14 @@ static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint1
 /* ---------------------------------------------------------- platform --- */
 #include "../firmware/src/app/plat.h"
 
+#include "../firmware/src/board_caps.h"
+#include "../firmware/src/app/master.h"
+
 static uint32_t now_ms, held_btn, held_keys, master = 2048;
+#if AISLING_BOARD_SMK37
+static uint32_t master_k10 = 0xFFFFu, held_extra;   /* K1's position (set at power-on); the buttons that reach nothing */
+static uint64_t held_outer;                         /* the keys outside the 27: held, and nothing reads them */
+#endif
 static int32_t enc_acc[NE];
 static uint32_t lit_btn, lit_keys;
 
@@ -89,7 +106,25 @@ int32_t plat_enc(int role)
     return v;
 }
 uint32_t plat_master(void) { return master; }
+#if AISLING_BOARD_SMK37
+uint32_t plat_master_raw(void) { return master_k10; }
+/* MASTER is K1, an encoder, as main_fm1.c has it: at power-on the knob position nearest MASTER_START from below,
+ * and the level MASTER_START itself until the first turn; a turn moves the position and the level follows it */
+static void master_power_on(void)
+{
+    master_k10 = master_enc_start();
+    master = MASTER_START;
+}
+static void master_turn(int32_t d)
+{
+    if (d) {
+        master_k10 = master_enc_turn(master_k10, d);
+        master = master_curve(master_k10);
+    }
+}
+#else
 uint32_t plat_master_raw(void) { return master >= 4092u ? 1023u : master / 4u; }
+#endif
 void plat_leds(uint32_t b, uint32_t k)
 {
     lit_btn = b;
@@ -168,7 +203,12 @@ static uint32_t cpu_pct;
 uint32_t plat_cpu_pct(void) { return cpu_pct; }
 uint32_t plat_xruns(void) { return 0; }
 uint32_t plat_cpu_peak(void) { return cpu_pct; }
-int32_t plat_battery(void) { return getenv("AMB_BATT") ? atoi(getenv("AMB_BATT")) : -1; }   /* (to see it drawn) */
+static int sim_batt_set;                        /* (`battery N`) */
+static int32_t sim_batt;
+int32_t plat_battery(void)                      /* (to see it drawn) */
+{
+    return sim_batt_set ? sim_batt : getenv("AMB_BATT") ? atoi(getenv("AMB_BATT")) : -1;
+}
 int plat_usb_power(void) { return getenv("AMB_USB") != 0; }
 
 /* -------------------------------------------------------------- app --- */
@@ -520,9 +560,18 @@ static void run_ms(uint32_t ms)
 }
 
 /* ---------------------------------------------------------- script --- */
+#if AISLING_BOARD_SMK37
+/* the SMK-37 Elite's printed names by the job each does, the FM-1's buttons in order (hal/smk37/smk_input.h gives each
+ * button the FM-1 id of its job, so PANEL_DEFAULT is the map; tests/host/smk_input_test.c checks the HAL's side) */
+static const char *const BTN_N[NB] = {"FX", "SCALE", "CHORD", "NOTE_REPEAT", "PARA", "GLOBE", "PATCH", "BT", "ARP",
+                                      "SEQ", "SEQ_PLAY", "SEQ_REC", "OCT-", "OCT+"};
+static const char *const EXTRA_N[4] = {"KNOB_BANK", "FADER_BANK", "<", ">"};
+static const char *const ENC_N[NE] = {"K2", "K3", "K4", "K5", "K6", "K7", "K8"};   /* (K1: MASTER) */
+#else
 static const char *const BTN_N[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ",
                                       "PLAY", "REC", "OCT-", "OCT+"};
 static const char *const ENC_N[NE] = {"SELECT", "ALGO", "PRESET", "K1", "K2", "K3", "K4"};
+#endif
 
 static int find_name(const char *const *t, int n, const char *s)
 {
@@ -533,8 +582,36 @@ static int find_name(const char *const *t, int n, const char *s)
     return -1;
 }
 
+/* the app's 27 keys, F3..G5 (the FM-1's; `leds` prints them so) */
 static const uint8_t WHITE_K[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
 static const uint8_t BLACK_K[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
+#if AISLING_BOARD_SMK37
+/* the SMK-37 Elite's keys by its own numbers, 0..36 = C3..C6: AISLING plays the middle 27 (keys SIM_KEY_LO.., the
+ * app's 0..26, F3..G5); the 5 below and the 5 above are read (fm1_in.outer) and play nothing. SIM_KEY_LO is the HAL's
+ * SMK_NOTE_LO (hal/smk37/smk_input.h, not included here): tests/host/smk_input_test.c and tests/scenarios_smk37/keys.amb
+ * each hold it at 5 */
+#define SIM_KEY_LO (CAP_OUTER_KEYS / 2)
+static const uint8_t SMK_WHITE[22] = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24, 26, 28, 29, 31, 33, 35, 36};
+static const uint8_t SMK_BLACK[15] = {1, 3, 6, 8, 10, 13, 15, 18, 20, 22, 25, 27, 30, 32, 34};
+static int key_of(const char *s)                /* -1: no such key */
+{
+    int i = atoi(s + (s[0] == 'w' || s[0] == 'b'));
+    if (s[0] == 'w')
+        return i >= 0 && i < 22 ? SMK_WHITE[i] : -1;
+    if (s[0] == 'b')
+        return i >= 0 && i < 15 ? SMK_BLACK[i] : -1;
+    return i >= 0 && i < CAP_KEYS ? i : -1;
+}
+static void key_set(int k, int down)
+{
+    int p = k - SIM_KEY_LO;
+    if (p >= 0 && p < 27)
+        held_keys = down ? held_keys | 1u << p : held_keys & ~(1u << p);
+    else
+        held_outer = down ? held_outer | 1ull << k : held_outer & ~(1ull << k);
+}
+#define STRUM_KEY(x) SMK_WHITE[((x) % 22 + 22) % 22]
+#else
 static int key_of(const char *s)
 {
     if (s[0] == 'w')
@@ -543,6 +620,9 @@ static int key_of(const char *s)
         return BLACK_K[atoi(s + 1) % 11];
     return atoi(s);
 }
+static void key_set(int k, int down) { held_keys = down ? held_keys | 1u << k : held_keys & ~(1u << k); }
+#define STRUM_KEY(x) WHITE_K[(x) & 15]
+#endif
 
 static int16_t mark_par[P_NPARAMS];              /* (`mark`, `expect marked`: what an undo must bring back) */
 static uint16_t mark_pool;
@@ -555,6 +635,14 @@ static int expect(const char *what, const char *val)
         got = en_frozen;
     else if (!strcmp(what, "view"))
         got = ui.view;
+    else if (!strcmp(what, "master"))             /* the level the engine gets (Q12, plat_master) */
+        got = (int)plat_master();
+    else if (!strcmp(what, "masterraw"))          /* MASTER's knob position, 0..1023 (plat_master_raw) */
+        got = (int)plat_master_raw();
+    else if (!strcmp(what, "battbars"))           /* the battery's bars and rough charge, by board_caps.h */
+        got = batt_bars();
+    else if (!strcmp(what, "battpct"))
+        got = batt_pct();
     else if (!strcmp(what, "piece"))
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
@@ -976,6 +1064,9 @@ int main(int argc, char **argv)
         sim_listen = 1;
         said_print = 0;
     }
+#if AISLING_BOARD_SMK37
+    master_power_on();
+#endif
     boot();
     if (sim_listen) {
         static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
@@ -990,37 +1081,43 @@ int main(int argc, char **argv)
             run_ms((uint32_t)atoi(a));
         else if (!strcmp(cmd, "press") || !strcmp(cmd, "release") || !strcmp(cmd, "tap")) {
             int i = find_name(BTN_N, NB, a);
+            uint32_t *held = &held_btn;
+#if AISLING_BOARD_SMK37
+            if (i < 0 && (i = find_name(EXTRA_N, 4, a)) >= 0)
+                held = &held_extra;
+#endif
             if (i < 0) {
                 printf("line %d: no button %s\n", lineno, a);
                 return 2;
             }
             if (cmd[0] != 'r')
-                held_btn |= 1u << i;
+                *held |= 1u << i;
             if (cmd[0] == 't')
                 run_ms(40);
             if (cmd[0] != 'p')
-                held_btn &= ~(1u << i);
+                *held &= ~(1u << i);
             run_ms(cmd[0] == 't' ? 40 : 2);
         } else if (!strcmp(cmd, "key") || !strcmp(cmd, "tapkey")) {
             int k = key_of(a);
+            if (k < 0) {
+                printf("line %d: no key %s\n", lineno, a);
+                return 2;
+            }
             if (cmd[0] == 't') {
-                held_keys |= 1u << k;
+                key_set(k, 1);
                 run_ms(60);
-                held_keys &= ~(1u << k);
+                key_set(k, 0);
                 run_ms(30);
             } else {
-                if (!strcmp(b, "down"))
-                    held_keys |= 1u << k;
-                else
-                    held_keys &= ~(1u << k);
+                key_set(k, !strcmp(b, "down"));
                 run_ms(2);
             }
         } else if (!strcmp(cmd, "strum")) {          /* strum A B [MS]: a finger across the white keys */
             int x = atoi(a), y = atoi(b), gap = c[0] ? atoi(c) : 25, s = y >= x ? 1 : -1;
             for (;; x += s) {
-                held_keys |= 1u << WHITE_K[x & 15];
+                key_set(STRUM_KEY(x), 1);
                 run_ms((uint32_t)gap);
-                held_keys &= ~(1u << WHITE_K[x & 15]);
+                key_set(STRUM_KEY(x), 0);
                 if (x == y)
                     break;
             }
@@ -1028,17 +1125,32 @@ int main(int argc, char **argv)
         } else if (!strcmp(cmd, "turn")) {
             int e = find_name(ENC_N, NE, a), n = atoi(b), s = n > 0 ? 1 : -1;
             uint32_t gap = c[0] ? (uint32_t)atoi(c) : 80u;
+#if AISLING_BOARD_SMK37
+            if (e < 0 && !strcmp(a, "K1")) {
+                for (; n; n -= s) {
+                    master_turn(s);
+                    run_ms(gap);
+                }
+            } else
+#endif
             if (e < 0) {
                 printf("line %d: no encoder %s\n", lineno, a);
                 return 2;
             }
-            for (; n; n -= s) {
+            for (; e >= 0 && n; n -= s) {
                 enc_acc[e] += s;
                 film_enc[e] += s;
                 run_ms(gap);
             }
         } else if (!strcmp(cmd, "spin")) {
             int e = find_name(ENC_N, NE, a);
+#if AISLING_BOARD_SMK37
+            if (e < 0 && !strcmp(a, "K1")) {
+                master_turn(atoi(b));
+                run_ms(1);
+                continue;
+            }
+#endif
             if (e < 0) {
                 printf("line %d: no encoder %s\n", lineno, a);
                 return 2;
@@ -1048,8 +1160,15 @@ int main(int argc, char **argv)
             accel_off = 1;
             run_ms(1);
             accel_off = 0;
-        } else if (!strcmp(cmd, "master"))
+        } else if (!strcmp(cmd, "master")) {
+#if AISLING_BOARD_SMK37
+            printf("line %d: no MASTER pot on the SMK-37 Elite (turn K1)\n", lineno);
+            return 2;
+#else
             master = (uint32_t)atoi(a);
+#endif
+        } else if (!strcmp(cmd, "battery"))
+            sim_batt_set = 1, sim_batt = atoi(a);
         else if (!strcmp(cmd, "midi")) {
             uint32_t s = (uint32_t)strtoul(a, 0, 16), d1 = (uint32_t)strtoul(b, 0, 16), d2 = (uint32_t)strtoul(c, 0, 16);
             uint32_t cin = s >= 0xF0 ? 0x0F : s >> 4;
@@ -1202,6 +1321,9 @@ int main(int argc, char **argv)
             ui_splash(atoi(a));
         else if (!strcmp(cmd, "reboot")) {
             memset(&proj, 0, sizeof proj);
+#if AISLING_BOARD_SMK37
+            master_power_on();                       /* (K1's position is not kept) */
+#endif
             boot();
         } else if (!strcmp(cmd, "listen")) {
             static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
