@@ -39,6 +39,7 @@ run golden sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-prom
 run seq sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -Ifirmware/src/dsp -o $OUT/seq_test tests/host/seq_test.c firmware/src/dsp/seq.c && $OUT/seq_test"
 run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/storage_test"
 run rescue python3 tests/rescue_test.py
+run package python3 tests/pkg_test.py
 # the update path, against the firmware package (Felucca's tests; needs ./build.sh)
 if [ -f build/amb.fwsc ]; then
     run ota-entry sh -c "$CC -o $OUT/ota_test tests/ota_test.c && $OUT/ota_test build/amb.fwsc"

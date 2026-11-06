@@ -56,13 +56,13 @@ SDK_SHA256 = {
 PRODUCT = "FM-1_353000000"          # package identity; release builds are FM-1_353XXYYZZ (see main)
 # The boards. flags: before -Ifirmware/hal, so a board header comes first; none for the FM-1, whose
 # build stays byte-identical. slot: room for app.bin in the package's app area, which is also the
-# linker's XIP length; the SMK's area is flash 0x4000..0x9CFFF (the FM-1's 0x4000..0x92FFF), less the
-# same 0x120 of entries and 0xF24 for the SDK cfg blocks. ram_spare: .data+.bss headroom the build keeps.
-# stem: a release package's name before -X.Y.
+# linker's XIP length (fm1pkg_make's BOARDS: the SMK's area is flash 0x4000..0x9CFFF, the FM-1's
+# 0x4000..0x92FFF). ram_spare: .data+.bss headroom the build keeps. stem: a release package's name
+# before -X.Y. The keys are fm1pkg_make's board names.
 BOARDS = {
     "fm1": dict(model="FM-1", out=OUT, flags=[], slot=APP_SLOT, ram_spare=0, stem="aisling"),
     "smk37": dict(model="SMK-37 Elite", out=OUT / "smk37", flags=["-DAISLING_BOARD_SMK37=1", "-Ifirmware/hal/smk37"],
-                  slot=0x9D000 - 0x4000 - 0x120 - 0xF24, ram_spare=2048, stem="aisling-smk37-elite"),
+                  slot=fm1pkg_make.BOARDS["smk37"]["app_slot"], ram_spare=2048, stem="aisling-smk37-elite"),
 }
 BOARD = BOARDS["fm1"]
 VERSION = None                      # FELUCCA_VERSION for release builds (default: firmware/src/ui.c)
@@ -421,10 +421,7 @@ def main():
         print("  FAIL ", e)
     if errors:
         raise SystemExit("build: checks failed")
-    if a.board != "fm1":                          # (the package format per board is the next step)
-        print(f"app      {OUT / 'amb.bin'}  {len(img)} B, board {model}, identity {PRODUCT}")
-        raise SystemExit(f"build: no package for the {model} yet: fm1pkg_make has no board table")
-    pkg = fm1pkg_make.ufw(fm1pkg_make.flash_image(img, fm1pkg_make.KEY), ota, PRODUCT)
+    pkg = fm1pkg_make.ufw(fm1pkg_make.flash_image(img, fm1pkg_make.KEY, a.board), ota, PRODUCT, a.board)
     (OUT / name).write_bytes(pkg)
     print(f"app      {OUT / 'amb.bin'}  {len(img)} B")
     print(f"loader   {LDR / 'ota.bin'}  {len(ota)} B")

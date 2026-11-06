@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
-"""Build an FM-1 update package (.fwsc) from the Felucca app and update loader.
+"""Build an FM-1 update package (.fwsc) from the Felucca app and update loader
+(or an SMK-37 Elite's: --board smk37; the layout per board is in BOARDS).
 
   flash.bin  head [0, 0x4000): flash header (JieLi SDK default values), JLFS
              entries, the SDK SPL (uboot.boot, Apache-2.0) and an isd_config
@@ -14,16 +15,40 @@
 The SDK files come from the JieLi AC79 SDK (AC79_SDK, or --sdk).
 All integrity checks in the format are CRC16 (poly 0x1021, init 0).
 
-  fm1pkg_make.py APP.bin OTA.bin OUT.fwsc [--product FM-1_9XY] [--sdk DIR]
+  fm1pkg_make.py APP.bin OTA.bin OUT.fwsc [--product FM-1_9XY] [--sdk DIR] [--board fm1|smk37]
 """
 import argparse
 import os
 import struct
 from pathlib import Path
 
-APP_SLOT = 0x8DFBC
-FLASH_SIZE = 0x93000
-KEY = 0x980F
+KEY = 0x980F                                    # the chip key (the FM-1's and the SMK-37 Elite's)
+# The boards.
+#   flash_size  the package's flash.bin: raw flash [0, end of the app area), and the PRCT region
+#   app_slot    room for app.bin; the app area is flash 0x4000..flash_size, less 0x120 of entries and
+#               0xF24 for the SDK cfg blocks (the linker's XIP length; tools/build.py)
+#   regions     the descriptors after app.bin and cfg_tool.bin, as M-VAVE's own package for the board
+#               has them: (offset, size, flags, resvd, index, name); the bytes after a name are SDK packer
+#               fields (VM size, "CODE", "AUTO")
+#   blocks      the .fwsc's marker blocks, one identity character each (see ufw)
+BOARDS = {
+    "fm1": dict(flash_size=0x93000, app_slot=0x8DFBC, blocks=20, regions=[
+        (0x93000, 352256, 0x12, 0x80, 0, bytes.fromhex("564d00ffffffffffffffffff00800000")),
+        (0, 0x93000, 0x92, 0x82, 0, bytes.fromhex("5052435400ffffffffffffff434f4445")),
+        (0xE9000, 0x1000, 0x92, 0x80, 0, bytes.fromhex("4254494600ffffffffffffff4155544f")),
+        (0xEA000, 0x12000, 0x92, 0x81, 1, "USR")]),
+    # M-VAVE's SMK-37 Elite_016.fwsc. Its own package has 20 marker blocks and the SMK-37 Pro's 36;
+    # AISLING's identity, SMK-37 Elite_353XXYYZZ, is 22 characters, so 36.
+    "smk37": dict(flash_size=0x9D000, app_slot=0x97FBC, blocks=36, regions=[
+        (0x9D000, 0x23000, 0x12, 0x81, 0, bytes.fromhex("564d00ffffffffffffffffff00800000")),
+        (0, 0x9D000, 0x92, 0x82, 0, bytes.fromhex("5052435400ffffffffffffff434f4445")),
+        (0xC0000, 0x1000, 0x92, 0x82, 0, bytes.fromhex("4254494600ffffffffffffff4155544f")),
+        (0xC1000, 0x1000, 0x92, 0x81, 0, "USRTRIM"),
+        (0xC2000, 0x29000, 0x92, 0x81, 0, "USRFLASH"),
+        (0xF4000, 0xA000, 0x92, 0x81, 1, "USR")]),
+}
+APP_SLOT = BOARDS["fm1"]["app_slot"]
+FLASH_SIZE = BOARDS["fm1"]["flash_size"]
 # flash header: JieLi SDK defaults (burner_size 544, VID "0.01", flash_size 0xFF000,
 # fs_ver 0x10, PID "AC791N_STORY"), plain, without its CRC
 FLASH_HDR = bytes.fromhex("20022f104cc900f00f001010a4ff4e5d0b41e0cd781dc856417fb367cf9f")
@@ -98,12 +123,14 @@ def sdk_file(rel):
         raise SystemExit(f"fm1pkg_make: {path}: {e.strerror}. Set AC79_SDK to a JieLi AC79 SDK checkout.")
 
 
-def flash_image(app, key):
+def flash_image(app, key, board="fm1"):
+    b = BOARDS[board]
+    slot, size = b["app_slot"], b["flash_size"]
     spl = sdk_file("uboot.boot")                         # SDK SPL, BANKCB-encoded as in the SDK
     cfg_tool = sdk_file("cfg_tool.bin")
     eq = sdk_file("cfg/eq_cfg_hw.bin")
     isd = key_blob(key) + b"[FELUCCA]\r\n"
-    f = bytearray(b"\xFF" * FLASH_SIZE)
+    f = bytearray(b"\xFF" * size)
     # ---- head
     spl_off = 0xA0
     isd_off = spl_off + len(spl)
@@ -120,20 +147,16 @@ def flash_image(app, key):
         enc(head, o, 32)
     f[0:len(head)] = head
     # ---- app area (plain first, then SFC)
-    if len(app) > APP_SLOT:
-        raise SystemExit(f"app is {len(app)} B, the slot is {APP_SLOT} B")
-    app = app + b"\xFF" * (APP_SLOT - len(app))
-    blk = 0x120 + APP_SLOT + len(cfg_tool)              # app_area_head block size
+    if len(app) > slot:
+        raise SystemExit(f"app is {len(app)} B, the slot is {slot} B")
+    app = app + b"\xFF" * (slot - len(app))
+    blk = 0x120 + slot + len(cfg_tool)                  # app_area_head block size
     area = bytearray(b"\xFF" * blk)
-    area[0x120:0x120 + APP_SLOT] = app
-    area[0x120 + APP_SLOT:blk] = cfg_tool
-    ents = [entry(crc16(app), 0x120, APP_SLOT, 0x82, 0xFF, 0, "app.bin"),
-            entry(crc16(cfg_tool), 0x120 + APP_SLOT, len(cfg_tool), 0x82, 0xFF, 0, "cfg_tool.bin"),
-            # region descriptors; the bytes after the names are SDK packer fields (VM size, "CODE", "AUTO")
-            entry(0xFFFF, 0x93000, 352256, 0x12, 0x80, 0, bytes.fromhex("564d00ffffffffffffffffff00800000")),
-            entry(0xFFFF, 0, FLASH_SIZE, 0x92, 0x82, 0, bytes.fromhex("5052435400ffffffffffffff434f4445")),
-            entry(0xFFFF, 0xE9000, 0x1000, 0x92, 0x80, 0, bytes.fromhex("4254494600ffffffffffffff4155544f")),
-            entry(0xFFFF, 0xEA000, 0x12000, 0x92, 0x81, 1, "USR")]
+    area[0x120:0x120 + slot] = app
+    area[0x120 + slot:blk] = cfg_tool
+    ents = [entry(crc16(app), 0x120, slot, 0x82, 0xFF, 0, "app.bin"),
+            entry(crc16(cfg_tool), 0x120 + slot, len(cfg_tool), 0x82, 0xFF, 0, "cfg_tool.bin"),
+            *(entry(0xFFFF, *r) for r in b["regions"])]   # region descriptors
     area[32:32 + len(b"".join(ents))] = b"".join(ents)
     area[0:32] = entry(crc16(area[32:blk]), 0x02000120, blk, 0x83, 0xFF, 0, "app_area_head")
     # nested cfg directory right after the block: SDK default EQ table
@@ -141,12 +164,13 @@ def flash_image(app, key):
     cfg_body = eq_e + eq
     cfg = entry(crc16(cfg_body), 0x20, 0x20 + len(cfg_body), 0x83, 0xFF, 1, "cfg") + cfg_body
     region = bytearray(area + cfg)
+    assert 0x4000 + len(region) <= size
     sfc(region, 0, len(region), 0, key)
     f[0x4000:0x4000 + len(region)] = region
     return bytes(f)
 
 
-def ufw(flash, ota, product):
+def ufw(flash, ota, product, board="fm1"):
     files = [(0, "flash.bin", flash), (100, "ota.bin", ota)]
     off, ents, data = 0x400, [], bytearray()
     for i, (typ, name, d) in enumerate(files):
@@ -174,15 +198,17 @@ def ufw(flash, ota, product):
     logical[0x40:0x40 + len(lst)] = lst
     for e, o, d in ents:
         logical[o:o + len(d)] = d
-    # .fwsc: one marker byte after each of the first 20 0x2F-byte blocks (the identity)
-    if len(product) > 20 or any((ord(c) + i + 1) & 0xFF == 0x7D for i, c in enumerate(product)):
-        raise SystemExit(f"product {product!r}: at most 20 characters, none encoding to the unused marker")
+    # .fwsc: one marker byte after each of the first n 0x2F-byte blocks (the identity, then 0x7D). A reader
+    # takes n from the file: its length less the total in the header (M-VAVE's packages have 20 or 36)
+    n = BOARDS[board]["blocks"]
+    if len(product) > n or any((ord(c) + i + 1) & 0xFF == 0x7D for i, c in enumerate(product)):
+        raise SystemExit(f"product {product!r}: at most {n} characters, none encoding to the unused marker")
     raw = bytearray()
-    for i in range(20):
+    for i in range(n):
         ch = product[i] if i < len(product) else None
         m = (ord(ch) + i + 1) & 0xFF if ch else 0x7D
         raw += logical[i * 0x2F:(i + 1) * 0x2F] + bytes([m])
-    raw += logical[20 * 0x2F:]
+    raw += logical[n * 0x2F:]
     return bytes(raw)
 
 
@@ -194,10 +220,11 @@ def main():
     ap.add_argument("--product", default="FM-1_900")
     ap.add_argument("--key", type=lambda s: int(s, 0), default=KEY)
     ap.add_argument("--sdk", type=Path, help="JieLi AC79 SDK checkout (default: $AC79_SDK)")
+    ap.add_argument("--board", choices=sorted(BOARDS), default="fm1")
     a = ap.parse_args()
     global SDK
     SDK = a.sdk
-    pkg = ufw(flash_image(a.app.read_bytes(), a.key), a.ota.read_bytes(), a.product)
+    pkg = ufw(flash_image(a.app.read_bytes(), a.key, a.board), a.ota.read_bytes(), a.product, a.board)
     a.out.write_bytes(pkg)
     print(f"package {a.out}: {len(pkg)} B, identity {a.product}, chip key {a.key:#06x}")
 
