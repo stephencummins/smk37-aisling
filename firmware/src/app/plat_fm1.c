@@ -28,6 +28,11 @@ static volatile uint16_t master_raw;                 /* the knob, 0..1023, befor
 uint32_t plat_master(void) { return master_q12; }
 uint32_t plat_master_raw(void) { return master_raw; }
 
+#if AISLING_BOARD_SMK37
+/* LEDs on the SMK: one per button (the keys have none), by the HAL's button id through the panel map; the extras
+ * (KNOB BANK, FADER BANK, <, >) stay dark. smk_leds builds the picture off-line, then copies it. */
+static void led_pos_init(void) {}
+#else
 /* LEDs: the picture is built off-line and copied one byte per column (Felucca: clearing
  * and relighting would let the 10 kHz scan catch the dark gap and flicker) */
 static uint8_t led_pos[FM1_NKEY];
@@ -42,10 +47,26 @@ static void led_pos_init(void)
                     led_pos[id] = (uint8_t)((p << 3) | r);
     }
 }
+#endif
 /* Glow: every button not lit is lit dim, on one scan frame in GLOW_DIV (the HAL's fm1_led_dim) */
 #define GLOW_DIV 4u
 static uint8_t glow_on = 1;
 void plat_glow(int on) { glow_on = (uint8_t)(on != 0); }
+#if AISLING_BOARD_SMK37
+void plat_play_red(int red) { (void)red; }       /* SEQ PLAY has one LED */
+void plat_leds(uint32_t buttons, uint32_t keys)
+{
+    uint32_t lit = 0, dim = 0, i;
+    (void)keys;
+    for (i = 0; i < NB; i++) {
+        if ((buttons >> i) & 1u)
+            lit |= 1u << panel.btn[i];
+        else if (glow_on)
+            dim |= 1u << panel.btn[i];
+    }
+    smk_leds(lit, dim, glow_on ? GLOW_DIV : 0u);
+}
+#else
 /* PLAY has two LEDs: its red at the button's own position, a green at the keyless matrix position
  * column 8, row PA5 (found on the device). Green, unless recording. */
 static uint8_t play_red;
@@ -73,6 +94,7 @@ void plat_leds(uint32_t buttons, uint32_t keys)
     }
     fm1_led_dim_div = glow_on ? GLOW_DIV : 0u;
 }
+#endif
 
 /* MIDI: Felucca's rings carry 4-byte USB-MIDI event packets, byte 0 = cable / CIN */
 int plat_midi_in(uint32_t *pkt)

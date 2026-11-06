@@ -2,11 +2,15 @@
  * Adapted from Felucca's panel.c, Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hugelton Instruments. */
 /* Physical panel: which matrix button / encoder carries which printed label (plat.h's
  * B_* / EN_*). HARDWARE CALIBRATION (hold OCT- and OCT+ while powering on) asks for each
- * label in turn; the table is kept in flash (OBJ_PANEL) and in .noinit. */
+ * label in turn; the table is kept in flash (OBJ_PANEL) and in .noinit.
+ * The SMK-37's HAL (hal/smk37/smk_input.h) gives each button the FM-1 id of the job it does, so PANEL_DEFAULT is
+ * its map as it stands: no calibration, nothing stored. */
+#if !AISLING_BOARD_SMK37
 static const char *const B_NAME[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE",
                                         "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+"};
 static const char *const E_NAME[NE] = {"SELECT", "ALGORITHM", "PRESETS", "KNOB 1", "KNOB 2",
                                         "KNOB 3", "KNOB 4"};
+#endif
 #define PANEL_MAGIC 0x50414E35u          /* "PAN5": Felucca's layout, so its calibration stays valid */
 
 typedef struct {
@@ -24,6 +28,7 @@ static const panel_t PANEL_DEFAULT = {
     {1, 1, 1, 1, 1, 1, 1},
 };
 
+#if !AISLING_BOARD_SMK37
 static int panel_valid(const panel_t *p)
 {
     uint32_t i, ok = p->magic == PANEL_MAGIC;
@@ -34,14 +39,22 @@ static int panel_valid(const panel_t *p)
     return (int)ok;
 }
 
+#endif
+
 static void panel_init(void)
 {
+#if AISLING_BOARD_SMK37
+    panel = PANEL_DEFAULT;
+#else
     panel_t p;
     if (plat_store_load(OBJ_PANEL, &p, sizeof p) == (int)sizeof p && panel_valid(&p))
         panel = p;
     if (!panel_valid(&panel))
         panel = PANEL_DEFAULT;
+#endif
 }
+
+#if !AISLING_BOARD_SMK37
 
 #define SETUP_IDLE_MS 30000u
 static void panel_setup(void)
@@ -107,3 +120,4 @@ timeout:
     panel = old;
     lcd_fill(0, 0, 240, 240, C_BLACK);
 }
+#endif

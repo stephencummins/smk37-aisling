@@ -14,4 +14,19 @@ static inline uint32_t master_curve(uint32_t k10) { (void)k10; return 0u; }
 #define MASTER_START 2048u
 static inline uint32_t master_curve(uint32_t k10) { return (k10 * k10 * k10) >> 18; }
 #endif
+/* A MASTER that is an encoder (the SMK-37's K1): it starts at the knob position nearest MASTER_START from below
+ * (812 for 2048), and a detent moves it MASTER_ENC_STEP of 1023 (43 detents end to end) */
+#define MASTER_ENC_STEP 24
+static inline uint32_t master_enc_start(void)
+{
+    uint32_t k = 1023u;
+    while (k && master_curve(k) > MASTER_START)
+        k--;
+    return k;
+}
+static inline uint32_t master_enc_turn(uint32_t k10, int32_t detents)
+{
+    int32_t k = (int32_t)k10 + detents * MASTER_ENC_STEP;
+    return k < 0 ? 0u : k > 1023 ? 1023u : (uint32_t)k;
+}
 #endif

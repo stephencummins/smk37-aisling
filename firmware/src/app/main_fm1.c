@@ -269,7 +269,9 @@ static void splash(void)                         /* the launch screen's first fr
 
 static void fm1_main(void)
 {
+#if !AISLING_BOARD_SMK37
     int32_t knob = 512 * 16;
+#endif
     uint32_t last_frame = 0;
     {
         uint32_t f = irq_save();
@@ -304,7 +306,9 @@ static void fm1_main(void)
     en_dbg.boots++;
     en_dbg.max_us = 0;
     fm1_input_init();
+#if !AISLING_BOARD_SMK37
     fm1_adc_init();
+#endif
     panel_init();
     led_pos_init();
     en_init();
@@ -321,8 +325,10 @@ static void fm1_main(void)
     fm1_guard_lock_top();
     fm1_irq_enable_all();
     fm1_delay_ms(30);
+#if !AISLING_BOARD_SMK37
     if ((fm1_in.buttons & 3u) == 3u)
         panel_setup();                              /* OCT- + OCT+ held at power-on */
+#endif
     {   /* the launch screen, played out while the rest settles (it was a still, 400 ms) */
         int f;
         for (f = 1; f < UI_SPLASH_N; f++) {
@@ -341,6 +347,21 @@ static void fm1_main(void)
             bootguard.pending = 0;
             bootguard.failed = 0;
         }
+#if AISLING_BOARD_SMK37
+        {   /* MASTER is K1, an encoder: from MASTER_START (master.h), a step a detent */
+            static uint32_t k10 = 0xFFFFu;
+            int32_t d = fm1_enc_take(SMK_ENC_MASTER);
+            if (k10 > 1023u) {
+                k10 = master_enc_start();
+                master_raw = (uint16_t)k10;              /* master_q12 stays MASTER_START until the first turn */
+            }
+            if (d) {
+                k10 = master_enc_turn(k10, d);
+                master_raw = (uint16_t)k10;
+                master_q12 = master_curve(k10);
+            }
+        }
+#else
         {
             int32_t a = fm1_adc_read(FM1_ADC_MASTER);
             if (a >= 0) {
@@ -360,6 +381,7 @@ static void fm1_main(void)
                     batt_raw = batt_raw < 0 ? b : batt_raw + (b - batt_raw) / 4;
             }
         }
+#endif
         {   /* OCT- + OCT+ held 5 s: update mode (Felucca's, unchanged) */
             static uint32_t t0, shown;
             uint32_t both = (1u << panel.btn[B_OCTDN]) | (1u << panel.btn[B_OCTUP]);

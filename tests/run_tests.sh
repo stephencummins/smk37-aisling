@@ -41,6 +41,10 @@ run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/sto
 # the SMK-37 Elite's flash map; the control builds it with the FM-1's map, which must fail
 run smk-flash sh -c "$CC -O2 -Wall -Wextra -Wno-unused-function -Werror -DAISLING_BOARD_SMK37=1 -o $OUT/smk_flash_test tests/smk_flash_test.c && $OUT/smk_flash_test && \
     $CC -O2 -w -o $OUT/smk_flash_fm1 tests/smk_flash_test.c && ! $OUT/smk_flash_fm1 >/dev/null"
+# its keys, buttons and knobs on a simulated matrix; the control swaps OCT-'s and OCT+'s codes, which must fail
+SMK_IN="-O2 -Wall -Wextra -Wno-unused-function -Werror -DAISLING_BOARD_SMK37=1 -Ifirmware/hal -Ifirmware/src/app"
+run smk-input sh -c "$CC $SMK_IN -o $OUT/smk_input_test tests/host/smk_input_test.c && $OUT/smk_input_test && \
+    $CC $SMK_IN -DCONTROL -o $OUT/smk_input_control tests/host/smk_input_test.c && ! $OUT/smk_input_control >/dev/null"
 run rescue python3 tests/rescue_test.py
 run package python3 tests/pkg_test.py
 # the update path, against the firmware package (Felucca's tests; needs ./build.sh)

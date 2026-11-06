@@ -9,10 +9,16 @@
 #include "fm1_sys.h"
 #include "fm1_irq.h"
 #include "fm1_guard.h"
+#if AISLING_BOARD_SMK37
+#include "smk37/smk_input.h"      /* the SMK's matrix behind fm1_input.h's interface */
+#else
 #include "fm1_input.h"
+#endif
 #include "fm1_timer.h"
 #include "fm1_audio.h"
+#if !AISLING_BOARD_SMK37          /* the SMK's MASTER is an encoder; its battery is step 6's */
 #include "fm1_adc.h"
+#endif
 #include "fm1_lcd_hw.h"
 #include "fm1_flash.h"
 #include "fm1_xip.h"
