@@ -221,6 +221,9 @@ static const uint8_t STR1[] = {12, 3, 'D', 0, 'U', 0, 'B', 0, '-', 0, '1', 0};  
 #ifdef FELUCCA_LOADER
 static const uint8_t STR2[] = {30, 3, 'F', 0, 'e', 0, 'l', 0, 'u', 0, 'c', 0, 'c', 0, 'a', 0, ' ', 0, 'U', 0, 'p', 0,
                                'd', 0, 'a', 0, 't', 0, 'e', 0};
+#elif defined(AISLING_BOARD_SMK37) && AISLING_BOARD_SMK37
+static const uint8_t STR2[] = {38, 3, 'D', 0, 'U', 0, 'B', 0, '-', 0, '1', 0, ' ', 0, 'S', 0, 'M', 0, 'K', 0, '-', 0,
+                               '3', 0, '7', 0, ' ', 0, 'E', 0, 'l', 0, 'i', 0, 't', 0, 'e', 0};   /* DUB-1 SMK-37 Elite */
 #else
 static const uint8_t STR2[] = {22, 3, 'D', 0, 'U', 0, 'B', 0, '-', 0, '1', 0, ' ', 0, 'F', 0, 'M', 0, '-', 0, '1', 0};   /* DUB-1 FM-1 */
 #endif

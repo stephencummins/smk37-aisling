@@ -29,6 +29,22 @@
 #define CAP_RGB         0
 #endif
 
+/* the battery: the divider's raw ADC reading (plat_battery) for one, two, three bars, and the span the percentage
+ * covers (a rough charge, linear) */
+#if AISLING_BOARD_SMK37
+#define BATT_BAR1       530     /* the stock firmware's thresholds (the guide); the divider's ratio is not known */
+#define BATT_BAR2       560
+#define BATT_BAR3       602
+#define BATT_PCT_LO     520     /* GUESS: 10 under one bar and 10 over three, as the FM-1's; check on the device */
+#define BATT_PCT_SPAN   92
+#else
+#define BATT_BAR1       531     /* dxsloop's */
+#define BATT_BAR2       561
+#define BATT_BAR3       591
+#define BATT_PCT_LO     521
+#define BATT_PCT_SPAN   80
+#endif
+
 #if CAP_KEYS - CAP_OUTER_KEYS != 27
 #error "board_caps.h: AISLING plays 27 keys"
 #endif

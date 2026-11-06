@@ -40,14 +40,14 @@
  *   - the LED commons' register and its other bits (SMK_LED_COM, SMK_COM_BASE), and the LED table, which the
  *     guide marks verified only for the LEDs its own port drives.
  *
+ * The analog muxes (smk_adc.h) take their address from the word too: smk_mux, latched with every column. It stays 7
+ * (mux C's battery) until stage 4 reads the pads, faders and wheels.
+ *
  * Host tests replace the hardware access: SMK_GPIO(port, reg), SMK_SR_PUT(v), SMK_LED_COM, SMK_IRQ_OFF/ON. */
 #pragma once
 #include <stdint.h>
-#include "../fm1_gpio.h"
+#include "smk_reg.h"
 
-#ifndef SMK_GPIO
-#define SMK_GPIO(p, r) FM1_PR(p, r)
-#endif
 #ifndef SMK_SR_PUT                         /* port A's output, the 595 pins (only this file writes port A) */
 #define SMK_SR_PUT(v) (SMK_GPIO(FM1_PA, FM1_OUT) = (v))
 #endif
@@ -143,6 +143,7 @@ static volatile struct {
 } fm1_in;
 static volatile uint16_t smk_led[2], smk_led_dim[2];   /* per group: bit = line, 1 = lit (smk_leds) */
 static volatile uint8_t fm1_led_dim_div;
+static volatile uint8_t smk_mux = 7u;   /* the analog muxes' address, latched with the next column (smk_adc.h) */
 static uint8_t smk__col;         /* the column latched by the last tick: its rows are read on this one */
 static uint8_t smk__grp;         /* the LED group lit this frame */
 static uint8_t smk__dim;         /* ticks to the next one that lights the dim LEDs */
@@ -330,7 +331,7 @@ static void fm1_input_tick(void)
         smk__dim = (uint8_t)(div - 1u);
     } else
         smk__dim--;
-    smk__sr_word(smk__word(n, lit, 0u));
+    smk__sr_word(smk__word(n, lit, smk_mux));
     if (n == 0u)
         SMK_LED_COM = SMK_COM_ON(smk__grp);
     smk__col = (uint8_t)n;

@@ -30,6 +30,7 @@ run uart-dma sh -c "$CC -O2 -w -Ifirmware/src -Ifirmware/hal -o $OUT/uart_dma_te
 run uart-dma-control sh -c "$CC -O2 -w -DLEGACY_CONTROL -Ifirmware/src -Ifirmware/hal -o $OUT/uart_dma_legacy tests/host/uart_dma_test.c && ! $OUT/uart_dma_legacy"
 run usb-desc sh -c "$CC -O2 -w -DT_CDC=0 -Ifirmware/src -Ifirmware/hal -o $OUT/usb_desc_test tests/host/usb_desc_test.c -lm && $OUT/usb_desc_test"
 run usb-desc-cdc sh -c "$CC -O2 -w -DT_CDC=1 -Ifirmware/src -Ifirmware/hal -o $OUT/usb_desc_cdc tests/host/usb_desc_test.c -lm && $OUT/usb_desc_cdc"
+run usb-desc-smk sh -c "$CC -O2 -w -DT_CDC=0 -DAISLING_BOARD_SMK37=1 -Ifirmware/src -Ifirmware/hal -o $OUT/usb_desc_smk tests/host/usb_desc_test.c -lm && $OUT/usb_desc_smk"
 run amb sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -DEN_HOST -Ifirmware/src/dsp \
     -o $OUT/amb_test tests/host/amb_test.c firmware/src/dsp/amb.c -lm && $OUT/amb_test"
 run usbtap sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -DEN_HOST -Ifirmware/src/dsp \
@@ -45,6 +46,9 @@ run smk-flash sh -c "$CC -O2 -Wall -Wextra -Wno-unused-function -Werror -DAISLIN
 SMK_IN="-O2 -Wall -Wextra -Wno-unused-function -Werror -DAISLING_BOARD_SMK37=1 -Ifirmware/hal -Ifirmware/src/app"
 run smk-input sh -c "$CC $SMK_IN -o $OUT/smk_input_test tests/host/smk_input_test.c && $OUT/smk_input_test && \
     $CC $SMK_IN -DCONTROL -o $OUT/smk_input_control tests/host/smk_input_test.c && ! $OUT/smk_input_control >/dev/null"
+# its screen's and ADC's registers, faked; the control moves every pin to the next port, which must fail
+run smk-hw sh -c "$CC $SMK_IN -o $OUT/smk_hw_test tests/host/smk_hw_test.c && $OUT/smk_hw_test && \
+    $CC $SMK_IN -DCONTROL -o $OUT/smk_hw_control tests/host/smk_hw_test.c && ! $OUT/smk_hw_control >/dev/null"
 run rescue python3 tests/rescue_test.py
 run package python3 tests/pkg_test.py
 # the update path, against the firmware package (Felucca's tests; needs ./build.sh)

@@ -16,10 +16,16 @@
 #endif
 #include "fm1_timer.h"
 #include "fm1_audio.h"
-#if !AISLING_BOARD_SMK37          /* the SMK's MASTER is an encoder; its battery is step 6's */
-#include "fm1_adc.h"
+#if AISLING_BOARD_SMK37
+#include "smk37/smk_adc.h"        /* the battery, on an analog mux (the SMK's MASTER is an encoder) */
+#include "smk37/smk_lcd_hw.h"     /* fm1_lcd_hw.h's interface on the SMK's pins */
+#ifndef LCD_BAUD
+#define LCD_BAUD 4u               /* 12 MHz, the stock's, until it is tried faster on the device */
 #endif
+#else
+#include "fm1_adc.h"
 #include "fm1_lcd_hw.h"
+#endif
 #include "fm1_flash.h"
 #include "fm1_xip.h"
 #include "fm1_perf.h"
@@ -48,7 +54,14 @@ static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ?
 #endif
 #include "usb.c"
 #ifndef EN_TRS
+#if AISLING_BOARD_SMK37
+#define EN_TRS 0                  /* none: its PH8 is a matrix row */
+#else
 #define EN_TRS 1                  /* MIDI IN on the TRS jack */
+#endif
+#endif
+#if EN_TRS && AISLING_BOARD_SMK37
+#error "EN_TRS: the SMK-37 Elite has no TRS MIDI IN (PH8, the FM-1's UART RX, is one of its matrix rows)"
 #endif
 #if EN_TRS
 #include "midi_uart.c"

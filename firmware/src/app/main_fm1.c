@@ -306,7 +306,9 @@ static void fm1_main(void)
     en_dbg.boots++;
     en_dbg.max_us = 0;
     fm1_input_init();
-#if !AISLING_BOARD_SMK37
+#if AISLING_BOARD_SMK37
+    smk_adc_init();
+#else
     fm1_adc_init();
 #endif
     panel_init();
@@ -359,6 +361,15 @@ static void fm1_main(void)
                 k10 = master_enc_turn(k10, d);
                 master_raw = (uint16_t)k10;
                 master_q12 = master_curve(k10);
+            }
+        }
+        {   /* the battery: mux C, address 7 (smk_mux, latched by the matrix scan), twice a second, smoothed */
+            static uint32_t t_batt;
+            if (fm1_ms - t_batt >= 500u && smk_mux == SMK_MUX_BATT) {
+                int32_t b = smk_adc_read(SMK_ADC_MUXC);
+                t_batt = fm1_ms;
+                if (b >= 0)
+                    batt_raw = batt_raw < 0 ? b : batt_raw + (b - batt_raw) / 4;
             }
         }
 #else

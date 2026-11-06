@@ -18,6 +18,7 @@
  *   GLO held       saves (it also saves by itself a few seconds after a change, while resting);
  *                  held on 1.5 s: the piece back to its recipe */
 #include "../dsp/fastmath.h"
+#include "../board_caps.h"        /* the battery's thresholds */
 
 /* the pages, one a layer (a button each, NPAGES; the Noise page, V_NSND, SAVE's); the header's dots show them in the
  * panel's order, PAGE_ORDER below (the view numbers stay as they were: the tests use them) */
@@ -1892,16 +1893,16 @@ static void tag(int32_t *x, const char *s, uint16_t bg, uint16_t fg)
     *x += w + 4;
 }
 
-/* the battery (dxsloop's thresholds on the divider's raw reading): three bars, 591 up, 561, 531; on USB
- * (powering and charging it: there is no charger line) the bars fill one, two, three in turn */
+/* the battery (the board's thresholds on the divider's raw reading, board_caps.h): three bars; on USB (powering and
+ * charging it: the FM-1 has no charger line) the bars fill one, two, three in turn */
 static int batt_bars(void)
 {
     int32_t b = plat_battery();
-    return b >= 591 ? 3 : b >= 561 ? 2 : b >= 531 ? 1 : 0;
+    return b >= BATT_BAR3 ? 3 : b >= BATT_BAR2 ? 2 : b >= BATT_BAR1 ? 1 : 0;
 }
-static int batt_pct(void)                        /* a rough charge, 521 .. 601 */
+static int batt_pct(void)                        /* a rough charge, BATT_PCT_LO .. + BATT_PCT_SPAN */
 {
-    int32_t p = (plat_battery() - 521) * 100 / 80;
+    int32_t p = (plat_battery() - BATT_PCT_LO) * 100 / BATT_PCT_SPAN;
     return p < 0 ? 0 : p > 100 ? 100 : (int)p;
 }
 static void draw_battery(int32_t bx)

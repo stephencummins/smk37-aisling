@@ -26,7 +26,17 @@
 #define OTA_RES (OTA_AREA + OTA_AREA_LEN - 0x100u)  /* FM-1 0xE4F00 = 4K boundary - 256: SPL scan */
 #define OTA_LDR_HCRC 0xEBAAu                     /* official update loader (usb_hid_ota.bin) */
 #define OTA_LDR_DCRC 0x5881u
-#define OTA_LDR_LEN 0x4DE1u
+#define OTA_LDR_LEN 0x4DE1u                      /* (the SMK-37 Elite_016 package carries the same loader) */
+/* the name the official loader answers to: it is the same binary on both boards, so it takes its identity from the
+ * update record; Felucca's loader has its own (FELUCCA_ID). The SMK's is ASSUMED, from the FM-1's and the guide's
+ * "ota-SMK-37 Pro_016": the stock app builds its name at run time. Wrong, and M-UPGRADE might not see the way back
+ * to stock; our installer takes either. */
+#if defined(AISLING_BOARD_SMK37) && AISLING_BOARD_SMK37
+#define OTA_LDR_NAME "ota-SMK-37 Elite_016"
+#else
+#define OTA_LDR_NAME "ota-FM-1_015"
+#endif
+typedef char ota_ldr_name_fits[sizeof OTA_LDR_NAME <= 64u ? 1 : -1];   /* UPDATA_PARM 8..71 */
 #define OTA_FRAME_MAX 640u                       /* 512-B response = 605 wire bytes */
 
 static int ota_wire_send(const uint8_t *p, uint32_t n);
@@ -354,8 +364,8 @@ static int ota_session(void)
     ota_wr16(parm + 2, 0x5A0Du);
     ota_wr16(parm + 4, 0x5A01u);
     ota_wr16(parm + 6, 0x5441u);
-    for (i = 0; i < 12u; i++)
-        parm[8 + i] = (uint8_t)"ota-FM-1_015"[i];    /* the loader's own USB identity */
+    for (i = 0; i < sizeof OTA_LDR_NAME - 1u; i++)
+        parm[8 + i] = (uint8_t)OTA_LDR_NAME[i];      /* the loader's own USB identity */
     ota_wr32(parm + 72, OTA_AREA);
     ota_wr16(parm, ota_crc16(parm + 2, 78, 0));
 #if FELUCCA_OTA_DRYRUN
