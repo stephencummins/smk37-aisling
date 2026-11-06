@@ -7,7 +7,8 @@
  * fm1_adc.h's 0xF04E takes ~200 us a conversion, too slow for the pads at one a 100 us tick. The read sequence is
  * fm1_adc.h's (Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments) with that CON.
  *
- * Stage 1 reads the battery alone (mux C, address 7), from the main loop, so smk_adc_init() sets up PA10 alone. The
+ * Stage 1 reads the battery alone (mux C, address 7), from the main loop, so smk_adc_init() sets up PA10 alone
+ * (smk_pins.h's table). The
  * pads (muxes A and B; PC9 is also SPI1 group B's clock, which the pads' LEDs use), the faders and the wheels are
  * stage 4's. PB1 (the charger's status) is no ADC input here and is never touched.
  *
@@ -18,6 +19,7 @@
 #pragma once
 #include <stdint.h>
 #include "smk_reg.h"
+#include "smk_pins.h"
 
 #define SMK_ADC_CON SMK_REG(0x13100u)
 #define SMK_ADC_RES SMK_REG(0x13104u)
@@ -25,14 +27,7 @@
 enum { SMK_ADC_MUXA = 1, SMK_ADC_MUXC = 2, SMK_ADC_MUXB = 8 };            /* channels */
 enum { SMK_MUX_PITCH = 4, SMK_MUX_MOD = 5, SMK_MUX_PEDAL = 6, SMK_MUX_BATT = 7 };   /* mux C's addresses */
 
-static void smk_adc_init(void)
-{
-    const uint32_t m = 1u << 10;
-    SMK_GPIO(FM1_PA, FM1_DIE) &= ~m;
-    SMK_GPIO(FM1_PA, FM1_PU) &= ~m;
-    SMK_GPIO(FM1_PA, FM1_PD) &= ~m;
-    SMK_GPIO(FM1_PA, FM1_DIR) |= m;
-}
+static void smk_adc_init(void) { smk_pins_setup(SMK_OWN_ADC); }
 
 static int32_t smk_adc_read(uint32_t ch)
 {

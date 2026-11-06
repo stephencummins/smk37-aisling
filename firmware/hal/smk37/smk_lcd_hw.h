@@ -9,8 +9,9 @@
  * The SPI1 sequence is fm1_lcd_hw.h's (Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments),
  * typed again with these pins.
  *
- * Pins: PB5 PB6 PB7 PC8, nothing else. Never port A (the 595s and the matrix rows: smk_input.h), never PB1 (the
- * charger's status: held low 8 s it resets the chip).
+ * Pins: PB5 PB6 PB7 PC8, nothing else, set up from smk_pins.h's table (outputs, no pulls; CS high before it
+ * drives). Never port A (the 595s and the matrix rows: smk_input.h), never PB1 (the charger's status: held low 8 s
+ * it resets the chip).
  *
  *   fm1_lcd_hw_init()          pins, SPI1 master on group A at BAUD 4
  *   fm1_lcd_baud(b)            SPI1 clock = lsb / (b + 1)
@@ -28,6 +29,7 @@
 #include <stdint.h>
 #include "../fm1_cc.h"
 #include "smk_reg.h"
+#include "smk_pins.h"
 
 #define SMK_LCD_IOMAP_CON1 SMK_REG(0x51020u)
 #define SMK_LCD_SPI_CON SMK_REG(0x11D00u)
@@ -35,21 +37,15 @@
 #define SMK_LCD_SPI_BUF SMK_REG(0x11D08u)
 #define SMK_LCD_SPI_ADR SMK_REG(0x11D0Cu)
 #define SMK_LCD_SPI_CNT SMK_REG(0x11D10u)
-#define SMK_LCD_DC (1u << 5)                /* port B */
-#define SMK_LCD_CLK (1u << 6)               /* port B */
-#define SMK_LCD_DO (1u << 7)                /* port B */
-#define SMK_LCD_CS (1u << 8)                /* port C */
+#define SMK_LCD_DC (1u << SMK_LCD_DC_BIT)   /* port B */
+#define SMK_LCD_CS (1u << SMK_LCD_CS_BIT)   /* port C */
 
 static uint32_t fm1_lcd_timeouts;
 
 FM1_INLINE void fm1_lcd_hw_init(void)
 {
-    const uint32_t pb = SMK_LCD_DC | SMK_LCD_CLK | SMK_LCD_DO;
     SMK_LCD_IOMAP_CON1 &= ~0x10u;                   /* SPI1 on group A */
-    SMK_GPIO(FM1_PC, FM1_OUT) |= SMK_LCD_CS;        /* high before it drives */
-    SMK_GPIO(FM1_PC, FM1_DIR) &= ~SMK_LCD_CS;
-    SMK_GPIO(FM1_PB, FM1_OUT) &= ~pb;
-    SMK_GPIO(FM1_PB, FM1_DIR) &= ~pb;
+    smk_pins_setup(SMK_OWN_LCD);                    /* CS high, then D/C, CLK, DO low */
     SMK_LCD_SPI_CON = 0x4021u;
     SMK_LCD_SPI_BAUD = 4u;
 }

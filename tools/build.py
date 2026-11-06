@@ -58,12 +58,17 @@ PRODUCT = "FM-1_353000000"          # package identity; release builds are FM-1_
 # build stays byte-identical. slot: room for app.bin in the package's app area, which is also the
 # linker's XIP length (fm1pkg_make's BOARDS: the SMK's area is flash 0x4000..0x9CFFF, the FM-1's
 # 0x4000..0x92FFF). ram_spare: .data+.bss headroom the build keeps. stem: a release package's name
-# before -X.Y. The keys are fm1pkg_make's board names.
+# before -X.Y. pin_guard: the C units write their dependency lists (-MD), checked by pin_guard() (not
+# the FM-1's: its commands stay as they were). The keys are fm1pkg_make's board names.
 BOARDS = {
-    "fm1": dict(model="FM-1", out=OUT, flags=[], slot=APP_SLOT, ram_spare=0, stem="aisling"),
+    "fm1": dict(model="FM-1", out=OUT, flags=[], slot=APP_SLOT, ram_spare=0, stem="aisling", pin_guard=False),
     "smk37": dict(model="SMK-37 Elite", out=OUT / "smk37", flags=["-DAISLING_BOARD_SMK37=1", "-Ifirmware/hal/smk37"],
-                  slot=fm1pkg_make.BOARDS["smk37"]["app_slot"], ram_spare=2048, stem="aisling-smk37-elite"),
+                  slot=fm1pkg_make.BOARDS["smk37"]["app_slot"], ram_spare=2048, stem="aisling-smk37-elite",
+                  pin_guard=True),
 }
+# The FM-1's hardware headers: their pins are the FM-1's, and on the SMK-37 Elite the same pins are other things
+# (PA2 a key row, PH8 a key row, PC7 MIDI OUT, PC9 the pads' mux). No SMK unit may include one, by any path.
+FM1_PIN_HEADERS = ("fm1_input.h", "fm1_adc.h", "fm1_lcd_hw.h", "fm1_uart.h")
 BOARD = BOARDS["fm1"]
 VERSION = None                      # FELUCCA_VERSION for release builds (default: firmware/src/ui.c)
 QUIET = False                       # a test build that makes no sound (--release X.Y-quiet)
@@ -184,12 +189,17 @@ def ldr_wrap(image):
     return ldr_head(crc16(body), 0x20, len(body), 0x41, LOADER_NAME) + body
 
 
+def deps_flags(d):
+    """-MD -MF d on a board with the pin guard, nothing on the FM-1"""
+    return ["-MD", "-MF", d] if BOARD["pin_guard"] else []
+
+
 def build_loader():
     LDR.mkdir(parents=True, exist_ok=True)
     src = FW / "loader"
     flags = [*CFLAGS, *BOARD["flags"], "-Ifirmware/hal", "-Ifirmware/src"]
     tc_all(("cc", "-c", src / "crt0_ldr.S", "-o", LDR / "crt0_ldr.o"),
-           ("cc", *flags, "-c", src / "loader.c", "-o", LDR / "loader.o"))
+           ("cc", *flags, *deps_flags(LDR / "loader.d"), "-c", src / "loader.c", "-o", LDR / "loader.o"))
     elf = LDR / "loader.elf"
     tc("pi32v2/bin/ld", "--gc-sections", "-e", "_start", "-T", src / "loader.ld",
        LDR / "crt0_ldr.o", LDR / "loader.o", "-o", elf)
@@ -247,12 +257,12 @@ def build_app():
     units = [("cc", "-c", FW / "crt0.S", "-o", OUT / "crt0.o"),
              ("cc", "-c", FW / "hal" / "fm1_vec.S", "-o", OUT / "fm1_vec.o"),
              ("cc", "-c", FW / "hal" / "fm1_isr.S", "-o", OUT / "fm1_isr.o"),
-             ("cc", *flags, "-c", FW / "src" / "main.c", "-o", OUT / "main.o")]
+             ("cc", *flags, *deps_flags(OUT / "main.d"), "-c", FW / "src" / "main.c", "-o", OUT / "main.o")]
     objs = [OUT / "crt0.o", OUT / "fm1_vec.o", OUT / "fm1_isr.o", OUT / "main.o"]
     (OUT / "o2").mkdir(parents=True, exist_ok=True)
     for u in O2_UNITS:
         o = OUT / "o2" / (u.replace("/", "_")[:-2] + ".o")
-        units.append(("cc", *o2, "-c", FW / "src" / u, "-o", o))
+        units.append(("cc", *o2, *deps_flags(o.with_suffix(".d")), "-c", FW / "src" / u, "-o", o))
         objs.append(o)
     tc_all(*units)
     elf = OUT / "amb.elf"
@@ -375,6 +385,32 @@ def mmio_check():
     return errors
 
 
+def deps(path):
+    """the files a compiler dependency list (-MD) names after its target, as written"""
+    text = Path(path).read_text().replace("\\\n", " ")
+    return [f for rule in text.splitlines() if ":" in rule for f in rule.split(":", 1)[1].split()]
+
+
+def pin_guard(units):
+    """units: (dependency list, the unit's source, headers it must list). An error for each FM-1 hardware
+    header in a list (by name, whatever its path), and for a list that is missing or does not name its own
+    source and the headers it must (so a list that was not written, or not parsed, cannot pass)"""
+    errors = []
+    for d, src, need in units:
+        d = Path(d)
+        if not d.is_file():
+            errors.append(f"pin guard: no dependency list {d.name} (-MD)")
+            continue
+        names = {Path(f).name for f in deps(d)}
+        for h in FM1_PIN_HEADERS:
+            if h in names:
+                errors.append(f"pin guard: {src} includes {h}, the FM-1's pins")
+        for h in (src, *need):
+            if h not in names:
+                errors.append(f"pin guard: {d.name} does not list {h}")
+    return errors
+
+
 def main():
     global PRODUCT, VERSION, QUIET, BOARD, OUT, LDR
     ap = argparse.ArgumentParser()
@@ -415,6 +451,14 @@ def main():
     errors += hal_err
     if not hal_err:
         notes.append("register access: hal/ only (src/, loader/ clean)")
+    if BOARD["pin_guard"]:
+        pin_err = pin_guard([(OUT / "main.d", "main.c", ("smk_pins.h", "smk_input.h", "smk_lcd_hw.h", "smk_adc.h")),
+                             (LDR / "loader.d", "loader.c", ()),
+                             *((OUT / "o2" / (u.replace("/", "_")[:-2] + ".d"), Path(u).name, ()) for u in O2_UNITS)])
+        errors += pin_err
+        if not pin_err:
+            notes.append(f"pin guard: no {', '.join(FM1_PIN_HEADERS)} in main.c's, loader.c's or "
+                         f"{', '.join(Path(u).name for u in O2_UNITS)}'s includes")
     for n in notes:
         print("  ok   ", n)
     for e in errors:

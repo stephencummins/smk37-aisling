@@ -14,7 +14,7 @@
  * clocked out on PA4 (data) and PA3 (clock), latched by a pulse on PA1; PA0 (the 595s' OE) is held low.
  * Rows 0..7 = PA2 PA5 PA6 PA7 PA9 PH6 PH8 PH9, pulled up, low = closed: rows 0-4 the keys, 5-6 the buttons,
  * 7 the knobs. The rows are only ever inputs; PB1 (the charger's status: held low 8 s it resets the chip)
- * and port C are never touched here.
+ * and port C are never touched here. The pins are set up from smk_pins.h's table, and named from it.
  *
  * Ids, chosen so the FM-1's panel map (panel.c PANEL_DEFAULT) and its OCT- + OCT+ checks hold as they are:
  *   buttons 0..13  the FM-1's matrix ids: the SMK button that does that job (SMK_BTN below)
@@ -47,6 +47,7 @@
 #pragma once
 #include <stdint.h>
 #include "smk_reg.h"
+#include "smk_pins.h"
 
 #ifndef SMK_SR_PUT                         /* port A's output, the 595 pins (only this file writes port A) */
 #define SMK_SR_PUT(v) (SMK_GPIO(FM1_PA, FM1_OUT) = (v))
@@ -167,13 +168,14 @@ static uint32_t smk__sr_bit(uint32_t w, uint32_t i)
  * traffic: 32 bits a tick, twice the FM-1's) */
 static void smk__sr_word(uint32_t w)
 {
-    uint32_t o = SMK_GPIO(FM1_PA, FM1_OUT) & ~((1u << 0) | (1u << 1) | (1u << 3) | (1u << 4)), i;
+    uint32_t o = SMK_GPIO(FM1_PA, FM1_OUT) &
+                 ~(1u << SMK_SR_OE | 1u << SMK_SR_LATCH | 1u << SMK_SR_CLK | 1u << SMK_SR_DATA), i;
     for (i = 0; i < 32u; i++) {
-        uint32_t d = o | smk__sr_bit(w, i) << 4;
+        uint32_t d = o | smk__sr_bit(w, i) << SMK_SR_DATA;
         SMK_SR_PUT(d);                                 /* data, clock low */
-        SMK_SR_PUT(d | 1u << 3);                       /* the 595s shift on the rising edge */
+        SMK_SR_PUT(d | 1u << SMK_SR_CLK);              /* the 595s shift on the rising edge */
     }
-    SMK_SR_PUT(o | 1u << 1);                           /* latch */
+    SMK_SR_PUT(o | 1u << SMK_SR_LATCH);                /* latch */
     SMK_SR_PUT(o);
 }
 
@@ -181,29 +183,15 @@ static void smk__sr_word(uint32_t w)
 static uint32_t smk__rows(void)
 {
     uint32_t a = SMK_GPIO(FM1_PA, FM1_IN), h = SMK_GPIO(FM1_PH, FM1_IN);
-    return ~(((a >> 2) & 0x01u) | ((a >> 4) & 0x0Eu) | ((a >> 5) & 0x10u) | ((h >> 1) & 0x20u) |
-             ((h >> 2) & 0xC0u)) & 0xFFu;
+    return ~((a >> SMK_ROW0 & 1u) | (a >> SMK_ROW1 & 1u) << 1 | (a >> SMK_ROW2 & 1u) << 2 | (a >> SMK_ROW3 & 1u) << 3 |
+             (a >> SMK_ROW4 & 1u) << 4 | (h >> SMK_ROW5 & 1u) << 5 | (h >> SMK_ROW6 & 1u) << 6 |
+             (h >> SMK_ROW7 & 1u) << 7) & 0xFFu;
 }
 
 static void fm1_input_init(void)
 {
-    const uint32_t rows_a = (1u << 2) | (1u << 5) | (1u << 6) | (1u << 7) | (1u << 9);
-    const uint32_t rows_h = (1u << 6) | (1u << 8) | (1u << 9);
-    const uint32_t sr = (1u << 0) | (1u << 1) | (1u << 3) | (1u << 4);     /* OE, latch, clock, data */
     uint32_t i;
-    SMK_GPIO(FM1_PA, FM1_DIE) |= rows_a;
-    SMK_GPIO(FM1_PA, FM1_DIR) |= rows_a;
-    SMK_GPIO(FM1_PA, FM1_PD) &= ~rows_a;
-    SMK_GPIO(FM1_PA, FM1_PU) |= rows_a;
-    SMK_GPIO(FM1_PH, FM1_DIE) |= rows_h;
-    SMK_GPIO(FM1_PH, FM1_DIR) |= rows_h;
-    SMK_GPIO(FM1_PH, FM1_PD) &= ~rows_h;
-    SMK_GPIO(FM1_PH, FM1_PU) |= rows_h;
-    SMK_GPIO(FM1_PA, FM1_DIE) |= sr;
-    SMK_GPIO(FM1_PA, FM1_PU) &= ~sr;
-    SMK_GPIO(FM1_PA, FM1_PD) &= ~sr;
-    SMK_GPIO(FM1_PA, FM1_OUT) &= ~sr;
-    SMK_GPIO(FM1_PA, FM1_DIR) &= ~sr;
+    smk_pins_setup(SMK_OWN_INPUT);                     /* the rows inputs, pulled up; then the 595 pins, low */
     SMK_LED_COM = SMK_COM_OFF;
     smk__sr_word(0xFFFFFFFFu & ~(7u << 3));            /* no column, no LED */
     smk__col = (uint8_t)(SMK_NCOL - 1u);               /* the first tick latches column 0 */

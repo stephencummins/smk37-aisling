@@ -126,9 +126,12 @@ static int only(uint32_t w[NPORT][NREG], const uint32_t (*want)[3], uint32_t n, 
 
 static void test_lcd(void)
 {
-    static const uint32_t lcd_pins[][3] = {
+    static const uint32_t lcd_pins[][3] = {          /* outputs: level, direction, no pulls, digital */
         {FM1_PB, FM1_OUT, T_DC | T_CLK | T_DO}, {FM1_PB, FM1_DIR, T_DC | T_CLK | T_DO},
-        {FM1_PC, FM1_OUT, T_CS}, {FM1_PC, FM1_DIR, T_CS},
+        {FM1_PB, FM1_PU, T_DC | T_CLK | T_DO}, {FM1_PB, FM1_PD, T_DC | T_CLK | T_DO},
+        {FM1_PB, FM1_DIE, T_DC | T_CLK | T_DO},
+        {FM1_PC, FM1_OUT, T_CS}, {FM1_PC, FM1_DIR, T_CS}, {FM1_PC, FM1_PU, T_CS}, {FM1_PC, FM1_PD, T_CS},
+        {FM1_PC, FM1_DIE, T_CS},
     };
     static uint8_t px[480];
     uint32_t w[NPORT][NREG], z, ok_vals = 1, iomap_ok = 1, spi_ok = 1;
@@ -140,15 +143,17 @@ static void test_lcd(void)
         changed(w);
         ok_vals &= !(gpio[FM1_PB][FM1_OUT / 4] & (T_DC | T_CLK | T_DO)) &&
                    !(gpio[FM1_PB][FM1_DIR / 4] & (T_DC | T_CLK | T_DO)) &&
-                   (gpio[FM1_PC][FM1_OUT / 4] & T_CS) && !(gpio[FM1_PC][FM1_DIR / 4] & T_CS);
+                   !((gpio[FM1_PB][FM1_PU / 4] | gpio[FM1_PB][FM1_PD / 4]) & (T_DC | T_CLK | T_DO)) &&
+                   (gpio[FM1_PC][FM1_OUT / 4] & T_CS) && !(gpio[FM1_PC][FM1_DIR / 4] & T_CS) &&
+                   !((gpio[FM1_PC][FM1_PU / 4] | gpio[FM1_PC][FM1_PD / 4]) & T_CS);
         iomap_ok &= regs[R_IOMAP].v == (init & ~0x10u);
         spi_ok &= regs[R_SPI_CON].v == 0x4021u && regs[R_SPI_BAUD].v == 4u;
     }
-    check("screen init writes PB5 PB6 PB7 and PC8 (OUT, DIR) and nothing else", only(w, lcd_pins, 4, 1));
+    check("screen init writes PB5 PB6 PB7 and PC8 (OUT DIR PU PD DIE) and nothing else", only(w, lcd_pins, 10, 1));
     check("  so never port A, never PB1, never PC7 PC9 PC10", !(w[FM1_PA][0] | w[FM1_PA][1] | w[FM1_PA][2] |
           w[FM1_PA][3] | w[FM1_PA][4] | w[FM1_PA][5]) && !((w[FM1_PB][0] | w[FM1_PB][2]) & 2u) &&
           !((w[FM1_PC][0] | w[FM1_PC][2]) & ((1u << 7) | (1u << 9) | (1u << 10))));
-    check("D/C, CLK, DO outputs low; CS an output, high", ok_vals);
+    check("D/C, CLK, DO outputs low; CS an output, high; no pulls", ok_vals);
     check("SPI1 on pin group A (IOMAP_CON1 bit 4 clear, the rest kept)", iomap_ok);
     check("SPI1: CON 0x4021, BAUD 4 (as the FM-1's)", spi_ok);
 

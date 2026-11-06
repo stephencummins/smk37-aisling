@@ -49,6 +49,11 @@ run smk-input sh -c "$CC $SMK_IN -o $OUT/smk_input_test tests/host/smk_input_tes
 # its screen's and ADC's registers, faked; the control moves every pin to the next port, which must fail
 run smk-hw sh -c "$CC $SMK_IN -o $OUT/smk_hw_test tests/host/smk_hw_test.c && $OUT/smk_hw_test && \
     $CC $SMK_IN -DCONTROL -o $OUT/smk_hw_control tests/host/smk_hw_test.c && ! $OUT/smk_hw_control >/dev/null"
+# the one pin table (hal/smk37/smk_pins.h) and every SMK driver's pin setup; the control rotates the ports, which
+# must fail. Then the build's guard against the FM-1's hardware headers in an SMK unit (tools/build.py)
+run smk-pins sh -c "$CC $SMK_IN -o $OUT/smk_pins_test tests/host/smk_pins_test.c && $OUT/smk_pins_test && \
+    $CC $SMK_IN -DCONTROL -o $OUT/smk_pins_control tests/host/smk_pins_test.c && ! $OUT/smk_pins_control >/dev/null"
+run pin-guard python3 tests/pin_guard_test.py
 run rescue python3 tests/rescue_test.py
 run package python3 tests/pkg_test.py
 # the update path, against the firmware package (Felucca's tests; needs ./build.sh)
