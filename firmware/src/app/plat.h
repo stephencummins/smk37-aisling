@@ -43,7 +43,8 @@ int plat_store_load(uint32_t obj, void *dst, uint32_t max);   /* bytes loaded, <
 int plat_store_save(uint32_t obj, const void *src, uint32_t len);   /* 0 = ok */
 #define PLAT_STORE_MAX 3840u           /* bytes per object */
 enum { OBJ_PROJ, OBJ_PANEL, OBJ_NOBJ };
-/* flash: OBJ_PROJ 0xFC000, OBJ_PANEL 0xDC000 (2 sectors each, inside Felucca's data area) */
+/* flash: OBJ_PROJ FL_PROJ_SECTOR, OBJ_PANEL FL_PANEL_SECTOR (hal/fl_map.h; FM-1 0xFC000 and 0xDC000), 2 sectors
+ * each, inside the board's store */
 
 /* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
 uint32_t plat_cpu_pct(void);

@@ -28,6 +28,7 @@ static int st_prog(uint32_t off, const void *src, uint32_t n)
         nor[off + i] &= s[i];
     return 0;
 }
+#include "../firmware/hal/fl_map.h"      /* the board's flash map: OTA_AREA, LDR_*, the objects */
 #include "../firmware/src/app/plat.h"     /* AMB-1: the object map */
 #include "../firmware/src/storage.c"
 #define OBJ_PROJECT0 OBJ_PROJ                  /* AMB-1 has two objects: the project and the panel */

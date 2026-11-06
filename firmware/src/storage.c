@@ -17,9 +17,10 @@
 #define ST_PAYLOAD_OFF 256u
 #define ST_PAYLOAD_MAX (ST_SECTOR - ST_PAYLOAD_OFF)
 
-/* flash map, AMB-1 (plat.h OBJ_*): the project at 0xFC000 (Felucca's FL_GLOB), the panel calibration at
- * 0xDC000 (Felucca's user-preset area). Nothing above 0xDFFFF: 0xE0000.. is the update loader's
- * staging area. The magic is X0X's, so a project is told apart by its own magic (project.c). */
+/* flash map, AMB-1 (plat.h OBJ_*), from the board's map (hal/fl_map.h FL_PROJ_SECTOR, FL_PANEL_SECTOR).
+ * FM-1: the project at 0xFC000 (Felucca's FL_GLOB), the panel calibration at 0xDC000 (Felucca's user-preset
+ * area); nothing above 0xDFFFF: 0xE0000.. is the update loader's staging area. SMK-37 Elite: 0xC2000 and
+ * 0xC4000, in the stock presets. The magic is X0X's, so a project is told apart by its own magic (project.c). */
 typedef struct {
     uint32_t magic;
     uint16_t type, slot;
@@ -48,7 +49,7 @@ static uint32_t st_crc32(const void *p, uint32_t n)   /* zlib CRC-32, 4 bits per
 
 static uint32_t st_sector(uint32_t obj, uint32_t copy)  /* flash offset of copy A (0) / B (1) */
 {
-    return (obj == OBJ_PANEL ? 0xDC000u : 0xFC000u) + copy * ST_SECTOR;
+    return (obj == OBJ_PANEL ? FL_PANEL_SECTOR : FL_PROJ_SECTOR) + copy * ST_SECTOR;
 }
 
 static uint8_t st_buf[ST_PAYLOAD_MAX] __attribute__((aligned(4)));

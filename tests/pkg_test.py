@@ -4,6 +4,7 @@
 flash.bin, the app area's entries and the .fwsc's marker blocks. For the SMK-37 Elite the region
 descriptors are compared with M-VAVE's own SMK-37 Elite_016.fwsc. Run from the repo root:
   python3 tests/pkg_test.py"""
+import re
 import struct
 import sys
 from pathlib import Path
@@ -97,5 +98,11 @@ for board, b in P.BOARDS.items():
        f"{board}: an identity over {b['blocks']} characters is refused")
 
 ok(raises(lambda: P.ufw(bytes(16), bytes(16), IDENTITY["smk37"], "fm1")), "fm1: the 22-character SMK identity is refused")
+
+# the firmware's map (hal/fl_map.h, hal/smk37/smk_flash_map.h): the app area the loader writes ends where
+# the package's flash.bin does
+for board, hdr in (("fm1", "firmware/hal/fl_map.h"), ("smk37", "firmware/hal/smk37/smk_flash_map.h")):
+    m = re.search(r"^#define FL_APP_HI\s+(0x[0-9A-Fa-f]+)u", (ROOT / hdr).read_text(), re.M)
+    ok(m and int(m.group(1), 16) == P.BOARDS[board]["flash_size"], f"{board}: {hdr} FL_APP_HI = flash.bin's size")
 print("package: " + ("all ok" if not failed else f"{failed} FAILED"))
 sys.exit(1 if failed else 0)

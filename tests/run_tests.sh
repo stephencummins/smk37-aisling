@@ -38,6 +38,9 @@ run golden sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-prom
     -o $OUT/golden_test tests/host/golden_test.c firmware/src/dsp/amb.c -lm && $OUT/golden_test"
 run seq sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -Ifirmware/src/dsp -o $OUT/seq_test tests/host/seq_test.c firmware/src/dsp/seq.c && $OUT/seq_test"
 run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/storage_test"
+# the SMK-37 Elite's flash map; the control builds it with the FM-1's map, which must fail
+run smk-flash sh -c "$CC -O2 -Wall -Wextra -Wno-unused-function -Werror -DAISLING_BOARD_SMK37=1 -o $OUT/smk_flash_test tests/smk_flash_test.c && $OUT/smk_flash_test && \
+    $CC -O2 -w -o $OUT/smk_flash_fm1 tests/smk_flash_test.c && ! $OUT/smk_flash_fm1 >/dev/null"
 run rescue python3 tests/rescue_test.py
 run package python3 tests/pkg_test.py
 # the update path, against the firmware package (Felucca's tests; needs ./build.sh)

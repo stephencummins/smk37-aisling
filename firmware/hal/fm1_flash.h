@@ -35,23 +35,8 @@ static inline void *fl_far(void *p) { void *volatile q = p; return q; }
 #define T4_CNT          REG32(0x10804u)            /* TIMER4, 24 MHz free-running */
 
 #define FL_XIP(off)     FM1_XIP(off)              /* fm1_xip.h */
-#define FL_DATA_LO      0x00097000u                /* Felucca main store */
-#define FL_DATA_HI      0x000E0000u
-#define FL_GLOB_LO      0x000FC000u                /* Felucca superblock / globals */
-#define FL_GLOB_HI      0x000FF000u
-#define FL_OTA_LO       0x000E0000u                /* M-UPGRADE loader staging, ota.c */
-#define FL_OTA_HI       0x000E5000u
-/* [off, off + n) inside [lo, hi), without wrapping: off + n can overflow, and
- * the 1 MiB part ignores the high address bits, so a wrapped range lands low. */
-#define FL_IN(off, n, lo, hi) ((uint32_t)(off) >= (lo) && (uint32_t)(off) <= (hi) && \
-                               (uint32_t)(n) <= (hi) - (uint32_t)(off))
-/* Felucca's own store (projects, user samples; settings) */
-#define FL_STORE_OK(off, n) (FL_IN(off, n, FL_DATA_LO, FL_DATA_HI) || FL_IN(off, n, FL_GLOB_LO, FL_GLOB_HI))
-/* Where the RAM driver may erase / program. The app build allows only its own
- * data regions; the update loader (firmware/loader) defines its own window. */
-#ifndef FL_RANGE_OK
-#define FL_RANGE_OK(off, n) (FL_STORE_OK(off, n) || FL_IN(off, n, FL_OTA_LO, FL_OTA_HI))
-#endif
+/* The board's map: FL_IN, FL_STORE_OK, FL_RANGE_OK (the update loader sets its own) and the windows */
+#include "fl_map.h"
 
 typedef struct { uint32_t sfc_con, spi_con; } fl_saved_t;
 
@@ -146,7 +131,9 @@ RAMINL int fl_wait_ready(uint32_t max_us, uint32_t *took_us)
 /* The FM-1's flash: a Puya P25Q80 (0x856014), or on units sold since autumn 2026 a UCUN UC25HQ80 (0xB36014, thanks to
  * Sven of The Firmware Hub and Felucca's issue 320). Both are 1 MiB, and this driver uses only plain SPI NOR commands
  * (9F, 05/35, 06, 20, 02, 0B). Evaluates id twice, so read the chip once and pass the value. */
+#ifndef FL_JEDEC_OK                                 /* another board's map brings its own (hal/smk37/) */
 #define FL_JEDEC_OK(id) ((id) == 0x856014u || (id) == 0xB36014u)
+#endif
 
 static RAMFN uint32_t fl_jedec_ram(void)                 /* see FL_JEDEC_OK */
 {
@@ -222,11 +209,11 @@ static RAMFN int fl_read_ram(uint32_t off, uint8_t *dst, uint32_t n)   /* 0x0B f
 static void fl_plain_window_init(void)
 {
     SFCENC_CON &= (uint8_t)~2u;
-    SFCENC_UNENC_L = FL_XIP(0x93000u);            /* 0x0208F000 */
+    SFCENC_UNENC_L = FL_XIP(FL_PLAIN_LO);         /* the FM-1's: 0x0208F000 */
     SFCENC_UNENC_H = 0x07FFFFFFu;
     SFCENC_CON |= 2u;
     __asm__ volatile("cli" ::: "memory");
-    fl_inval(0x93000u, 0x100000u - 0x93000u);     /* drop any decrypted lines */
+    fl_inval(FL_PLAIN_LO, 0x100000u - FL_PLAIN_LO);   /* drop any decrypted lines */
     __asm__ volatile("csync\n\tsti" ::: "memory");
 }
 

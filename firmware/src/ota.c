@@ -6,8 +6,8 @@
  *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID)
  *   F0 22 24 35 7F F7  upgrade -> ota_session(): pull parts of the package
  *     with cmd 0x30 read requests, check them, stage the package's update
- *     loader at 0xE0000 (outside Felucca's store), ask 0xE0000000 ("success"),
- *     then write the UPDATA_PARM record (flash 0xE4F00 + RAM 0x01C7FD88) and
+ *     loader at OTA_AREA (FM-1 0xE0000, outside Felucca's store), ask 0xE0000000 ("success"),
+ *     then write the UPDATA_PARM record (flash OTA_RES, FM-1 0xE4F00, + RAM 0x01C7FD88) and
  *     reset. The SPL runs the loader, which installs the package.
  * Nothing is committed before the host's "success"; any failure erases the
  * staging area and Felucca carries on.
@@ -21,9 +21,9 @@
  *   ota_show(step, code)       progress / result for the screen
  *   ota_commit(parm)           write RAM record + reset (never returns on hardware)
  */
-#define OTA_AREA 0x000E0000u                     /* staged loader, 5 x 4 KiB */
-#define OTA_AREA_LEN 0x5000u
-#define OTA_RES (OTA_AREA + OTA_AREA_LEN - 0x100u)  /* 0xE4F00 = 4K boundary - 256: SPL scan */
+#define OTA_AREA FL_OTA_LO                       /* staged loader, 5 x 4 KiB (hal/fl_map.h; FM-1 0xE0000) */
+#define OTA_AREA_LEN (FL_OTA_HI - FL_OTA_LO)
+#define OTA_RES (OTA_AREA + OTA_AREA_LEN - 0x100u)  /* FM-1 0xE4F00 = 4K boundary - 256: SPL scan */
 #define OTA_LDR_HCRC 0xEBAAu                     /* official update loader (usb_hid_ota.bin) */
 #define OTA_LDR_DCRC 0x5881u
 #define OTA_LDR_LEN 0x4DE1u

@@ -112,6 +112,7 @@ static int ota_fread(uint32_t off, void *dst, uint32_t n) { memcpy(dst, nor + of
 static void ota_show(uint32_t step, int32_t code) { if (step == 9) last_code = code; }
 static void ota_commit(const uint8_t *parm) { committed = 1; memcpy(committed_parm, parm, 112); }
 
+#include "../firmware/hal/fl_map.h"      /* the board's flash map: OTA_AREA, LDR_*, the objects */
 #include "../firmware/src/ota.c"
 
 static uint32_t ota_body_off(void)                  /* ota.bin data + 0x20 in the logical image */

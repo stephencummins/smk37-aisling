@@ -22,10 +22,11 @@
  *   ldr_record_clear()    forget the RAM update record
  *   ldr_progress(done, total)
  * plus the ota.c hooks (frames, time, idle). */
-#define LDR_APP_LO 0x4000u
-#define LDR_APP_HI 0x93000u
-#define LDR_REC_LO 0x93000u                     /* update records live above the app ... */
-#define LDR_REC_HI 0xFC000u                     /* ... and below Felucca's globals */
+/* the board's map (hal/fl_map.h), the same windows the flash driver guards (FL_LDR_RANGE_OK) */
+#define LDR_APP_LO FL_APP_LO                    /* the FM-1's 0x4000..0x93000 */
+#define LDR_APP_HI FL_APP_HI
+#define LDR_REC_LO FL_REC_LO                    /* update records live above the app ... */
+#define LDR_REC_HI FL_REC_HI                    /* ... and below Felucca's globals (FM-1: 0xFC000) */
 
 static int ldr_fread(uint32_t off, void *p, uint32_t n);
 static int ldr_erase(uint32_t off);
