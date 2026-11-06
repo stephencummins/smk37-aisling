@@ -3,10 +3,12 @@
 # Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
 """Build DUB-1 (built on Felucca, as X0X is): the app, the update loader and an installable .fwsc package.
 
-  tools/build.py [--release X.Y[-suffix]]
+  tools/build.py [--release X.Y[-suffix]] [--board fm1|smk37]
 
 Outputs in build/: amb.bin (app), loader/ota.bin (update loader, Felucca's, unchanged),
 amb.fwsc (package). See BUILDING.md for the toolchain and the SDK.
+--board smk37 builds for the M-VAVE SMK-37 Elite into build/smk37/ (the same names), so neither
+board's build overwrites the other's. The FM-1 (the default) builds exactly as without the option.
 
 The JieLi toolchain is Linux x86-64 only. JIELI_TOOLCHAIN points at it; on
 macOS (or with JIELI_DOCKER=1) each tool runs in a linux/amd64 container.
@@ -52,6 +54,17 @@ SDK_SHA256 = {
 }
 
 PRODUCT = "FM-1_353000000"          # package identity; release builds are FM-1_353XXYYZZ (see main)
+# The boards. flags: before -Ifirmware/hal, so a board header comes first; none for the FM-1, whose
+# build stays byte-identical. slot: room for app.bin in the package's app area, which is also the
+# linker's XIP length; the SMK's area is flash 0x4000..0x9CFFF (the FM-1's 0x4000..0x92FFF), less the
+# same 0x120 of entries and 0xF24 for the SDK cfg blocks. ram_spare: .data+.bss headroom the build keeps.
+# stem: a release package's name before -X.Y.
+BOARDS = {
+    "fm1": dict(model="FM-1", out=OUT, flags=[], slot=APP_SLOT, ram_spare=0, stem="aisling"),
+    "smk37": dict(model="SMK-37 Elite", out=OUT / "smk37", flags=["-DAISLING_BOARD_SMK37=1", "-Ifirmware/hal/smk37"],
+                  slot=0x9D000 - 0x4000 - 0x120 - 0xF24, ram_spare=2048, stem="aisling-smk37-elite"),
+}
+BOARD = BOARDS["fm1"]
 VERSION = None                      # FELUCCA_VERSION for release builds (default: firmware/src/ui.c)
 QUIET = False                       # a test build that makes no sound (--release X.Y-quiet)
 
@@ -174,7 +187,7 @@ def ldr_wrap(image):
 def build_loader():
     LDR.mkdir(parents=True, exist_ok=True)
     src = FW / "loader"
-    flags = [*CFLAGS, "-Ifirmware/hal", "-Ifirmware/src"]
+    flags = [*CFLAGS, *BOARD["flags"], "-Ifirmware/hal", "-Ifirmware/src"]
     tc_all(("cc", "-c", src / "crt0_ldr.S", "-o", LDR / "crt0_ldr.o"),
            ("cc", *flags, "-c", src / "loader.c", "-o", LDR / "loader.o"))
     elf = LDR / "loader.elf"
@@ -202,8 +215,25 @@ def build_loader():
 
 # ---- app
 
+XIP_LEN = re.compile(r"(XIP\s+\(rx\)\s*:\s*ORIGIN = 0x02000120, LENGTH = )(0x[0-9A-Fa-f]+)")
+
+
+def app_ld():
+    """firmware/app.ld, the FM-1's; another board's is a copy in its build directory with its own XIP length"""
+    ld = FW / "app.ld"
+    text = ld.read_text()
+    m = XIP_LEN.findall(text)
+    if len(m) != 1 or int(m[0][1], 16) != APP_SLOT:
+        raise SystemExit(f"build: firmware/app.ld's XIP length is not the FM-1 app slot {APP_SLOT:#x}")
+    if BOARD is BOARDS["fm1"]:
+        return ld
+    out = OUT / "app.ld"
+    out.write_text(XIP_LEN.sub(lambda mm: f"{mm.group(1)}{BOARD['slot']:#X}".replace("0X", "0x"), text))
+    return out
+
+
 def build_app():
-    flags = [*CFLAGS, *FPU, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
+    flags = [*CFLAGS, *FPU, *BOARD["flags"], "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
     for flag in ("EN_CDC",):
         v = os.environ.get(flag)    # unset: the default in firmware/src/main.c
         if v in ("0", "1"):
@@ -228,7 +258,7 @@ def build_app():
     elf = OUT / "amb.elf"
     # unreferenced functions (each in its own section: -ffunction-sections) are dropped: the DSP keeps
     # mono reference paths for the host tests that the firmware no longer calls
-    tc("pi32v2/bin/ld", "--gc-sections", "-e", "_start", "-T", FW / "app.ld", *objs, "-o", elf)
+    tc("pi32v2/bin/ld", "--gc-sections", "-e", "_start", "-T", app_ld(), *objs, "-o", elf)
     for sect in ("text.bin", "data.bin", "ramtext.bin"):
         (OUT / sect).unlink(missing_ok=True)
     *_, syms, dis, rt = tc_all(("common/bin/objcopy", "-O", "binary", "-j", ".text", elf, OUT / "text.bin"),
@@ -278,8 +308,8 @@ def check(img, syms, dis, rt):
             val = (int(v[0]) & 0xFFFFFFFF) if v[0] else int(v[1], 16) & 0xFFFFFFFF
             if 0xFFC00000 <= val < 0xFFD00000:
                 errors.append(f"reference to ROM address {val:#010x}")
-    if len(img) > APP_SLOT:
-        errors.append(f"image {len(img)} B exceeds the app slot")
+    if len(img) > BOARD["slot"]:
+        errors.append(f"image {len(img)} B exceeds the app slot ({BOARD['slot']} B)")
     # the FPU is single precision; a soft-double routine in the image means a double crept in
     soft = sorted(set(re.findall(r"\s(__(?:add|sub|mul|div|neg|cmp|eq|ne|lt|le|gt|ge|un|extendsf|truncdf|fixdf|fixunsdf|floatsidf|floatunsidf|floatdidf)\w*df\w*)$", syms, re.M)))
     if soft:
@@ -293,8 +323,9 @@ def check(img, syms, dis, rt):
     bss = sym("_bss_end") - 0x01C08000
     pool = sym("_pool_end") - sym("_pool_start")
     notes.append(f"image {len(img)} B; RAM .data+.bss {bss} B of 98304; pool {pool} B of {0x54000}")
-    if bss > 96 * 1024:
-        errors.append("RAM region overflow")
+    if 96 * 1024 - bss < BOARD["ram_spare"]:     # the FM-1: no overflow; the SMK: >= 2 KiB spare
+        errors.append("RAM region overflow" if bss > 96 * 1024 else
+                      f"RAM headroom {96 * 1024 - bss} B < {BOARD['ram_spare']} B")
     if 0x54000 - pool < 8192:                     # keep >= 8 KiB of the pool spare
         errors.append(f"pool headroom {0x54000 - pool} B < 8192 B")
     return errors, notes
@@ -320,9 +351,9 @@ def mmio_check():
         s = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), s, flags=re.S)
         return re.sub(r"//[^\n]*", "", s)
     defs = {}
-    for h in sorted((FW / "hal").glob("*.h")):
+    for h in sorted((FW / "hal").rglob("*.h")):  # every board's headers (hal/smk37/ too)
         for m in re.finditer(r"^#define\s+(\w+)(?:\([^)]*\))?\s+(.*)$", strip(h.read_text()), re.M):
-            defs[m.group(1)] = m.group(2)
+            defs[m.group(1)] = defs.get(m.group(1), "") + " " + m.group(2)
     regs = {n for n, b in defs.items() if re.search(r"\bvolatile\b", b)}
     while True:                                   # macros built on register macros (FM1_WR_LIMIT_H -> FM1_X2)
         more = {n for n, b in defs.items() if n not in regs and set(re.findall(r"\w+", b)) & regs}
@@ -345,11 +376,16 @@ def mmio_check():
 
 
 def main():
-    global PRODUCT, VERSION, QUIET
+    global PRODUCT, VERSION, QUIET, BOARD, OUT, LDR
     ap = argparse.ArgumentParser()
-    ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity FM-1_353XXYYZZ, version string X.Y[.Z]")
+    ap.add_argument("--board", choices=sorted(BOARDS), default="fm1", help="fm1 (default) or smk37 (SMK-37 Elite)")
+    ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity FM-1_353XXYYZZ (SMK-37 Elite_353XXYYZZ), version string X.Y[.Z]")
     ap.add_argument("--sdk", type=Path, help="JieLi AC79 SDK checkout (default: $AC79_SDK)")
     a = ap.parse_args()
+    BOARD = BOARDS[a.board]
+    OUT, LDR = BOARD["out"], BOARD["out"] / "loader"
+    model = BOARD["model"]
+    PRODUCT = PRODUCT.replace("FM-1", model, 1)
     name = "amb.fwsc"
     if a.release:
         # identity FM-1_353 (AISLING's: Ireland's dialling code; NACHTFAHRT's is 197) + major, minor, patch as two
@@ -360,10 +396,10 @@ def main():
         m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?(-[A-Za-z0-9]+)?", a.release)
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y[.Z][-suffix], up to two digits each")
-        PRODUCT = "FM-1_353%02d%02d%02d" % (int(m[1]), int(m[2]), int(m[3] or 0))
+        PRODUCT = f"{model}_353%02d%02d%02d" % (int(m[1]), int(m[2]), int(m[3] or 0))
         VERSION = a.release.upper()
         QUIET = (m[4] or "").lower() == "-quiet"    # (the suffix sets it, so a quiet build can't be mislabelled)
-        name = f"aisling-{a.release}.fwsc"
+        name = f"{BOARD['stem']}-{a.release}.fwsc"
     fm1pkg_make.SDK = a.sdk
     for rel, sha in SDK_SHA256.items():          # fail early without the SDK
         if hashlib.sha256(fm1pkg_make.sdk_file(rel)).hexdigest() != sha:
@@ -385,6 +421,9 @@ def main():
         print("  FAIL ", e)
     if errors:
         raise SystemExit("build: checks failed")
+    if a.board != "fm1":                          # (the package format per board is the next step)
+        print(f"app      {OUT / 'amb.bin'}  {len(img)} B, board {model}, identity {PRODUCT}")
+        raise SystemExit(f"build: no package for the {model} yet: fm1pkg_make has no board table")
     pkg = fm1pkg_make.ufw(fm1pkg_make.flash_image(img, fm1pkg_make.KEY), ota, PRODUCT)
     (OUT / name).write_bytes(pkg)
     print(f"app      {OUT / 'amb.bin'}  {len(img)} B")

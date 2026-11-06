@@ -4,6 +4,7 @@
  * The instrument (dsp/amb.c) is a separate unit compiled at -O2 by tools/build.py; this one is
  * -Os. Order matters. */
 #include <stdint.h>
+#include "board_caps.h"           /* AISLING_BOARD_SMK37 and what the board has (CAP_*) */
 #include "fm1_time.h"
 #include "fm1_sys.h"
 #include "fm1_irq.h"
