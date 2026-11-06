@@ -207,10 +207,15 @@ export class Updater {
     return s2;
   }
 
-  // resume: the device is already in update mode (loader) -> true when the write finished
-  async resume(image, onStep) {
+  // resume: the device is already in update mode (loader) -> true when the write finished. Given the
+  // package's identity, a loader of another model ("ota-SMK-37 Elite_…" for an FM-1 package) is refused.
+  async resume(image, onStep, product) {
     const ota = await this.find(IS_OTA);
     if (!ota) return false;
+    if (product && ota.id.model.replace(/^ota-/i, "") !== product.split("_")[0]) {
+      ota.link.close();
+      throw fail("model", `the device is ${ota.id.text}, the package is for ${product}`);
+    }
     return (await this.write(ota, image, onStep || (() => {}))).finished;
   }
 }

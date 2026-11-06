@@ -29,7 +29,8 @@ HS_QUERY = bytes([0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7])
 UPGRADE = bytes([0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7])
 FINISH_CHECK, FINISH_WRITE = 0xE0000000, 0xF0000000
 MAXDATA = 512
-BLOCKS, BLK, KEEP = 20, 0x30, 0x2F
+BLOCKS, BLK, KEEP = 20, 0x30, 0x2F     # BLOCKS: the fewest marker blocks (M-VAVE's FM-1 packages)
+MAX_BLOCKS = 64
 LOADER_MARK = b"FELUCCA-LOADER-1"
 PORT_RE = re.compile(r"fm-1|smk-37|felucca|ota|composite|sinco|usb-midi", re.I)   # never probe other gear
 
@@ -116,19 +117,52 @@ def parse_identity(pkt):
 
 # --------------------------------------------------------------- package ---
 
-def product_of(raw):
-    """the package identity ("FM-1_906"): one marker byte after each of the first 20 blocks"""
+def _crc16(data):
+    """CRC-16/XMODEM"""
+    crc = 0
+    for b in data:
+        crc ^= b << 8
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x1021) & 0xFFFF if crc & 0x8000 else (crc << 1) & 0xFFFF
+    return crc
+
+
+def _enc(data, key=0xFFFF):
+    """JieLi's ENC stream cipher (its own inverse)"""
+    out = bytearray(data)
+    for i in range(len(out)):
+        out[i] ^= key & 0xFF
+        key = ((key << 1) ^ (0x1021 if key & 0x8000 else 0)) & 0xFFFF
+    return bytes(out)
+
+
+def marker_blocks(raw):
+    """how many 0x2F-byte blocks carry a marker byte: the file's length less the logical length in the
+    package header (M-VAVE's FM-1 and SMK-37 Elite packages have 20, the SMK-37 Pro's and AISLING's
+    SMK-37 Elite packages 36). The header is the logical image's first 0x40 bytes, ENC'd."""
     if len(raw) < BLOCKS * BLK:
         raise InstallError("badpkg", "not an FM-1 package (too short)")
-    return "".join(chr((m - i - 1) & 0xFF) for i in range(BLOCKS) if (m := raw[i * BLK + KEEP]) != 0x7D)
+    hdr = _enc(raw[0:KEEP] + raw[BLK:BLK + 0x40 - KEEP])
+    n = len(raw) - int.from_bytes(hdr[4:8], "little")
+    if int.from_bytes(hdr[0:2], "little") != _crc16(hdr[2:0x40]) or hdr[16:22] != b"AC791N" or \
+            not BLOCKS <= n <= MAX_BLOCKS or n * BLK > len(raw):
+        raise InstallError("badpkg", "not an FM-1 package (no valid header)")
+    return n
+
+
+def product_of(raw):
+    """the package identity ("FM-1_906"): one marker byte after each of the first n blocks"""
+    n = marker_blocks(raw)
+    return "".join(chr((m - i - 1) & 0xFF) for i in range(n) if (m := raw[i * BLK + KEEP]) != 0x7D)
 
 
 def logical_image(raw):
-    """the image the device reads during an update: the package without the 20 marker bytes"""
+    """the image the device reads during an update: the package without its n marker bytes"""
+    n = marker_blocks(raw)
     out = bytearray()
-    for i in range(BLOCKS):
+    for i in range(n):
         out += raw[i * BLK:i * BLK + KEEP]
-    return bytes(out + raw[BLOCKS * BLK:])
+    return bytes(out + raw[n * BLK:])
 
 
 def model_of(text):

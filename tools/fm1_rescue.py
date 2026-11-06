@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 """fm1_rescue: put stock firmware back on an FM-1 through the chip's own update mode (the
-mask-ROM "UBOOT"), from a Mac, with no extra hardware.
+mask-ROM "UBOOT"), from a Mac, with no extra hardware. (Also an M-VAVE SMK-37 Elite, the same chip,
+from M-VAVE's Elite package: see the end.)
 
 For an FM-1 whose firmware crashes at start-up. X0X 0.2-beta crashes at once, and after two failed
 boots enters UBOOT, which shows up on USB as "WL80UBOOT1.00" (4C4A:8057). macOS then takes it for a
@@ -27,6 +28,13 @@ on hardware:
      app are never touched; a head that matches no package given stops it), each erased, written and
      read back;
   5. a final full read must equal the expected image; then the FM-1 restarts into stock.
+
+The SMK-37 Elite (AISLING's second board): the package is M-VAVE's SMK-37 Elite_016.fwsc, and the same
+steps run with the Elite's own checks. Its flash head is byte-identical to the FM-1 V15's, so the head
+cannot tell the two apart; the board comes from the package, and FM-1 and SMK-37 packages are never given
+together. Its flash ID must be the SMK's (EB6014, read on an SMK-37 Pro), its backup must hold the
+velocity calibration's "trimdat" at 0xC1224 (and an FM-1's must not), and only [0x4000, 0x9D000) is
+written: never the head, the calibration (0xC0000-0xC1FFF) or the resources and key above 0xF4000.
 """
 import argparse
 import hashlib
@@ -37,10 +45,11 @@ import time
 import urllib.request
 
 VID, PID = 0x4C4A, 0x8057
-# M-VAVE's FM-1 packages: sha256 -> (name, end of the .fwsc flash entry, which is raw flash [0, end))
+# M-VAVE's packages: sha256 -> (name, end of the .fwsc flash entry, which is raw flash [0, end), board)
 STOCK = {
-    "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a": ("V15", 0x93000),
-    "d017fb65e70aca97ee29d944470c3515a74581df5c0576bf70de917c7b2b61d5": ("V16", 0xA9000),
+    "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a": ("V15", 0x93000, "fm1"),
+    "d017fb65e70aca97ee29d944470c3515a74581df5c0576bf70de917c7b2b61d5": ("V16", 0xA9000, "fm1"),
+    "b2ee38abfef3ae922e4eecdb8a551e14345300ae6f270265feacd33b6ef99cb6": ("SMK-37 Elite 016", 0x9D000, "smk37"),
 }
 LOADER_URL = ("https://raw.githubusercontent.com/kagaimiq/jl-uboot-tool/"
               "c32b28e7a04f873f526ba929cb1bae9f05442fe9/data/loaderblobs/usb/wl82loader.bin")
@@ -53,6 +62,17 @@ WRITE_MIN = 0x4000         # flash header, SPL, isd_config: never written
 SECTOR = 0x1000
 IO = 512
 
+# the SMK-37 Elite's velocity calibration (USRTRIM) and its marker; an FM-1 has none
+TRIM_AT, TRIM_MARK = 0xC1224, b"trimdat\0"
+# per board: its name, its flash IDs (the firmware's FL_JEDEC_OK: hal/fm1_flash.h, hal/smk37/smk_flash_map.h),
+# the ranges never written ([lo, hi); the SMK's are smk_flash_map.h's SMK_HEAD, SMK_CAL and SMK_TOP), and
+# whether its backup must hold the calibration
+BOARDS = {
+    "fm1": dict(label="FM-1", flash_ids=FLASH_IDS, never=((0, WRITE_MIN),), trim=False),
+    "smk37": dict(label="SMK-37 Elite", flash_ids=(0xEB6014,),
+                  never=((0, WRITE_MIN), (0xC0000, 0xC2000), (0xF4000, FLASH_SIZE)), trim=True),
+}
+
 # ROM UBOOT1.00
 CMD_WRITE_MEMORY, CMD_READ_MEMORY, CMD_JUMP = 0xFB06, 0xFD07, 0xFB08
 # loader
@@ -62,6 +82,10 @@ CMD_READ_KEY, CMD_GET_ONLINE_DEVICE, CMD_RUN_APP = 0xFC09, 0xFC0A, 0xFC0C
 
 class Fail(Exception):
     pass
+
+
+class Refuse(Fail):
+    """this device or these packages: trying again changes nothing"""
 
 
 # ------------------------------------------------------------------ maths ---
@@ -96,14 +120,20 @@ def enc(buf, key=0xFFFF):
 # ---------------------------------------------------------------- package ---
 def package_flash_image(raw):
     """The .fwsc's type-0 entry: raw flash [0, end of the app). Layout as tools/fm1pkg_make.py writes it:
-    the logical image is the .fwsc without the marker byte after each of its first 20 0x2F-byte
-    blocks; it starts with a 0x40-byte header and a list of 0x50-byte entries, each ENC'd."""
-    logical = bytearray()
-    for i in range(20):
-        logical += raw[i * 0x30:i * 0x30 + 0x2F]
-    logical += raw[20 * 0x30:]
-    hdr = bytearray(logical[0:0x40])
+    the logical image is the .fwsc without the marker byte after each of its first k 0x2F-byte
+    blocks; it starts with a 0x40-byte header and a list of 0x50-byte entries, each ENC'd. k is the
+    file's length less the total in the header (M-VAVE's FM-1 and Elite packages have 20, the Pro's 36)."""
+    if len(raw) < 2 * 0x30:
+        raise Fail("not an FM-1 package (header)")
+    hdr = bytearray(raw[0:0x2F] + raw[0x30:0x41])
     enc(hdr)
+    k = len(raw) - struct.unpack_from("<I", hdr, 4)[0]
+    if struct.unpack_from("<H", hdr, 0)[0] != crc16(hdr[2:0x40]) or not 2 <= k <= 64:
+        raise Fail("not an FM-1 package (header)")
+    logical = bytearray()
+    for i in range(k):
+        logical += raw[i * 0x30:i * 0x30 + 0x2F]
+    logical += raw[k * 0x30:]
     n = struct.unpack_from("<H", hdr, 8)[0]
     if hdr[16:22] != b"AC791N" or not 0 < n < 16:
         raise Fail("not an FM-1 package (header)")
@@ -223,8 +253,9 @@ class Uboot:
             out += self.bot.xfer(cdb_for(CMD_READ_FLASH, struct.pack(">IH", addr + len(out), k)), n_in=k)
         return bytes(out)
 
-    def write_sector(self, addr, data, end):
-        if addr < WRITE_MIN or addr >= end or addr % SECTOR or len(data) != SECTOR:
+    def write_sector(self, addr, data, end, never=()):
+        if addr < WRITE_MIN or addr >= end or addr % SECTOR or len(data) != SECTOR or \
+                any(addr < hi and addr + SECTOR > lo for lo, hi in never):
             raise Fail(f"refusing to write {addr:#x}")
         self.cmd(CMD_ERASE_SECTOR, struct.pack(">I", addr))
         for off in range(0, SECTOR, IO):
@@ -240,9 +271,12 @@ class Uboot:
 
 
 # ------------------------------------------------------------------- flow ---
-def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None):
+def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None, board="fm1"):
     """Everything in one session: the FM-1 leaves UBOOT (and crashes again) as soon as it is let go.
-    stock: [(name, flash image)]; the one written is the one whose protected head is the FM-1's own."""
+    stock: [(name, flash image)], all for `board`; the one written is the one whose protected head is
+    the device's own."""
+    b = BOARDS[board]
+    label, never = b["label"], b["never"]
     vendor, product = dev.inquiry()
     say(f"  device: {vendor} {product}")
     if vendor != "WL82":
@@ -250,29 +284,36 @@ def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None):
     dev.start_loader(loader)
     key, typ, fid = dev.chip()
     say(f"  chip key {key:04X}, flash type {typ}, id {fid:06X}")
-    if (key, typ) != (0x980F, 3) or fid not in FLASH_IDS:
-        raise Fail("this is not the FM-1's chip and flash (expected key 980F, type 3, id 856014 or B36014); "
-                   "nothing written")
+    if (key, typ) != (0x980F, 3) or fid not in b["flash_ids"]:
+        raise Refuse(f"this is not the {label}'s chip and flash (expected key 980F, type 3, id "
+                     + " or ".join(f"{i:06X}" for i in b["flash_ids"]) + "); nothing written")
     say("  reading the whole flash ...")
     t0 = time.time()
     now = dev.read(0, FLASH_SIZE)
-    path = os.path.join(backup_dir, time.strftime("fm1-backup-%Y%m%d-%H%M%S.bin"))
+    path = os.path.join(backup_dir, time.strftime(f"{board}-backup-%Y%m%d-%H%M%S.bin"))
     with open(path, "wb") as f:
         f.write(now)
     say(f"  backup saved: {path} ({time.time() - t0:.1f} s)")
+    # the heads are the same, so the calibration tells an SMK-37 from an FM-1
+    trim = now[TRIM_AT:TRIM_AT + len(TRIM_MARK)] == TRIM_MARK
+    if trim != b["trim"]:
+        raise Refuse(f"the flash {'holds' if trim else 'lacks'} an SMK-37's velocity calibration (\"trimdat\" at "
+                     f"{TRIM_AT:#x}): this does not look like an {label}; not writing; send this output and the backup")
     match = [(n, im) for n, im in stock if im[:WRITE_MIN] == now[:WRITE_MIN]]
     if not match:
-        raise Fail("the protected head of the flash matches no stock package given ("
+        raise Refuse("the protected head of the flash matches no stock package given ("
                    + "; ".join(n + " differs in sectors " + " ".join(
                        f"{a:#06x}" for a in range(0, WRITE_MIN, SECTOR) if im[a:a + SECTOR] != now[a:a + SECTOR])
                        for n, im in stock)
                    + "): not writing; send this output and the backup")
     name, image = match[0]
     end = len(image)
+    if any(lo < end and hi > WRITE_MIN for lo, hi in never[1:]):
+        raise Refuse(f"{name}'s app reaches a range that is never written; not writing")
     diff = [a for a in range(0, end, SECTOR) if image[a:a + SECTOR] != now[a:a + SECTOR]]
     say(f"  the flash head is {name}'s; {len(diff)} of {end // SECTOR} firmware sectors differ from {name}")
     if not write and confirm is not None:
-        write = keep_alive(dev, confirm)
+        write = keep_alive(dev, confirm, label)
     if not write:
         say(f"  check passed. Nothing written: run again with --write to put {name} back.")
         return False
@@ -281,11 +322,11 @@ def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None):
     for i, a in enumerate(reversed(diff)):
         for attempt in range(3):
             try:
-                dev.write_sector(a, image[a:a + SECTOR], end)
+                dev.write_sector(a, image[a:a + SECTOR], end, never)
                 break
             except Fail as e:
                 if attempt == 2:
-                    raise Fail(f"{e}; the FM-1 is still in update mode: run the script again")
+                    raise Fail(f"{e}; the {label} is still in update mode: run the script again")
         say(f"\r  writing {i + 1}/{len(diff)}", end="")
     say("")
     say("  final read ...")
@@ -295,12 +336,12 @@ def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None):
         bad = [a for a in range(0, FLASH_SIZE, SECTOR) if final[a:a + SECTOR] != expect[a:a + SECTOR]]
         raise Fail("final read differs in sectors " + " ".join(f"{a:#07x}" for a in bad)
                    + "; run the script again with --write")
-    say(f"  flash now holds {name}. Restarting the FM-1 ...")
+    say(f"  flash now holds {name}. Restarting the {label} ...")
     dev.run_app()
     return True
 
 
-def keep_alive(dev, confirm):
+def keep_alive(dev, confirm, label="FM-1"):
     """Ask while the loader is kept busy (it resets the chip after ~3 s without a command)."""
     import threading
     stop, lost = threading.Event(), []
@@ -320,7 +361,7 @@ def keep_alive(dev, confirm):
         stop.set()
         t.join()
     if lost:
-        raise Fail(f"the FM-1 dropped out while waiting ({lost[0]}); run it again")
+        raise Fail(f"the {label} dropped out while waiting ({lost[0]}); run it again")
     return answer
 
 
@@ -354,9 +395,9 @@ def backend(usb):
     raise Fail("libusb not found: pip install libusb-package")
 
 
-def open_device(usb, timeout):
+def open_device(usb, timeout, label="FM-1"):
     """Wait for 4C4A:8057 and take it from macOS's mass storage driver."""
-    print("waiting for the FM-1 in update mode (switch it on, or wait for it to cycle) ...")
+    print(f"waiting for the {label} in update mode (switch it on, or wait for it to cycle) ...")
     be = backend(usb)
     t0 = time.time()
     while time.time() - t0 < timeout:
@@ -381,7 +422,7 @@ def open_device(usb, timeout):
                 time.sleep(1.0)
                 continue
         time.sleep(0.02)
-    raise Fail("the FM-1 did not appear in update mode")
+    raise Fail(f"the {label} did not appear in update mode")
 
 
 def ask():
@@ -392,28 +433,40 @@ def ask():
         return False
 
 
+def load_stock(paths):
+    """M-VAVE's packages, by sha256 -> ([(name, flash image)], board); all for one board"""
+    stock, boards = [], set()
+    for path in paths:
+        raw = open(path, "rb").read()
+        sha = hashlib.sha256(raw).hexdigest()
+        if sha not in STOCK:
+            raise Fail(f"{path} is not M-VAVE's FM-1 V15 or V16 package, or its SMK-37 Elite_016 (sha256 mismatch)")
+        name, end, board = STOCK[sha]
+        image = package_flash_image(raw)
+        if len(image) != end:
+            raise Fail(f"{path}: unexpected flash entry size")
+        stock.append((name, image))
+        boards.add(board)
+    if len(boards) != 1:
+        raise Fail("FM-1 and SMK-37 Elite packages given together: their flash heads are the same, so give "
+                   "only the device's own")
+    return stock, boards.pop()
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("package", nargs="+",
-                    help="M-VAVE's FM-1 V15 or V16 .fwsc, or both (the one matching the FM-1's head is written)")
+                    help="M-VAVE's FM-1 V15 or V16 .fwsc, or both (the one matching the FM-1's head is written); "
+                         "or M-VAVE's SMK-37 Elite_016.fwsc")
     ap.add_argument("--write", action="store_true", help="write stock (without it: check and back up only)")
     ap.add_argument("--ask", action="store_true", help="after the check and the backup, ask before writing")
     ap.add_argument("--loader", help="a local wl82loader.bin instead of downloading it")
-    ap.add_argument("--wait", type=float, default=120, help="seconds to wait for the FM-1 (default 120)")
+    ap.add_argument("--wait", type=float, default=120, help="seconds to wait for the device (default 120)")
     ap.add_argument("--tries", type=int, default=5, help="attempts if it drops out mid-way (default 5)")
     args = ap.parse_args()
     try:
-        stock = []
-        for path in args.package:
-            raw = open(path, "rb").read()
-            sha = hashlib.sha256(raw).hexdigest()
-            if sha not in STOCK:
-                raise Fail(f"{path} is not M-VAVE's FM-1 V15 or V16 package (sha256 mismatch)")
-            name, end = STOCK[sha]
-            image = package_flash_image(raw)
-            if len(image) != end:
-                raise Fail(f"{path}: unexpected flash entry size")
-            stock.append((name, image))
+        stock, board = load_stock(args.package)
+        label = BOARDS[board]["label"]
         loader = get_loader(args.loader)
         if os.geteuid() != 0:
             raise Fail("run it with sudo: macOS has to give the device up")
@@ -424,15 +477,15 @@ def main():
             raise Fail("pyusb is missing: ~/fm1-rescue/bin/pip install pyusb libusb-package")
         backup_dir = os.path.dirname(os.path.abspath(args.package[0]))
         for attempt in range(1, args.tries + 1):
-            bot = open_device(usb, args.wait)
+            bot = open_device(usb, args.wait, label)
             try:
                 rescue(Uboot(bot), stock, loader, args.write, backup_dir,
                        say=lambda *a, **k: print(*a, **k, flush=True),
-                       confirm=ask if args.ask else None)
+                       confirm=ask if args.ask else None, board=board)
                 return 0
             except (Fail, usb.core.USBError) as e:
                 print(f"\n  attempt {attempt}: {e}")
-                if isinstance(e, Fail) and "not writing" in str(e) or "not the FM-1" in str(e):
+                if isinstance(e, Refuse):
                     return 1
             finally:
                 try:

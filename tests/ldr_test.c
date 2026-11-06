@@ -3,14 +3,20 @@
 /* Host test of the Felucca update loader (firmware/loader/ldr_core.c): a fake
  * host serves a package over the SysEx protocol, the "device" flash starts as
  * another package's flash.bin (as if that firmware were installed).
- *   ldr_test OLD.fwsc NEW.fwsc */
+ *   ldr_test OLD.fwsc NEW.fwsc
+ * Built with -DAISLING_BOARD_SMK37=1 -Ifirmware/hal/smk37, the SMK-37 Elite's (addresses in tests/fwsc.h). */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(AISLING_BOARD_SMK37) && AISLING_BOARD_SMK37
+#define FELUCCA_ID "ota-SMK-37 Elite_900"
+#else
 #define FELUCCA_ID "ota-FM-1_900"
+#endif
 #define FELUCCA_OTA_DRYRUN 0
+#include "fwsc.h"                        /* the package reader, and the board's addresses (T_*) */
 
 static uint8_t nor[0x100000], *logical;
 static size_t logical_len;
@@ -81,7 +87,7 @@ static void ota_commit(const uint8_t *parm) { (void)parm; }
 static int ldr_fread(uint32_t off, void *p, uint32_t n) { memcpy(p, nor + off, n); return 0; }
 static int ldr_erase(uint32_t off)
 {
-    if (off < 0x4000u || off >= 0xFC000u || (off & 0xFFFu)) bad_range++;
+    if (off < 0x4000u || off >= T_REC_HI || (off & 0xFFFu)) bad_range++;
     if (off < 0x4000u) { printf("ERASE IN THE HEAD %#x\n", off); exit(1); }
     erases++;
     memset(nor + off, 0xFF, 0x1000);
@@ -91,7 +97,7 @@ static int ldr_prog(uint32_t off, const void *p, uint32_t n)
 {
     const uint8_t *s = p;
     uint32_t i;
-    if (off < 0x4000u || off + n > 0x93000u || ((off & 0xFFu) + n) > 256u) bad_range++;
+    if (off < 0x4000u || off + n > T_APP_HI || ((off & 0xFFu) + n) > 256u) bad_range++;
     for (i = 0; i < n; i++) nor[off + i] &= s[i];
     return 0;
 }
@@ -103,14 +109,15 @@ static uint8_t *load_logical(const char *path, size_t *len)
 {
     FILE *f = fopen(path, "rb");
     uint8_t *raw = malloc(0x200000), *lg;
-    size_t n, i;
+    size_t n;
+    uint32_t blocks;
     if (!f) { perror(path); exit(2); }
     n = fread(raw, 1, 0x200000, f);
     fclose(f);
     lg = malloc(n);
-    for (i = 0; i < 20; i++) memcpy(lg + i * 47, raw + i * 48, 47);
-    memcpy(lg + 20 * 47, raw + 20 * 48, n - 20 * 48);
-    *len = n - 20;
+    blocks = fwsc_logical(raw, n, lg, len);
+    if (!blocks) { printf("%s: not a package (no valid header)\n", path); exit(2); }
+    printf("  %s: %u marker blocks\n", path, blocks);
     free(raw);
     return lg;
 }
@@ -143,23 +150,23 @@ int main(int argc, char **argv)
     logical = load_logical(argv[2], &logical_len);
     ofo = flash_off(old);
     nfo = flash_off(logical);
-    /* device: OLD installed, plus a valid update record at 0xE4F00 */
+    /* device: OLD installed, plus a valid update record at T_RES (the FM-1's 0xE4F00) */
     memset(nor, 0xFF, sizeof nor);
-    memcpy(nor, old + ofo, 0x93000);
+    memcpy(nor, old + ofo, T_APP_HI);
     memcpy(head, nor, sizeof head);
     {
         uint8_t r[112] = {0};
         r[2] = 0x0D; r[3] = 0x5A; r[4] = 0x01; r[5] = 0x5A; r[6] = 0x41; r[7] = 0x54;
         ota_wr16(r, ota_crc16(r + 2, 78, 0));
-        memcpy(nor + 0xE4F00, r, sizeof r);
+        memcpy(nor + T_RES, r, sizeof r);
     }
     rc = ldr_session();
     printf("  rc %d, %u requests, %u sector erases\n", rc, requests, erases);
     bad += check("install completes", rc == 0);
-    bad += check("app area == the new package's flash.bin", !memcmp(nor + 0x4000, logical + nfo + 0x4000, 0x93000 - 0x4000));
+    bad += check("app area == the new package's flash.bin", !memcmp(nor + 0x4000, logical + nfo + 0x4000, T_APP_HI - 0x4000));
     bad += check("flash head [0, 0x4000) untouched", !memcmp(nor, head, sizeof head));
     bad += check("finish asked (0xF0000000)", f0_asked >= 1);
-    bad += check("update record cleared (RAM + flash)", record_cleared && nor[0xE4F06] == 0xFF);
+    bad += check("update record cleared (RAM + flash)", record_cleared && nor[T_RES + 6] == 0xFF);
     bad += check("no write outside the allowed windows", bad_range == 0);
     /* same package again: nothing to erase */
     erases = 0; requests = 0;
@@ -169,7 +176,7 @@ int main(int argc, char **argv)
     {
         uint8_t save = logical[nfo + 0x4000 + 5];
         logical[nfo + 0x4000 + 5] ^= 0x5A;           /* app area head no longer decrypts */
-        memcpy(nor, old + ofo, 0x93000);
+        memcpy(nor, old + ofo, T_APP_HI);
         erases = 0;
         rc = ldr_session();
         bad += check("foreign key / damaged app head refused, nothing erased", rc == -6 && erases == 0);

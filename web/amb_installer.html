@@ -245,7 +245,7 @@ async function run(img, product) {
     const ota = await up.find((id) => /^ota-/i.test(id.model));
     if (ota) {
       ota.link.close();
-      sayK((await up.resume(img, step)) ? "done" : "stopped");
+      sayK((await up.resume(img, step, product)) ? "done" : "stopped");
     } else {
       await up.install(img, product, step);
     }

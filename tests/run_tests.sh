@@ -70,6 +70,24 @@ if [ -f build/amb.fwsc ]; then
 else
     echo "  skip update-path tests (no build/amb.fwsc: run ./build.sh)"
 fi
+# the SMK-37 Elite's update path: its packages have 36 marker blocks, and its own staging, record and app area
+# (tests/fwsc.h); against its package from tools/mini_build.sh --board smk37. The control runs the FM-1's build of
+# the test on it, which must fail (36 marker blocks, not 20)
+SMK_PKG=
+for f in build/smk37/amb.fwsc build/smk37/aisling-smk37-elite-*.fwsc; do [ -f "$f" ] && SMK_PKG="$f"; done
+if [ -n "$SMK_PKG" ]; then
+    run ota-entry-smk37 sh -c "$CC -DAISLING_BOARD_SMK37=1 -o $OUT/ota_test_smk tests/ota_test.c && $OUT/ota_test_smk $SMK_PKG && \
+        $CC -o $OUT/ota_test_fm1 tests/ota_test.c && ! $OUT/ota_test_fm1 $SMK_PKG >/dev/null"
+    if [ -n "${AC79_SDK:-}" ] && [ -f build/smk37/amb.bin ] && [ -f build/smk37/loader/ota.bin ]; then
+    run update-loader-smk37 sh -c "head -c 100000 build/smk37/amb.bin > $OUT/old_smk_app.bin && \
+        python3 tools/fm1pkg_make.py --board smk37 $OUT/old_smk_app.bin build/smk37/loader/ota.bin $OUT/old_smk.fwsc >/dev/null && \
+        $CC -DAISLING_BOARD_SMK37=1 -o $OUT/ldr_test_smk tests/ldr_test.c && $OUT/ldr_test_smk $OUT/old_smk.fwsc $SMK_PKG"
+    else
+        echo "  skip update-loader-smk37 (needs AC79_SDK and the SMK build's amb.bin and loader/ota.bin)"
+    fi
+else
+    echo "  skip SMK-37 update-path tests (no build/smk37 package: tools/mini_build.sh --board smk37)"
+fi
 run host-build sh host/build_host.sh
 if command -v node >/dev/null 2>&1; then
     run visualiser node tests/host/vis_test.mjs web/visualiser/index.html

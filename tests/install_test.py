@@ -5,9 +5,12 @@
 The fake device is the one in web/test_web.mjs: identity on the handshake,
 then "device asks, host answers" reads of the logical image. Run from the repo root:
   python3 tests/install_test.py
-Also checks logical_image/product_of against web/fm1pkg.js (needs node and
-build/amb.fwsc, skipped otherwise)."""
+Also checks logical_image/product_of against web/fm1pkg.js (needs node; the
+built packages, build/amb.fwsc and build/smk37/*.fwsc, when they are there).
+Test packages are written by tools/fm1pkg_make.py: the FM-1's with 20 marker
+blocks, the SMK-37 Elite's with 36."""
 import io
+import os
 import queue
 import shutil
 import subprocess
@@ -20,6 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import fm1_install as I  # noqa: E402
+import fm1pkg_make as P  # noqa: E402
 
 I.DELAY.update(open=0, start=0.01, reply=0, loader=0.01, reboot=0.01, retry=0.02, poll=0.05, hs=0.1,
                idle_check=0.4, idle_write=0.4, wait_loader=2, wait_reboot=2)
@@ -67,8 +71,8 @@ class FakeFM1:
     """a MIDI backend with one FM-1 on it"""
 
     def __init__(self, image, identity="FM-1_015", name="FM-1", unplug_after=None, after_write="FM-1_900",
-                 stall_after=None, bad_addr=None):
-        self.image, self.unplug_after, self.after_write = image, unplug_after, after_write
+                 stall_after=None, bad_addr=None, loader="ota-FM-1_900"):
+        self.image, self.unplug_after, self.after_write, self.loader = image, unplug_after, after_write, loader
         self.stall_after, self.bad_addr = stall_after, bad_addr
         self.served = self.bad = self.upgrades = 0
         self.sent, self.links, self.gen, self.lock = [], [], 0, threading.Lock()
@@ -123,7 +127,7 @@ class FakeFM1:
             if self.stall_after and self.served >= self.stall_after:
                 return
             if addr == I.FINISH_CHECK:
-                threading.Timer(0.05, self.boot, ("ota-FM-1_900", "Felucca Update")).start()
+                threading.Timer(0.05, self.boot, (self.loader, "Felucca Update")).start()
             elif addr == I.FINISH_WRITE:
                 threading.Timer(0.05, self.boot, (self.after_write, "Felucca")).start()
             else:
@@ -140,12 +144,13 @@ class FakeFM1:
 
 # ----------------------------------------------------------------- helpers ---
 
-def package(product="FM-1_900", marker=True, size=0x2000):
-    raw = bytearray((i * 7) & 0xFF for i in range(size + I.BLOCKS))
-    for i in range(I.BLOCKS):
-        raw[i * I.BLK + I.KEEP] = (ord(product[i]) + i + 1) & 0xFF if i < len(product) else 0x7D
-    raw[0x1800:0x1800 + 16] = I.LOADER_MARK if marker else bytes(16)
-    return bytes(raw)
+def package(product="FM-1_900", marker=True, size=0x2000, board=None):
+    """a package as tools/fm1pkg_make.py writes it: the FM-1's 20 marker blocks, an SMK-37's 36"""
+    board = board or ("smk37" if product.startswith("SMK-37") else "fm1")
+    flash = bytes((i * 7) & 0xFF for i in range(size))
+    ota = bytearray((i * 13 + 5) & 0xFF for i in range(0x800))
+    ota[0x100:0x110] = I.LOADER_MARK if marker else bytes(16)
+    return P.ufw(flash, bytes(ota), product, board)
 
 
 TMP = Path(tempfile.mkdtemp(prefix="felucca-install-"))
@@ -177,7 +182,8 @@ def wire():
     ok(u[:3] == b"\x00\x59\x30" and int.from_bytes(u[7:11], "little") == 0x12345 and u[14:17] == b"\x01\x02\x03"
        and ~sum(u[6:17]) & 0xFF == u[17], "response: header, address, data, checksum")
     raw = package("FM-1_906")
-    ok(I.product_of(raw) == "FM-1_906" and len(I.logical_image(raw)) == len(raw) - 20, "product_of / logical_image (synthetic)")
+    ok(I.marker_blocks(raw) == 20 and I.product_of(raw) == "FM-1_906" and len(I.logical_image(raw)) == len(raw) - 20,
+       "product_of / logical_image (synthetic, 20 marker blocks)")
     raw = package("FM-1_9001000")                  # X0X from 0.10: major, minor, patch, two digits each
     ok(I.product_of(raw) == "FM-1_9001000", "product_of: a 12-character identity")
 
@@ -268,26 +274,98 @@ def errors():
     ok(rc == 2, "missing file -> exit 2")
 
 
+def smk37():
+    """the SMK-37 Elite: its packages have 36 marker blocks, and no package goes to another model"""
+    raw = package("SMK-37 Elite_900")
+    image = I.logical_image(raw)
+    ok(I.marker_blocks(raw) == 36 and I.product_of(raw) == "SMK-37 Elite_900" and len(image) == len(raw) - 36,
+       "SMK-37 Elite package: 36 marker blocks, identity and logical image")
+    short = package("FM-1_900", board="smk37")
+    ok(I.marker_blocks(short) == 36 and I.product_of(short) == "FM-1_900",
+       "  the count comes from the header, not the identity's length")
+    p = pkgfile("smk.fwsc", raw)
+    fm1 = pkgfile("fm1.fwsc", package())
+    pro = pkgfile("pro.fwsc", package("SMK-37 Pro_016"))
+
+    dev = FakeFM1(image, identity="SMK-37 Elite_015", name="SMK-37 Elite", loader="ota-SMK-37 Elite_900",
+                  after_write="SMK-37 Elite_900")
+    rc, out, err = cli([p, "--yes"], dev)
+    ok(rc == 0 and dev.bad == 0 and dev.upgrades == 2 and "done: the FM-1 runs SMK-37 Elite_900" in out,
+       "install on an SMK-37 Elite: running -> loader -> AISLING")
+
+    dev = FakeFM1(image)
+    rc, out, err = cli([p, "--yes"], dev)
+    ok(rc == 6 and dev.upgrades == 0 and "the package is for SMK-37 Elite_900" in err,
+       "SMK-37 Elite package on an FM-1 -> exit 6, nothing sent")
+    for path, what in ((fm1, "an FM-1"), (pro, "an SMK-37 Pro")):
+        dev = FakeFM1(image, identity="SMK-37 Elite_015", name="SMK-37 Elite")
+        rc, out, err = cli([path, "--yes"], dev)
+        ok(rc == 6 and dev.upgrades == 0, f"{what} package on an SMK-37 Elite -> exit 6, nothing sent")
+    dev = FakeFM1(image, identity="ota-SMK-37 Elite_900", name="Felucca Update")
+    rc, out, err = cli([fm1, "--yes"], dev)
+    ok(rc == 6 and dev.upgrades == 0, "an FM-1 package on an SMK-37 Elite's loader (update mode) -> exit 6")
+    dev = FakeFM1(image, identity="ota-SMK-37 Elite_900", name="Felucca Update", after_write="SMK-37 Elite_900")
+    rc, out, err = cli([p, "--yes"], dev)
+    ok(rc == 0 and dev.bad == 0 and dev.upgrades == 1, "  ... and its own package finishes the write")
+
+    bad = bytearray(raw)
+    bad[5] ^= 1                                    # in the header: its CRC no longer matches
+    rc, out, err = cli([pkgfile("bad.fwsc", bytes(bad)), "--yes"], FakeFM1(image))
+    ok(rc == 2 and "no valid header" in err, "a damaged package header -> exit 2")
+    rc, out, err = cli([pkgfile("long.fwsc", raw + bytes(100)), "--yes"], FakeFM1(image))
+    ok(rc == 2 and "no valid header" in err, "a package with bytes added -> exit 2 (the count is out of range)")
+
+    elite = os.environ.get("SMK_ELITE_FWSC")
+    if elite:
+        e = Path(elite).read_bytes()
+        ok(I.marker_blocks(e) == 20 and I.product_of(e) == "SMK-37 Elite_016",
+           "M-VAVE's SMK-37 Elite_016: 20 marker blocks, identity SMK-37 Elite_016")
+
+
 def against_js():
-    clean = ROOT / "build/amb.fwsc"
-    if not shutil.which("node") or not clean.exists():
-        print("logical image vs fm1pkg.js: skipped (needs node and build/amb.fwsc)")
+    if not shutil.which("node"):
+        print("logical image vs fm1pkg.js: skipped (needs node)")
         return
-    js = ("import { logicalImage, productOf } from %r; import { readFileSync } from 'node:fs';"
-          "const p = readFileSync(process.argv[1]); process.stderr.write(productOf(p));"
-          "process.stdout.write(logicalImage(p));") % str(TMP / "fm1pkg.mjs")
+    js = ("import { logicalImage, productOf, markerBlocks } from %r; import { readFileSync } from 'node:fs';"
+          "const p = readFileSync(process.argv[1]);"
+          "try { const n = markerBlocks(p); process.stderr.write(n + ' ' + productOf(p)); "
+          "process.stdout.write(logicalImage(p)); } catch (e) { process.stderr.write('E ' + e.message); }") \
+        % str(TMP / "fm1pkg.mjs")
     # (an .mjs copy: Node before 22 reads a plain .js with no package.json as CommonJS, and its named exports fail)
     shutil.copyfile(ROOT / "web/fm1pkg.js", TMP / "fm1pkg.mjs")
-    r = subprocess.run(["node", "--input-type=module", "-e", js, str(clean)], capture_output=True, check=True)
-    raw = clean.read_bytes()
-    ok(I.logical_image(raw) == r.stdout and I.product_of(raw) == r.stderr.decode(),
-       f"logical_image / product_of == fm1pkg.js ({clean.name}, {I.product_of(raw)})")
-    ok(I.LOADER_MARK in raw, f"{clean.name} carries the Felucca loader marker")
+
+    def js_read(path):
+        r = subprocess.run(["node", "--input-type=module", "-e", js, str(path)], capture_output=True, check=True)
+        return r.stdout, r.stderr.decode()
+
+    built = [ROOT / "build/amb.fwsc"] + sorted((ROOT / "build/smk37").glob("*.fwsc"))
+    made = {"fm1.fwsc": package("FM-1_906"), "smk.fwsc": package("SMK-37 Elite_901"),
+            "short.fwsc": package("FM-1_900", board="smk37")}
+    for name, raw in made.items():
+        built.append(Path(pkgfile(name, raw)))
+    for path in built:
+        if not path.exists():
+            print(f"logical image vs fm1pkg.js: {path.relative_to(ROOT)} skipped (not built)")
+            continue
+        raw = path.read_bytes()
+        out, err = js_read(path)
+        n, product = I.marker_blocks(raw), I.product_of(raw)
+        ok(I.logical_image(raw) == out and err == f"{n} {product}",
+           f"logical_image / product_of == fm1pkg.js ({path.name}, {product}, {n} blocks)")
+        if path.parent != TMP:
+            ok(I.LOADER_MARK in raw, f"  {path.name} carries the Felucca loader marker")
+    bad = bytearray(made["smk.fwsc"])
+    bad[5] ^= 1
+    _, err = js_read(pkgfile("bad.fwsc", bytes(bad)))
+    ok(err == "E not an FM-1 package (no valid header)", "fm1pkg.js refuses a damaged header too")
+    _, err = js_read(pkgfile("short2.fwsc", b"\0" * 100))
+    ok(err == "E not an FM-1 package (too short)", "  ... and a file that is too short")
 
 
 wire()
 installs()
 errors()
+smk37()
 against_js()
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"INSTALL TESTS FAILED ({failed})" if failed else "install tests passed")

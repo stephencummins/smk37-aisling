@@ -5,8 +5,10 @@ The fake answers the loader's commands on a 1 MiB flash; the stock packages are 
 V15's and V16's sizes and two different heads. Run from the repo root:
   python3 tests/rescue_test.py
 Also checks M-VAVE's real V15 and V16 in ~/fm1-rescue (where tools/fm1_rescue.sh keeps them;
-skipped otherwise)."""
+skipped otherwise), and its SMK-37 Elite_016.fwsc when $SMK_ELITE_FWSC names it (run python3 -I then).
+The SMK-37 Elite's stand-ins share V15's head, as M-VAVE's real packages do."""
 import hashlib
+import os
 import re
 import struct
 import sys
@@ -16,6 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import fm1_rescue as R  # noqa: E402
+import fm1pkg_make as P  # noqa: E402
 
 failed = 0
 
@@ -85,17 +88,19 @@ def flash_with(head_of, app_seed, tail_seed):
     return f
 
 
-def run(flash, stock, write=True, confirm=None, flash_id=0x856014):
+def run(flash, stock, write=True, confirm=None, flash_id=0x856014, board="fm1"):
     bot = FakeBot(flash, flash_id)
     said = []
     with tempfile.TemporaryDirectory() as d:
         try:
             r = R.rescue(R.Uboot(bot), stock, b"loader", write, d,
-                         say=lambda *a, **k: said.append(" ".join(map(str, a))), confirm=confirm)
+                         say=lambda *a, **k: said.append(" ".join(map(str, a))), confirm=confirm, board=board)
         except R.Fail as e:
             r = e
-        backups = list(Path(d).glob("fm1-backup-*.bin"))
+        backups = list(Path(d).glob("*-backup-*.bin"))
         backup = backups[0].read_bytes() if len(backups) == 1 else None
+        if backup is not None:
+            said.append("backup file " + backups[0].name)
     return r, bot, backup, "\n".join(said)
 
 
@@ -174,6 +179,112 @@ def flash_chips():
     ok(not loader, "the update loader has no flash ID check of its own")
 
 
+# ------------------------------------------------------------ SMK-37 Elite ---
+
+SMK_ID = 0xEB6014
+E16 = V15[:R.WRITE_MIN] + image("E16", 0x9D000)[R.WRITE_MIN:]    # V15's head, as M-VAVE's Elite_016 has
+ELITE = [("SMK-37 Elite 016", E16)]
+
+
+def smk_flash(head_of=E16, trim=True):
+    """an SMK-37 Elite: a stock head, some other firmware in the app area, its calibration and data above"""
+    f = bytearray(image("smkdata", R.FLASH_SIZE))
+    f[0:R.WRITE_MIN] = head_of[0:R.WRITE_MIN]
+    f[R.WRITE_MIN:0x9D000] = image("AISLING-SMK", 0x9D000)[R.WRITE_MIN:]
+    if trim:
+        f[R.TRIM_AT:R.TRIM_AT + len(R.TRIM_MARK)] = R.TRIM_MARK
+    return f
+
+
+def smk37():
+    before = smk_flash()
+    r, bot, backup, said = run(before, ELITE, flash_id=SMK_ID, board="smk37")
+    ok(r is True and bot.ran and bot.flash == E16 + before[0x9D000:], "SMK-37 Elite: Elite_016's app written, restarted")
+    ok(min(bot.erased) >= R.WRITE_MIN and max(bot.erased) < 0x9D000 and bot.programmed and
+       min(bot.programmed) >= R.WRITE_MIN and max(bot.programmed) < 0x9D000, "  only [0x4000, 0x9D000) erased and written")
+    ok(bot.flash[0xC0000:0xC2000] == before[0xC0000:0xC2000] and bot.flash[0xF4000:] == before[0xF4000:],
+       "  calibration, resources and key as they were")
+    ok(backup == bytes(before) and "backup file smk37-backup-" in said and "Restarting the SMK-37 Elite" in said,
+       "  backed up first (smk37-backup-*.bin), says SMK-37 Elite")
+
+    r, bot, backup, said = run(smk_flash(trim=False), ELITE, flash_id=SMK_ID, board="smk37")
+    ok(isinstance(r, R.Refuse) and "lacks an SMK-37's velocity calibration" in str(r) and "trimdat" in str(r) and not bot.erased
+       and backup is not None, "no calibration at 0xC1224: refused after the backup, nothing written")
+
+    r, bot, backup, _ = run(smk_flash(), ELITE, flash_id=0x856014, board="smk37")
+    ok(isinstance(r, R.Refuse) and "not the SMK-37 Elite's chip and flash" in str(r) and "id EB6014)" in str(r)
+       and not bot.erased and backup is None, "an FM-1's flash ID with the Elite's package: refused before reading")
+    r, bot, backup, _ = run(flash_with(V15, "AISLING", "data"), ELITE, flash_id=SMK_ID, board="smk37")
+    ok(isinstance(r, R.Refuse) and not bot.erased, "an FM-1 flash (no calibration) with the SMK's ID: refused")
+
+    # an SMK whose flash has an FM-1's ID, given FM-1 V15 (the same head): the calibration stops it
+    before = smk_flash(head_of=V15)
+    r, bot, backup, _ = run(before, STOCK, flash_id=0x856014)
+    ok(isinstance(r, R.Refuse) and "holds an SMK-37's velocity calibration" in str(r) and not bot.erased
+       and backup == bytes(before), "FM-1 V15 on an SMK-37 (same head, FM-1 flash ID): refused, backed up")
+
+    dev = R.Uboot(FakeBot(bytes(R.FLASH_SIZE)))
+    never = R.BOARDS["smk37"]["never"]
+    for addr in (0x3000, 0xC0000, 0xC1000, 0xF4000, 0xFF000):
+        try:
+            dev.write_sector(addr, b"\0" * R.SECTOR, R.FLASH_SIZE, never)
+            ok(False, f"write_sector refuses {addr:#x} on the SMK, whatever the app's end")
+        except R.Fail:
+            ok(True, f"write_sector refuses {addr:#x} on the SMK, whatever the app's end")
+    try:
+        dev.write_sector(0xC2000, b"\0" * R.SECTOR, R.FLASH_SIZE, never)
+        ok(True, "  ... and writes 0xC2000 (not protected) when the app reaches it")
+    except R.Fail:
+        ok(False, "  ... and writes 0xC2000 (not protected) when the app reaches it")
+    r, bot, _, _ = run(smk_flash(), [("long", E16 + image("x", 0x30000))], flash_id=SMK_ID, board="smk37")
+    ok(isinstance(r, R.Refuse) and "never written" in str(r) and not bot.erased,
+       "a package whose app reaches the calibration: refused before any write")
+
+    # the tool's SMK settings and the firmware's flash map must not drift apart
+    m = (ROOT / "firmware/hal/smk37/smk_flash_map.h").read_text()
+    mac = {k: int(v, 16) for k, v in re.findall(r"#define (SMK_\w+|FL_APP_HI)\s+0x([0-9A-F]+)u", m)}
+    ok(tuple(never) == tuple((mac[f"SMK_{k}_LO"], mac[f"SMK_{k}_HI"]) for k in ("HEAD", "CAL", "TOP")),
+       "never-written ranges == smk_flash_map.h's SMK_HEAD, SMK_CAL, SMK_TOP")
+    ids = {int(x, 16) for x in re.findall(r"0x([0-9A-F]{6})u", re.search(r"#define FL_JEDEC_OK\(id\) (.+)", m)[1])}
+    ok(ids == set(R.BOARDS["smk37"]["flash_ids"]), "flash IDs == smk_flash_map.h's FL_JEDEC_OK")
+    ends = {end for _, end, b in R.STOCK.values() if b == "smk37"}
+    ok(ends == {mac["FL_APP_HI"]} == {P.BOARDS["smk37"]["flash_size"]}, "Elite_016's app ends at FL_APP_HI (0x9D000)")
+    ok("0xC1224" in m and R.TRIM_AT == 0xC1224, "the calibration marker's address is smk_flash_map.h's")
+
+
+def packages():
+    """package_flash_image and load_stock on packages written by tools/fm1pkg_make.py (20 and 36 blocks)"""
+    with tempfile.TemporaryDirectory() as d:
+        paths, saved = {}, dict(R.STOCK)
+        for name, board, end, product in (("fm1", "fm1", 0x93000, "FM-1_015"),
+                                          ("smk", "smk37", 0x9D000, "SMK-37 Elite_016")):
+            flash = image(name, end)
+            raw = P.ufw(flash, image("ota" + name, 0x4E01), product, board)
+            ok(R.package_flash_image(raw) == flash,
+               f"package_flash_image: {board}, {P.BOARDS[board]['blocks']} marker blocks")
+            paths[name] = Path(d) / f"{name}.fwsc"
+            paths[name].write_bytes(raw)
+            R.STOCK[hashlib.sha256(raw).hexdigest()] = (name, end, board)
+        try:
+            stock, board = R.load_stock([str(paths["smk"])])
+            ok(board == "smk37" and stock[0][0] == "smk", "load_stock: the Elite's package -> board smk37")
+            try:
+                R.load_stock([str(paths["fm1"]), str(paths["smk"])])
+                ok(False, "load_stock: FM-1 and SMK-37 packages together refused")
+            except R.Fail as e:
+                ok("together" in str(e), "load_stock: FM-1 and SMK-37 packages together refused")
+            bad = bytearray(paths["fm1"].read_bytes())
+            bad[5] ^= 1                                                  # the header's CRC fails
+            try:
+                R.package_flash_image(bytes(bad))
+                ok(False, "package_flash_image: a damaged header refused")
+            except R.Fail:
+                ok(True, "package_flash_image: a damaged header refused")
+        finally:
+            R.STOCK.clear()
+            R.STOCK.update(saved)
+
+
 def real_packages():
     pk = {n: Path.home() / "fm1-rescue" / f"FM-1-{n}.fwsc" for n in ("V15", "V16")}
     if not all(p.exists() for p in pk.values()):
@@ -182,15 +293,27 @@ def real_packages():
     images = {}
     for n, p in pk.items():
         raw = p.read_bytes()
-        name, end = R.STOCK.get(hashlib.sha256(raw).hexdigest(), (None, None))
+        name, end, board = R.STOCK.get(hashlib.sha256(raw).hexdigest(), (None, None, None))
         images[n] = R.package_flash_image(raw)
-        ok(name == n and len(images[n]) == end, f"M-VAVE's {n}: known, flash entry {end:#x}")
+        ok(name == n and len(images[n]) == end and board == "fm1", f"M-VAVE's {n}: known, flash entry {end:#x}")
     ok(images["V15"][:R.WRITE_MIN] != images["V16"][:R.WRITE_MIN], "V15's and V16's heads differ")
+    elite = os.environ.get("SMK_ELITE_FWSC")
+    if not elite:
+        print("  skip M-VAVE's SMK-37 Elite_016 (set SMK_ELITE_FWSC)")
+        return
+    raw = Path(elite).read_bytes()
+    name, end, board = R.STOCK.get(hashlib.sha256(raw).hexdigest(), (None, None, None))
+    im = R.package_flash_image(raw)
+    ok(board == "smk37" and len(im) == end == 0x9D000, f"M-VAVE's SMK-37 Elite_016: known, flash entry {end:#x}")
+    ok(im[:R.WRITE_MIN] == images["V15"][:R.WRITE_MIN], "  its head is V15's (so the board comes from the package)")
+    ok(R.TRIM_MARK not in im, "  the package carries no calibration (the device's own)")
 
 
 writes()
 refusals()
 flash_chips()
+smk37()
+packages()
 real_packages()
 print("rescue: " + ("all ok" if not failed else f"{failed} FAILED"))
 sys.exit(1 if failed else 0)
