@@ -29,9 +29,12 @@ git add -A
 git commit -q -m "Site for AISLING on the SMK-37 Elite (from $SHA)"
 git push -q -f "$REMOTE" gh-pages
 rm -rf .git
-# Pages on, from gh-pages, the first time; then ask it to build now (a push alone has left a first deploy on "building")
+# Pages on, from gh-pages, the first time; then ask it to build now (a push alone has left a first deploy on "building").
+# GitHub may turn Pages on by itself for a new gh-pages branch, just after the first check: so a refused POST (409,
+# "already enabled") is checked again before it is reported.
 gh api "repos/$REPO/pages" >/dev/null 2>&1 ||
-    gh api -X POST "repos/$REPO/pages" -f "source[branch]=gh-pages" -f "source[path]=/" >/dev/null ||
+    gh api -X POST "repos/$REPO/pages" -f "source[branch]=gh-pages" -f "source[path]=/" >/dev/null 2>&1 ||
+    gh api "repos/$REPO/pages" >/dev/null 2>&1 ||
     echo "(could not turn GitHub Pages on: check the repository's Pages settings)"
 gh api -X POST "repos/$REPO/pages/builds" >/dev/null 2>&1 || echo "(could not ask GitHub Pages to build: check its settings)"
 echo "pushed the SMK-37 Elite's site to gh-pages of $REPO: https://stephencummins.github.io/smk37-aisling/"
