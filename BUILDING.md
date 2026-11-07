@@ -72,6 +72,19 @@ tests can run with nobody listening; `test` and `soak` refuse to start if master
 `host/build_host.sh` builds the simulator alone; `build/host/amb_host SCRIPT OUTDIR` runs one
 script (the command list is at the top of `host/amb_host.c`).
 
+## The SMK-37 Elite
+
+The same tree builds for the M-VAVE SMK-37 Elite (not yet run on one: nothing to install yet):
+
+```
+./build.sh --board smk37                    # build/smk37/amb.fwsc
+./build.sh --board smk37 --release 1.0      # build/smk37/aisling-smk37-elite-1.0.fwsc
+```
+
+Without `--board` the build is the FM-1's, byte for byte as before. `tests/run_tests.sh` runs the Elite's tests with
+the FM-1's, and `host/build_host.sh` builds its simulator, `build/host/amb_host_smk37`.
+[docs/SMK37.md](docs/SMK37.md) has the rest: the controls, the flash, the pins, the tests and what is still open.
+
 ## Install
 
 From the command line (needs `pip3 install mido python-rtmidi`):

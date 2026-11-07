@@ -11,6 +11,8 @@ Chromebook; the FM-1 on USB) · **[Try it in the browser](https://aisling.stephe
 
 By CU_STE · [www.stephen8n.com](https://www.stephen8n.com)
 
+The same source also builds for the M-VAVE SMK-37 Elite, not yet tried on one: see [docs/SMK37.md](docs/SMK37.md).
+
 ## What?
 
 AISLING turns the M-VAVE FM-1 into a generative Irish ambient instrument: harps over a held drone, and a flute, a
