@@ -1,0 +1,132 @@
+# 1.1: the sleep timer (ZEN-1's and Penumbra's idea). Setup's ALGORITHM: off, 15 or 30 minutes, 1, 2, 4 or 8 hours
+# from the last touch. The sound fades out over the last 30 s (a touch then brings it back up); then the music stops,
+# the screen and the lights go dark. A new press, key or turn wakes it, and only wakes it: the music again if it was
+# playing, faded in. Not saved: off at every start
+wait 500
+expect playing 1
+expect sleep 0
+expect gain 4096
+expect screen 1
+expect piece 0
+listen
+tap GLO
+wait 300
+expect view 6
+# a step a detent: off at the left, 8 hours at the right
+turn ALGO 1
+wait 200
+expect sleep 15
+said sleep in 15 minutes
+turn ALGO 10
+wait 200
+expect sleep 480
+said sleep in 8 hours
+turn ALGO -20
+wait 200
+expect sleep 0
+said sleep off
+turn ALGO 1
+wait 300
+shot setup.png
+where
+said Setup page, sleep in 15 minutes
+# off the Setup page, ALGORITHM does what it did (HOME: nothing); the time runs from the last touch
+tap HOME
+wait 300
+turn ALGO 1
+expect sleep 15
+expect view 0
+# 14 minutes on: whole
+wait 840000
+expect gain 4096
+expect asleep 0
+# 14 m 45 s: half way down the fade, by the square a quarter
+wait 45000
+expect gain >800
+expect gain <1250
+# a touch: back up within a second, and the time starts again
+tapkey w0
+wait 1100
+expect gain 4096
+# 14 m 20 s after that: still whole (the fade is the last 30 s)
+wait 858900
+expect gain 4096
+# 15 m 1 s: asleep. Stopped as PLAY stops it, dark, silent
+wait 41000
+expect asleep 1
+expect screen 0
+expect gain 0
+expect playing 0
+said sleeping
+expect litbtn10 0
+expect litkey0 0
+shot asleep.png
+peakreset
+wait 2000
+expect peak_db_max -120
+# MIDI does not wake it
+midi 90 3C 64
+wait 200
+midi 80 3C 00
+wait 200
+expect asleep 1
+# FX wakes it, and only wakes it (not its page): the music again, faded in
+press FX
+wait 100
+expect asleep 0
+expect screen 1
+expect gain >0
+expect gain <500
+said awake
+release FX
+wait 100
+expect view 0
+expect playing 1
+wait 1000
+expect gain 4096
+# once nothing has been touched for a moment, a touch is a touch again
+wait 300
+tap FX
+wait 100
+expect view 5
+tap HOME
+wait 100
+expect view 0
+# asleep again; a turn of PRESET wakes it and moves nothing
+wait 905000
+expect asleep 1
+turn PRESET 1
+wait 50
+expect asleep 0
+expect piece 0
+wait 400
+turn PRESET 1
+wait 100
+expect piece 1
+# resting when it falls asleep: resting when it wakes
+tap PLAY
+wait 200
+expect playing 0
+wait 905000
+expect asleep 1
+tapkey w3
+wait 200
+expect asleep 0
+expect playing 0
+# awake, a note from outside is a touch: someone playing it from a MIDI keyboard is not faded out
+wait 600000
+midi 90 3C 64
+wait 100
+midi 80 3C 00
+wait 600000
+expect asleep 0
+expect gain 4096
+wait 300500
+expect asleep 1
+# not saved: off after a restart
+reboot
+wait 500
+expect sleep 0
+expect asleep 0
+expect screen 1
+expect gain 4096

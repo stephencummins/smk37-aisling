@@ -68,6 +68,7 @@ static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ?
 #endif
 
 static uint8_t flash_ok;          /* JEDEC id matched at boot */
+static uint32_t flash_jedec;      /* the JEDEC id read at boot, for the identity reply (ota.c) */
 static void audio_silence(void);
 static int st_read(uint32_t off, void *dst, uint32_t n)   /* 256-byte IRQ-off windows: audio keeps up */
 {
@@ -102,6 +103,7 @@ static int st_prog(uint32_t off, const void *src, uint32_t n)
 
 struct bootguard_s { uint32_t magic, failed, pending; };
 extern struct bootguard_s bootguard;
+#define OTA_FLASH_ID() flash_jedec
 #include "ota.c"
 static uint32_t ota_now_ms(void) { return fm1_ms; }
 static void ota_idle(void) { fm1_wdt_feed(); }

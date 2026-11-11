@@ -132,12 +132,15 @@ void plat_leds(uint32_t b, uint32_t k)
 }
 static int glow_on = 1;                 /* the device's button glow (plat_glow); the lights printed are the bright ones */
 void plat_glow(int on) { glow_on = on; }
+static int screen_on = 1;               /* (1.1) the screen (plat_screen): off while asleep */
+void plat_screen(int on) { screen_on = on != 0; }
 void plat_play_red(int red) { (void)red; }      /* the device's PLAY colour: green, red while recording */
 
 #define MQ 256
 static uint32_t min_q[MQ], mi_w, mi_r;
 static FILE *midi_log;
 static uint32_t midi_out_count, clock_out_count;
+static uint32_t fxcc_count, fxcc_last;
 int plat_midi_in(uint32_t *pkt)
 {
     if (mi_r == mi_w)
@@ -158,6 +161,8 @@ void plat_midi_out(uint32_t pkt)
         clock_out_count++;
         return;
     }
+    if (((pkt >> 8) & 0xFF) == 0xBF)             /* (1.3) the effects' CCs out: how many, the last (cc << 8 | value) */
+        fxcc_count++, fxcc_last = ((pkt >> 16) & 0xFF) << 8 | ((pkt >> 24) & 0xFF);
     if (midi_log)
         fprintf(midi_log, "%u ms: %02X %02X %02X\n", now_ms, (pkt >> 8) & 0xFF, (pkt >> 16) & 0xFF, (pkt >> 24) & 0xFF);
 }
@@ -512,7 +517,7 @@ static void run_ms(uint32_t ms)
         now_ms++;
         while (audio_due_ms <= (double)now_ms) {      /* 256-frame blocks, as the device renders them */
             double t0 = now_ns(), dt;
-            en_render(blk, 256, master);
+            en_render(blk, 256, master * ui_gain_q12 >> 12);   /* (1.1) the sleep timer's fade, as the device */
             seq_apart += en_loop_pos[0] != en_loop_pos[1];
 #ifdef EN_WEB
             web_audio(blk, 256);
@@ -633,6 +638,14 @@ static int expect(const char *what, const char *val)
         got = en_playing;
     else if (!strcmp(what, "frozen"))
         got = en_frozen;
+    else if (!strcmp(what, "sleep"))              /* (1.1) the sleep timer: its minutes (0: off) */
+        got = SLEEP_MIN[sl.set];
+    else if (!strcmp(what, "asleep"))
+        got = sl.asleep;
+    else if (!strcmp(what, "screen"))
+        got = screen_on;
+    else if (!strcmp(what, "gain"))               /* the gain after MASTER, Q12 (4096: whole) */
+        got = (int)ui_gain_q12;
     else if (!strcmp(what, "view"))
         got = ui.view;
     else if (!strcmp(what, "master"))             /* the level the engine gets (Q12, plat_master) */
@@ -647,12 +660,58 @@ static int expect(const char *what, const char *val)
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
         got = proj.pool;
+    else if (!strcmp(what, "evbars"))             /* (1.2) Evolve's timing: 0 now and then, 1..4 every 4, 8, 16, 32 bars */
+        got = proj.evbars;
+    else if (!strcmp(what, "evolves"))            /* (1.2) Evolve's nudges so far */
+        got = (int)ui_evolve_n;
+    else if (!strcmp(what, "evolvebar"))          /* (1.2) the bar of the last (from 0 at the top) */
+        got = (int)ui_evolve_bar;
     else if (!strcmp(what, "format"))
         got = (int)proj.format;
     else if (!strncmp(what, "lastnote_ch", 11))   /* lastnote_chN: the last note-on on MIDI channel N */
         got = last_note[(atoi(what + 11) + 15) % 16];
     else if (!strncmp(what, "act", 3) && what[3] >= '0' && what[3] <= '4')   /* (BERLIN) actN: layer N's activity x100 */
         got = (int)(en_layer_act[what[3] - '0'] * 100.0f);
+    else if (!strcmp(what, "pflash"))             /* (1.3) PERFORM's flash on the screen */
+        got = pflash_showing();
+    else if (!strcmp(what, "pfcontrast")) {       /* (1.3) the flash's colours whose black lettering reads under 4.5:1 */
+        int k, c;
+        got = 0;
+        for (k = 0; k < PERF_N; k++) {
+            uint16_t q[2] = {pkey_col(k), K_PANEL};
+            double l[2];
+            for (c = 0; c < 2; c++) {
+                double ch[3] = {(q[c] >> 11) / 31.0, ((q[c] >> 5) & 63) / 63.0, (q[c] & 31) / 31.0};
+                int i;
+                for (i = 0; i < 3; i++)
+                    ch[i] = ch[i] <= 0.03928 ? ch[i] / 12.92 : pow((ch[i] + 0.055) / 1.055, 2.4);
+                l[c] = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+            }
+            got += (l[0] + 0.05) / (l[1] + 0.05) < 4.5;
+        }
+    } else if (!strcmp(what, "pffit")) {          /* (1.3) the names and lines wider than the flash allows */
+        int k;
+        got = 0;
+        for (k = 0; k < PERF_N; k++) {
+            char t[16];
+            caps(t, PKEY[k].name, sizeof t);
+            got += text_w(&FONT_UL, t) > 232 || text_w(&FONT_UM, t) > 232 || text_w(&FONT_XS, PLINE[k]) > 232;
+        }
+    }
+    else if (!strcmp(what, "pheld"))              /* (1.3) PERFORM's keys held, a bit a key (0..26) */
+        got = (int)ui.pheld;
+    else if (!strcmp(what, "pcc"))                /* (1.3) the effects a CC holds */
+        got = (int)ui.pcc;
+    else if (!strcmp(what, "ptrisk"))             /* (1.3) the map's triskele: its angle within 2 sixteenths of the music's */
+        got = (int)((en_bars + 48u - ptr_at) % 48u) <= 2;
+    else if (!strcmp(what, "pnow"))               /* (1.3) every effect sounding (the link's STATE) */
+        got = (int)ui.pnow;
+    else if (!strcmp(what, "fxcc"))               /* (1.3) the effects' CCs sent out */
+        got = (int)fxcc_count;
+    else if (!strcmp(what, "fxcclast"))
+        got = (int)fxcc_last;
+    else if (!strcmp(what, "platch"))             /* (1.3) and latched */
+        got = (int)ui.platch;
     else if (!strcmp(what, "bfx"))                /* (BERLIN) the black keys' effects and moves held (0: none) */
         got = (int)(ui.bfx | ui.mv << 16);
     else if (!strncmp(what, "fo", 2) && what[2] >= '0' && what[2] <= '4' && !what[3])   /* foN: layer N's offset x100 */
@@ -838,6 +897,10 @@ static int expect(const char *what, const char *val)
         got = lc.state[23] | lc.state[24] << 7;
     else if (!strcmp(what, "lgen"))
         got = lc.state[29];
+    else if (!strcmp(what, "chorus"))             /* (1.3) PERFORM's Chorus knob */
+        got = ui.chorus;
+    else if (!strcmp(what, "lfx"))                /* (1.3) the effects sounding, as STATE tells them */
+        got = lc.state_n >= 34 ? lc.state[30] | lc.state[31] << 7 | lc.state[32] << 14 | lc.state[33] << 21 : -1;
     else if (!strcmp(what, "lstatelen"))
         got = lc.state_n;
     else if (!strncmp(what, "lval", 4))           /* a knob as VALS told it */

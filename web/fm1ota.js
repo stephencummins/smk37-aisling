@@ -56,12 +56,16 @@ function parseRequest(pkt) {
   return { fl: u[6], addr: (u[7] | (u[8] << 8) | (u[9] << 16) | (u[10] << 24)) >>> 0, len: u[11] | (u[12] << 8) | (u[13] << 16) };
 }
 
-function parseIdentity(pkt) {
+// the text up to its first zero (bytes 24..26 may hold the flash's JEDEC ID: AISLING from 1.1 and felucca-bsp's
+// firmwares); chip: that ID, 0 = none
+export function parseIdentity(pkt) {
   const d = unpack7(pkt.slice(1, -1));
   if (d.length !== 34 || d[0] !== 0 || d[1] !== 0x59 || d[2] !== 0x11) return null;
-  const txt = String.fromCharCode(...d.slice(6, 33)).replace(/\0+$/, "");
+  const body = Array.from(d.slice(6, 33)), z = body.indexOf(0);
+  const txt = String.fromCharCode(...(z < 0 ? body : body.slice(0, z)));
   const m = /^([^_]+)_(\d+)$/.exec(txt);
-  return m ? { text: txt, model: m[1], version: parseInt(m[2], 10) } : null;
+  const chip = txt.length < 24 ? (body[24] << 16 | body[25] << 8 | body[26]) : 0;
+  return m ? { text: txt, model: m[1], version: parseInt(m[2], 10), chip } : null;
 }
 
 // one MIDI in/out pair with a SysEx queue
@@ -105,6 +109,25 @@ async function handshake(link, tries = 3) {
     }
   }
   return null;
+}
+
+// the handshake with the one-byte body 01: newer firmwares (AISLING from 1.1, felucca-bsp's) answer it with the whole
+// identity and the flash's JEDEC ID in bytes 24..26; older ones and the update loader do not answer it
+// (tools/fm1_install.py's HS_WHOLE and flash_chip)
+const HS_WHOLE = [0xF0, ...pack7([0, 0x59, 0x11, 1, 0, 0, 1, 0xFE]), 0xF7];
+
+// the flash's JEDEC ID, from the answer to the handshake with the body 01; 0 if the firmware does not say
+export async function flashChip(link) {
+  link.drain();
+  if (!link.send(HS_WHOLE)) return 0;
+  const end = Date.now() + 1000;
+  while (Date.now() < end) {
+    const p = await link.read(end - Date.now());
+    if (!p) break;
+    const id = parseIdentity(p);
+    if (id) return id.chip;
+  }
+  return 0;
 }
 
 export class Updater {
@@ -192,8 +215,10 @@ export class Updater {
     await sleep(3000);
     const back = await this.waitFor((id) => !IS_OTA(id), 40000);
     if (!back) throw fail("noreturn", "the device did not come back: power-cycle it");
+    const chip = back.id.chip || await flashChip(back.link);   // (AISLING from 1.1 says; 0 = it doesn't)
     back.link.close();
     if (back.id.text !== product) throw fail("mismatch", `installed, but the device reports ${back.id.text}`, back.id.text);
+    if (chip) step("chip", chip);
     step("done", back.id.text);
     return back.id.text;
   }

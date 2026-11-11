@@ -3,7 +3,13 @@
 /* M-UPGRADE update entry.
  *
  * The updater talks SysEx (F0 pack7(00 59 cmd len24 body chk) F7):
- *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID)
+ *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID), 27 bytes: the text, then zeros.
+ *             A firmware that defines OTA_FLASH_ID() (AISLING: main.c) also answers the query with the
+ *             one-byte body 01 (the newer installers' "whole identity"): the same text, and the flash's
+ *             JEDEC ID, big-endian, in bytes 24..26 (0: not read), the layout Sven proposed for Felucca
+ *             (issue #320) and felucca-bsp answers. The plain query's answer stays the text and zeros:
+ *             installers that strip only the trailing zeros (the hub's, AISLING 1.0's) would not know
+ *             the identity with the ID in it. A host reads the text up to its first zero
  *   F0 22 24 35 7F F7  upgrade -> ota_session(): pull parts of the package
  *     with cmd 0x30 read requests, check them, stage the package's update
  *     loader at OTA_AREA (FM-1 0xE0000, outside Felucca's store), ask 0xE0000000 ("success"),
@@ -145,6 +151,22 @@ static void ota_reply_identity(void)
     ota_send_msg(0x11, id, sizeof id);
 }
 
+#ifdef OTA_FLASH_ID
+_Static_assert(sizeof FELUCCA_ID <= 24u, "the identity: 23 characters at most, the flash's ID follows at byte 24");
+static void ota_reply_identity_chip(void)       /* the answer to the query with the body 01 */
+{
+    static const char ID[] = FELUCCA_ID;
+    uint8_t id[27];
+    uint32_t i, j = OTA_FLASH_ID();
+    for (i = 0; i < sizeof id; i++)
+        id[i] = i < sizeof ID - 1u ? (uint8_t)ID[i] : 0;
+    id[24] = (uint8_t)(j >> 16);
+    id[25] = (uint8_t)(j >> 8);
+    id[26] = (uint8_t)j;
+    ota_send_msg(0x11, id, sizeof id);
+}
+#endif
+
 /* decode the pending frame; returns its decoded length (0 = not ours) */
 static uint32_t ota_take(void)
 {
@@ -169,6 +191,10 @@ static void ota_service(void)
     uint32_t d = ota_take();
     if (d == 7u && ota_dec[2] == 0x11)
         ota_reply_identity();
+#ifdef OTA_FLASH_ID
+    else if (d == 8u && ota_dec[2] == 0x11 && ota_dec[6] == 1u)
+        ota_reply_identity_chip();
+#endif
 }
 
 /* one read request (3 tries x 5 s); data -> dst */

@@ -1,0 +1,77 @@
+# 1.2: Evolve's timing (the idea Unholy Union's, Bunker's and Tessera's, our own code), HOME's ALGORITHM: now and then
+# on a phrase's start, as before; or every 4, 8, 16 or 32 bars from the top, every time. Evolve 40 and under: none, as
+# ever. Saved, global (as Tune)
+wait 500
+expect view 0
+expect evbars 0
+listen
+turn ALGO 2
+wait 200
+expect evbars 2
+said evolve every 8 bars
+expect dirty 1
+shot evolve8.png
+# Skellig's Evolve, 40: nothing moves
+bar 17
+expect evolves 0
+# Evolve up: a nudge on bar 24, on 32, none between
+turn K2 100
+wait 900
+expect par5 100
+bar 23
+expect evolves 0
+bar 25
+expect evolves 1
+expect evolvebar 24
+bar 31
+expect evolves 1
+bar 33
+expect evolves 2
+expect evolvebar 32
+# every 4: on 36, 40
+turn ALGO -1
+wait 200
+expect evbars 1
+said evolve every 4 bars
+bar 41
+expect evolves 4
+expect evolvebar 40
+# a detent past either end: no further
+turn ALGO 9
+wait 200
+expect evbars 4
+said evolve every 32 bars
+wait 2500
+shot evolve32.png
+turn ALGO 1
+wait 200
+expect evbars 4
+turn ALGO -2
+wait 200
+expect evbars 2
+# Evolve back down to 40 and under: none
+turn K2 -100
+wait 900
+expect par5 0
+bar 57
+expect evolves 4
+# saved (SAVE held), and back after a reboot; the reader hears it with the page
+press SAVE
+wait 600
+release SAVE
+wait 40
+expect dirty 0
+reboot
+wait 300
+expect evbars 2
+tap ENV
+wait 300
+tap HOME
+wait 300
+expect view 0
+said Aisling page, evolve every 8 bars: Filter Off, Evolve 0, Motion 40, Drift 16 bars
+# back to now and then: off the rule
+turn ALGO -5
+wait 200
+expect evbars 0
+said evolve now and then

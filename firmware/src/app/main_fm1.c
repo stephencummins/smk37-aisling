@@ -47,7 +47,7 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
 #if FELUCCA_UAC
             en_usb_out = uac.feed ? ubuf : 0;       /* (made only while a computer is reading) */
 #endif
-            en_render(o + 2u * k, REND_FRAMES, master_q12);
+            en_render(o + 2u * k, REND_FRAMES, master_q12 * ui_gain_q12 >> 12);   /* (1.1) the sleep fade (ui.c) */
 #if FELUCCA_UAC
             uac_tap(ubuf, REND_FRAMES);             /* the USB audio input: before MASTER, so at any volume */
 #endif
@@ -278,6 +278,7 @@ static void fm1_main(void)
         uint32_t id = FL_FAR(fl_jedec_ram)();
         irq_restore(f);
         flash_ok = FL_JEDEC_OK(id);                 /* a 1 MiB part we know, else RAM only */
+        flash_jedec = id & 0xFFFFFFu;               /* (the identity reply's bytes 24..26) */
         if (flash_ok)
             ota_boot_cleanup();
     }

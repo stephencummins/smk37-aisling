@@ -33,6 +33,7 @@ uint32_t plat_master_raw(void);        /* the knob itself, 0..1023, before the c
 void plat_leds(uint32_t buttons, uint32_t keys);   /* lit: bit B_*, bit key */
 void plat_glow(int on);                /* the unlit buttons glow dimly, readable in the dark (call before plat_leds) */
 void plat_play_red(int red);           /* PLAY lights green; red (its other LED) while recording (before plat_leds) */
+void plat_screen(int on);              /* (1.1) the screen: off (black) while asleep (the sleep timer, ui.c) */
 
 /* USB MIDI, 4-byte USB-MIDI event packets (cable 0) */
 int plat_midi_in(uint32_t *pkt);       /* 1 = got one (called from the audio ISR) */

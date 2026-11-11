@@ -9,18 +9,19 @@ swing between two tonics, D and C or E minor and D, as the old tunes do. Each pi
 gives the Lead its turn, crosses a bridge, and goes on for ever; every layer's filter moves slowly on its own.
 Listen, and play: let it run, or join in. Play a melody on the white keys and the Lead answers it, takes it as its
 theme and grows new ideas out of it; pick a piece and a key, thin or fill the harps, open the filter, push the
-echo, mute and solo the layers.
+echo, or tap SEL and play the effects on the whole music.
 
 Source, releases and the web installer: [github.com/stephencummins/fm1-aisling](https://github.com/stephencummins/fm1-aisling)
 and [aisling.stephen8n.com](https://aisling.stephen8n.com/). AISLING is by CU_STE
 ([www.stephen8n.com](https://www.stephen8n.com)).
 
-AISLING (an *aisling* is an Irish vision poem) is a fork of [NACHTFAHRT](https://github.com/FartyPants/fm1-nachtfahrt)
+AISLING is said ASH-ling. It's Irish for a dream or a vision (an *aisling* is also an old kind of Irish poem, a
+vision), and a pun on *AI Synth Link*; [Saying the names](#saying-the-names) has the rest. It is a fork of [NACHTFAHRT](https://github.com/FartyPants/fm1-nachtfahrt)
 by FartyPants, a Berlin School firmware: it keeps NACHTFAHRT's whole machine and changes what it plays. NACHTFAHRT
 is a fork of DUB-1, itself a fork of AMB-1, Charles Vestal's generative ambient firmware for the FM-1.
 
-**This is 1.0, the first version out of testing.** It runs on the FM-1 (install it from the web installer) and in the
-browser emulator, from the same code.
+**This is 1.3.1:** PERFORM is all effects, twelve of them new, with Chorus and a CC for each (1.3), and the effects grid redrawn to match. It runs
+on the FM-1 (install it from the web installer) and in the browser emulator, from the same code.
 
 ![A drawing of the FM-1 running AISLING, each control labelled with what it does: the Controls section below says the same in words](img/fm1-panel.svg "The FM-1 (a drawing), running AISLING, each control labelled")
 
@@ -58,8 +59,10 @@ python3 tools/fm1_install.py build/amb.fwsc
 ```
 
 (Python 3 with `pip3 install mido python-rtmidi`, the FM-1 connected by a USB data cable and switched on.)
-Don't unplug it while it's writing; when it finishes, the FM-1 restarts into AISLING. M-VAVE's own
-updater, M-UPGRADE, puts the stock firmware back. M-UPGRADE shows AISLING as v14; that's expected.
+Don't unplug it while it's writing; when it finishes, the FM-1 restarts into AISLING. The stock firmware goes back
+only in the version whose bootloader your FM-1 already has: V16 with M-VAVE's own updater, M-UPGRADE, or V15 with
+The Firmware Hub (see [Installing over AISLING](#13-troubleshooting)). M-UPGRADE may show AISLING with an odd version
+number; that's expected.
 
 > Installing other firmware is at your own risk. If the FM-1 ever won't start, see
 > [Recovering an FM-1 that won't start](#recovering-an-fm-1-that-wont-start).
@@ -90,8 +93,8 @@ AISLING starts playing as soon as it's on. A few minutes with it:
 5. **Hold the echo.** Tap REC: the echo stops listening and repeats what it holds while the music goes
    on dry above it. Tap REC again to let it go. Hold REC: the effects grid, sixteen effects on the white
    keys, each one there while its key is held.
-6. **Perform.** Tap SEL: white keys 1–5 mute the five layers, black keys 1–5 solo them, and white keys
-   7–11, held, sweep the sequence, open or shut the filter, drop both sequences out or push the echo.
+6. **Perform.** Tap SEL: every key is an effect while you hold it, several together. Hold some and tap REC and
+   they stay on; REC alone lets them go.
 7. **Watch the filters.** On a layer's sound page, a small cyan dot on the brightness knob's ring shows where
    the filter is now, and the screen says how far it has moved ("MOVING DARKER, -1.5 OCT"). Turn the knob:
    the movement goes on around its new setting.
@@ -110,11 +113,11 @@ second.
 | MASTER | The volume, with room at the quiet end: a low listening level sits about a quarter of the way up. The USB audio doesn't follow it: there, the computer sets the volume |
 | SELECT | On a layer's pages (the Drone, the Sequence, the Lead, Sequence 2, the Atmosphere, and each one's further pages), the layer's level, 1 a click: a ring in the middle of the screen shows it, and the header says it ("SEQ 64"). On the Aisling page it turns **Energy**, PERFORM's (the same value, 1 a click: the screen shows twice), so you can play the keys and push Energy at once: the knobs' rule shows "ENERGY 24" with a bar while you turn, and the header says it. Elsewhere it does nothing (the pages are on their buttons, the tempo on the Key page) |
 | PRESETS | The piece (eight) |
-| ALGORITHM | On a layer's page, its voice (on the Atmosphere's pages, its character). On the Chords page, the chord walk's character (Home, Wander, Free) |
+| ALGORITHM | On a layer's page, its voice (on the Atmosphere's pages, its character). On the Chords page, the chord walk's character (Home, Wander, Free). On the Aisling page, Evolve's timing (see Nudges, below). On the Setup page, the sleep timer (see Sleep, below) |
 | OCT− / OCT+ | On the Sequence's, the Lead's and Sequence 2's pages, the layer's octave, a step a press (the Sequence −2 to 2, the Lead and Sequence 2 −2 to 1): the page's Octave knob shows it, the header says it ("SEQ OCTAVE −1"). OCT+ is lit while that octave is above where the piece was loaded, OCT− while it's below. On the other pages they do nothing. With HOME held, OCT− undoes and OCT+ redoes (see Undo, below). Both held 5 s: the update mode |
 | KNOB 1–4 | The four values at the bottom of the page. The line above them says what the one turning does |
 | White keys | Play the Lead in the piece's scale: the first white key is the root, the next the scale's second step, and so on up. While the Lead sounds a note, that key is lit. Three notes or more and a pause become the Lead's theme (see [The layers](#5-the-layers)). On the Pattern page they write the steps instead; in PERFORM they mute, play moves, and the top one makes the Lead forget; with REC held they're the effects |
-| Black keys | Eleven effects, each while the key is held. They stay lit, so they stand apart from the Lead's white keys; a key goes dark while its effect is held: Ceo, Macalla, Fras, Repeat, Shimmer, Freeze, Octave, Return, Rise, Close, Transpose (see [The effects grid](#9-the-effects-grid)). In PERFORM, the solos; on the Pattern page, the accents |
+| Black keys | Eleven effects, each while the key is held. They stay lit, so they stand apart from the Lead's white keys; a key goes dark while its effect is held: Ceo, Macalla, Fras, Repeat, Shimmer, Freeze, Octave, Return, Rise, Close, Transpose (see [The effects grid](#9-the-effects-grid)). In PERFORM, its own eleven; on the Pattern page, the accents |
 | PLAY | Play / rest |
 | REC | A tap: hold (the echo and the cloud repeat what they hold). Held: the effects grid |
 | EDIT | A tap: the Chords page. Held: the next chord, on the next bar. Held on (1.5 s): new chords |
@@ -135,6 +138,13 @@ towards the piece's recipe, so nudges explore around the piece's sound rather th
 over 40, AISLING nudges a layer by itself now and then. The Atmosphere has no nudge of its own, because SAVE held
 saves; Evolve and HOME's shake still move it.
 
+**Evolve's timing.** On the Aisling page, ALGORITHM sets when Evolve's nudges land: **now and then** (at the start of
+a phrase, more often the higher Evolve is; as before 1.2), or **every 4, 8, 16 or 32 bars**, every time, a step a
+click. The bars are counted from the top: from when the music starts, or from a DAW's start under MIDI clock. The
+start of the knobs' rule shows it ("EVOLVE EVERY 8 BARS"), lit while Evolve is over 40; at 40 and under nothing moves
+either way, and Lock stops it as before. It's saved, one setting for every piece, as Tune is. The sequences' own small
+changes, the other half of Evolve, keep their own times.
+
 **Undo.** Hold HOME and tap OCT−: the piece's settings go back a step. OCT+ brings them forward again. While HOME is
 held, OCT− is lit if there's something to undo and OCT+ if there's something to redo. Undo goes back 16 steps, and
 changes less than a second apart count as one step. It takes back knobs, voices, nudges, shakes and a reset to the
@@ -142,6 +152,16 @@ recipe. What Evolve moves makes no step of its own, but an undo rolls it back wi
 and the scale, not the patterns: after undoing a reset, the settings return but the patterns it grew stay. Tune, MIDI
 out and Lights aren't undone, and in Endless the chords aren't, because the walk moves them itself. Another piece
 clears undo, and it isn't saved, though the piece it leaves behind is, as after any change.
+
+**Sleep.** On GLO's Setup page, ALGORITHM sets a sleep timer: Off, 15 or 30 minutes, 1, 2, 4 or 8 hours, a step a
+click. The start of the knobs' rule shows it ("SLEEP 30 MIN"). The time runs from the last thing you touched (a
+button, a key, a knob, or a note or program change sent in over MIDI), so it never fades out while you play. Over the
+last 30 seconds the sound fades out, and a touch then brings it back and starts the time again. At the end the music
+stops, as PLAY stops it, the screen goes black (its light still glows faintly) and the button lights go out. A press,
+a key or a turn wakes it, and that touch only wakes it: the screen comes back, and the music starts again, faded in,
+if it was playing. MIDI doesn't wake it (a sequencer left running would), and MIDI sent while it sleeps is ignored.
+The USB audio isn't faded, since it comes before MASTER, but it stops with the music. The timer isn't saved: it's off
+every time the FM-1 starts.
 
 A long press says what it did on a card in the middle of the screen.
 
@@ -156,8 +176,8 @@ The screen is black, with a few dim stars drifting slowly left while the music p
 - **Top:** the piece, its key and mode, the tempo (EXT under MIDI clock). A dot means unsaved changes.
 - **Top left:** the section of the arc (EMERGE, FLOW, SOLO, BRIDGE), with **hold** and **lock** after it in red
   while they're on, and under it the eight bars of the phrase.
-- **Top right:** "CU_STE", small, and under it the page's name (with SOLO beside it while a solo is on); on the
-  Aisling page, a small green triskele before it.
+- **Top right:** "CU_STE", small, and under it the page's name in an uncial hand (with SOLO beside it while a solo
+  is on); on the Aisling page, a small green triskele before it.
 - **Left:** five **meters**, one for each layer in its own colour: the Drone (violet), the Sequence (pink), the
   Lead (gold), Sequence 2 (cyan), the Atmosphere (grey). Each rises with what its layer is playing. Across each
   one, a white **tick** shows where that layer's filter has moved to: above the middle, brighter; below,
@@ -172,14 +192,14 @@ The screen is black, with a few dim stars drifting slowly left while the music p
   is, in red; with Drift at Hold (the chord never changes) there is no ring.
 - **Right:** the echo's level (ECHO).
 - **Which page:** the line above the knobs ends in a dot for each page of the button you're on, with the page you're
-  on lit. When a button brings a new page, its name shows large over the chord for a moment, with the same dots.
+  on lit. When a button brings a new page, its name shows large over the chord for a moment, in the same uncial hand, with the same dots.
 - **A ring in the middle:** while you turn SELECT on a layer's page, its level as a big knob in its colour, the
   number inside and the layer's name under it (grey and MUTED if it's muted); it fades a moment after.
 - **Below:** two **lanes**, the Sequence (pink) and Sequence 2 (cyan), each as long as its sequence: a big dot
   for each step that plays, a speck for a rest, and a white cursor on the step playing now. Two sequences of
   different lengths drift apart and meet again, and you can see them do it. On a layer's page, the other
   lane is greyed.
-- **Bottom:** the page's four knobs and their values. While a knob turns, the rule above them says what it does;
+- **Bottom:** the page's four knobs and their values, under a rule drawn as a plait. While a knob turns, the rule says what it does;
   while SELECT turns Energy on the Aisling page, it shows "ENERGY", its value and a bar from the middle.
 
 **The filter motion, shown.** On a layer's *sound* page (the one with its brightness knob), a small cyan
@@ -212,7 +232,7 @@ the same; the lowest notes, under about C2, on one string). The
 root step is accented and the others quieter (Accent, on the Pattern page). Density decides how many of the steps sound, the least important dropping out first. In Carolan it also drifts, a slow wander about the knob's value, so the harps fill out and thin over a minute or two (Motion sets how far and 0 holds it; so does a knob right up or right down). Now and then
 (Evolve, Motion) a step changes, a note moves, an octave jumps, the sequence comes round early; it follows the Drone's chord
 (Transpose, on the Key page). Its cutoff wanders slowly over minutes, around the Cutoff you set (its Move page, below; its Width is the
-**Sweep**, also on PERFORM).
+**Sweep**).
 
 **The Repeats** (ARP, third page), NACHTFAHRT's Berlin School echo, kept: each note is played again at one of the echo's
 times, by default a dotted eighth (**Repeat A**, as loud as the note: 100), and a second time
@@ -282,7 +302,7 @@ played is never thrown away). One or two notes are just played, nothing is kept;
 aren't kept either. Your notes sound as you play them; the Lead counts them on the grid, to the nearest sixteenth.
 Stopping the music, or PANIC, forgets notes you are in the middle of playing; PANIC also drops an answer not yet begun
 (a theme already taken stays: the Lead plays it next, in its own time). A new piece starts again from its air. PERFORM's
-**Forget** (the top key) lets the air go too, and the Lead starts again from ideas of its own.
+**Forget** (SAVE, tapped) lets the air go too, and the Lead starts again from ideas of its own.
 
 After your theme, or the piece's air, the Lead's own ideas **grow out of it**. The next one, a bar or two after the answer, starts from
 it: its first notes carried on in a new way, or its first notes and then the same again from another note of the
@@ -317,7 +337,7 @@ opened, it goes on through flow, solo and bridge for ever, until you stop it or 
 ### The filter motion
 
 Nothing in AISLING fades behind your back. A layer whose level is up and which isn't muted always plays at its
-level (your mutes, your solos and PERFORM's Drop are the only ways a layer goes quiet, and they are shown).
+level (PERFORM's Drop is the only way a layer goes quiet, and its key shows it).
 What moves is each layer's **brightness**: the Drone's Colour, the Sequence's and Sequence 2's Cutoff, the
 Lead's Tone and the Atmosphere's Colour. AISLING moves each one's filter by an **offset in octaves from the
 knob**, never to a value of its own. The knob keeps the value you gave it; turn it and the whole movement
@@ -439,6 +459,31 @@ and mode. Most are in 3/4; the Lead plays them in their own time, so they float 
 The air is kept with the piece's settings (**Lead air**, on no page). A figure on the keys takes its place, and
 Forget lets it go, until the piece begins again.
 
+### Saying the names
+
+Irish spelling doesn't sound out the way English does, so here is how the names are said, the stressed part in
+capitals. These are the common ways; Irish is said a little differently from one county to the next.
+
+| Name | Say it | What it is |
+|---|---|---|
+| AISLING | ASH-ling | Irish for a dream or a vision, and an old kind of Irish poem; also a pun on *AI Synth Link* |
+| Skellig | SKEL-ig | Skellig Michael, a rock in the Atlantic off Kerry |
+| Burren | BURR-en | The limestone hills of Clare |
+| Aran, Inis Mór | ARR-an, IN-ish MORE | The islands off Galway, and the biggest of them |
+| Carolan | KARR-o-lan | Turlough O'Carolan, the harper |
+| Blasket | BLASS-kit | The islands off Kerry |
+| Samhain | SOW-in (sow as in cow) | The old feast at the start of winter; in Irish, also November |
+| Connemara | kon-eh-MAH-ra | The west of Galway |
+| Tír na nÓg | teer na NOHG | The land of the young, in the old stories |
+| Ceo | KYOH | Fog |
+| Macalla | MOCK-al-a | An echo |
+| Fras | FRASS | A shower, a burst of rain |
+| bodhrán | BOW-rawn (bow as in cow) | The frame drum |
+| An Chúileann | un KHOO-lin (kh as in loch) | The Coolin, an air |
+| Róisín Dubh | roe-SHEEN DUV | The Little Black Rose, an air |
+| Siúil a Rún | SHOOL a ROON | Walk, my love, an air |
+| triskele | TRIS-keel | The three-armed spiral on the launch screen |
+
 ---
 
 ## 8. The pages
@@ -452,7 +497,7 @@ Rate and Intro (see [The arc and the filter motion](#6-the-arc-and-the-filter-mo
 **HOME: Aisling:** Filter (on everything, Off in the middle: turned down it shuts, a low-pass; turned up it
 opens, a resonant high-pass), Evolve (how often the sequences change
 a step), Motion (how much they change, and how quickly the sections move; 0: Flow for ever), Drift (bars
-per chord: 2–64, or Hold).
+per chord: 2–64, or Hold). ALGORITHM: Evolve's timing (see [Nudges](#3-controls)).
 
 **HOME again: Key:** Tempo (60–160), Root, Mode (Minor, Major, Dorian, Mixolydian, Pentatonic minor and
 major, Phrygian, Lydian: the most common first), Transpose: how the sequences follow the chord. **Parallel**
@@ -486,7 +531,8 @@ Reverb, Echo. **Its Move page:** Width, Time, Rate, Intro.
 (the tail, in seconds), Reverb. The echo is a tape echo that ping-pongs left and right. **FX again: Echo:** Blur, Tone, Width, Size
 (the plate).
 
-**GLO: Setup:** Tune (±50 cents), MIDI out, Lights, Save. **GLO again: Arc:** Lead in, Bridge, Arc,
+**GLO: Setup:** Tune (±50 cents), MIDI out, Lights, Save; ALGORITHM the sleep timer (see
+[Sleep](#3-controls)). **GLO again: Arc:** Lead in, Bridge, Arc,
 Memory (see [The arc and the filter motion](#6-the-arc-and-the-filter-motion)).
 
 **EDIT: Chords:** eight slots. In **Endless** the walk writes them and slot 1 plays; on each change they move
@@ -497,9 +543,9 @@ up a slot. A key writes a slot's root, KNOB 2 its kind, KNOB 3 its type, KNOB 4 
 
 ## 9. The effects grid
 
-![The effects grid, REC held: four rows of four, Octave held](img/screen-grid.png)
+![The effects grid, REC held: four rows of four, a colour a group, Octave held](img/screen-grid.png)
 
-Hold REC: the grid fills the screen, four rows of four, one effect on each white key. An effect lasts while
+Hold REC: the grid fills the screen, four rows of four, one effect on each white key, a colour for each group (since 1.3.1). An effect lasts while
 its key is held; several can be held together. Let go of REC and the keys still held keep theirs until
 they're let go.
 
@@ -507,8 +553,8 @@ they're let go.
 |---|---|---|---|---|
 | **Echo** | Repeat: the Sequence thrown into the echo | Time: the echo's time doubled | Tape stop: the tape slowing to a quarter | Shimmer: the plate climbing, its tail an octave up and again (see below) |
 | **Filter** | Low-pass: down to 350 Hz | High-pass: up to 1.3 kHz | Sweep: the Sequence's filter swept two octaves each way | Phaser: a deep phaser on all the music |
-| **Space** | Reverb: the dry music into the plate | Ceo (fog): a wash of noise rolling down into the echo | Freeze: the cloud holds what it has | Wash: everything into the echo and the plate, the dry down |
-| **Moves** | Octave: the Sequence an octave up | Return: both sequences round their first four steps | Fras (a burst of rain): a scatter of bleeps into the echo | Macalla (an echo): the echo's feedback past full and more into it, so it rings on and builds |
+| **Space** | Reverb: the dry music into the plate | Ceo (KYOH, fog): a wash of noise rolling down into the echo | Freeze: the cloud holds what it has | Wash: everything into the echo and the plate, the dry down |
+| **Moves** | Octave: the Sequence an octave up | Return: both sequences round their first four steps | Fras (FRASS, a burst of rain): a scatter of bleeps into the echo | Macalla (MOCK-al-a, an echo): the echo's feedback past full and more into it, so it rings on and builds |
 
 **Shimmer** is a shimmer reverb, played. While it is held, the plate's tail is pitched an octave up and fed back
 into the plate, so each time round it climbs another octave, darker as it climbs (the FM-1's speaker is bright) and
@@ -539,37 +585,80 @@ are:
 The first eight are the grid's own effects, not copies: a black key and the grid's white key for the same
 effect are one effect, on while either is held. Rise and Close are offsets from the knobs, like the filter
 motion's, added to it (the Lead's stays within its three quarters of an octave); they never set a filter to
-a value of their own. In PERFORM the black keys solo, and on the Pattern page they accent steps. The screen
+a value of their own. In PERFORM the black keys are its own eleven effects, and on the Pattern page they accent steps. The screen
 reader names the effect as each key goes down.
 
 ---
 
 ## 10. PERFORM
 
-![PERFORM: the knobs Filter, Wet, Energy and Sweep](img/screen-perform.png)
+![PERFORM at rest: the map of the 27 keys' effects in their groups' colours, a green triskele in the last cell, and the knobs Filter, Wet, Energy and Chorus](img/screen-perform.png)
 
 Tap SEL. The knobs become the master actions: **Filter** (as on the Aisling page), **Wet** (the whole music dry, or drowned in the
 echo: every layer's echo send, the Drone's, both Sequences', the Lead's and the Atmosphere's), **Energy**
 (sparser or busier: the Sequence's Density, levels, Sweep, note length, Cutoff, and Repeat B, the second
-repeat), and **Sweep** (how far the Sequence's cutoff wanders on its own: the same as its Width on the
-Move page, the piece's). With Motion, Filter, Wet and Energy also move by themselves, the knobs showing where
+repeat), and **Chorus** (the whole music thickened and widened: Off, to 100. Like Wet and Energy it's for
+playing and never saved). Until 1.3 the fourth knob was Sweep; that's still the Width on the Sequence's Move
+page. With Motion, Filter, Wet and Energy also move by themselves, the knobs showing where
 they are; a turn of yours holds until the next section ([The master actions move by
-themselves](#the-master-actions-move-by-themselves)). The keys
-that do something are lit:
+themselves](#the-master-actions-move-by-themselves)).
 
-- **White 1–5:** the Drone, the Sequence, the Lead, Sequence 2, the Atmosphere, muted and back (their levels
-  kept). A mute is complete: a muted Lead lets go of its note at once (and plays nothing from the white keys),
-  a muted Drone is silent, and neither sends MIDI notes while muted.
-- **Black 1–5:** the same, soloed (more than one: they play together). (In normal playing, the black keys
-  play effects instead: [The black keys](#the-black-keys).)
-- **White 6, held:** the knobs become the levels (Drone, Seq, Lead, Seq 2).
-- **White 7–11, held:** **Sweep** (the Sequence's filter swept), **Open**, **Shut** (the filter pushed),
-  **Drop** (both sequences out), **Echo** (the echo pushed, everything in and feeding back).
-- **The top key (G), apart from the rest:** **Forget**. A press and the Lead forgets everything it remembers:
-  its ideas, its theme (yours too, if you played one), a figure you were in the middle of playing, and an answer it
-  was about to give. The note it's playing stops; it thinks of a new theme and new ideas of its own (the piece's air too is let go),
-  and plays again within a few bars. Nothing else changes (no setting, nothing saved). The key is lit, and dark
-  while you hold it.
+Every key is an effect, on the whole music, for as long as you hold it. Hold several and they sound together. The
+generator goes on underneath, so you can stay here for a whole piece. The keys that do something are lit, and a key
+goes dark while you hold it.
+
+The white keys, left to right, in four groups of four:
+
+| Group | 1 | 2 | 3 | 4 |
+|---|---|---|---|---|
+| Rhythm | Stutter | Half time | Gate | Roll |
+| Echo | Repeat | Macalla | Tape stop | Reverse |
+| Space | Reverb | Shimmer | Freeze | Wash |
+| Colour | Flange | Phaser | Drive | Crush |
+
+The black keys, in their own groups: **Ceo**, **Fras**, **Sweep** · **Rise**, **Close** · **Octave**, **Dive**, **Ring** ·
+**Vinyl**, **Comb** · **Drop** (both sequences out).
+
+What the new ones do:
+
+- **Half time:** both sequences step half as often. The clock, the Lead and the Atmosphere go on as they were.
+- **Gate:** the whole output chopped on the sixteenths, open for the first half of each.
+- **Roll:** the sequences' notes doubled to thirty-seconds: each one's last note again between the sixteenths and
+  wherever it rests, a little quieter.
+- **Dive:** the pitch falls an octave over a second and a half, and springs back when you let go. Notes take the
+  fall as they start, the Lead and the sequences' sounding notes fall with it; the Drone's chord and the plucked
+  strings already ringing stay where they are.
+- **Drive:** a warm overdrive on everything that grows the longer you hold it (three seconds to the top), filtered
+  after, and held to the level the music had, so it gets thicker, not louder.
+- **Ring:** a ring modulator on the piece's root, two octaves over middle C: bells and clangs out of whatever plays.
+- **Vinyl:** a narrow band, crackle, and the level wobbling slowly, as an old record. (No pitch wobble: that needs
+  memory the light effects don't use.)
+- **Stutter:** an eighth note of the music is caught as you press, then goes round and round until you let go.
+  (A sixteenth, in a piece too slow for the eighth to fit.)
+- **Reverse:** each eighth note played backwards, an eighth late.
+- **Flange:** a short, slowly sweeping delay mixed back in: a jet passing.
+- **Comb:** the music through a ringing pipe tuned to the piece's root.
+- **Crush:** fewer samples and fewer bits: gritty and bright. It keeps nothing, so it goes with any of the others.
+
+Stutter, Reverse, Flange and Comb share one line of memory, so only one of them sounds at a time: the last one you
+pressed. If you are still holding another when you let go, that one comes back. They work on the music in the
+middle (mono) and a little duller than the rest, which is what lets them fit.
+
+**The screen shows the keys.** While nothing is held, the middle of the screen is a map of PERFORM's effects, as the
+effect grid shows its own: four rows of four for the white keys from F3 up, then the black keys, each group in its
+colour. Hold a key and the screen flashes that effect's colour and name; let go and the map is back. In the map's
+last cell a small green triskele turns with the music, once round in three bars, and stands still when the music stops.
+
+**REC is as on any page.** A tap holds the echo; held, it opens the effect grid. There is no latch.
+
+**SAVE, tapped, is Forget.** The Lead forgets everything it remembers: its ideas, its theme (yours too, if you played
+one), a figure you were in the middle of playing, and an answer it was about to give. The note it's playing stops; it
+thinks of a new theme and new ideas of its own (the piece's air too is let go), and plays again within a few bars.
+Nothing else changes, and you stay in PERFORM. SAVE held still saves. (The Noise page is SAVE from any other page.)
+
+There are no mutes or solos in PERFORM any more. A layer's level is SELECT on its own page.
+
+Leaving PERFORM lets every effect go.
 
 A page's button leaves. So does SEL again, back to the page you came from.
 
@@ -589,8 +678,48 @@ clock from a Korg nanoKEY Fold, over a plain stereo cable. Type B hasn't been tr
   Octave shifts it, a figure becomes its theme as the keys' does, and a muted Lead stays silent. All notes off and
   all sound off (CC 123 and 120) let it go. In earlier versions a note on channel 1 changed the scale; the Key page
   does that now.
+- **In, program change:** programs 0 to 7, on any channel, choose the eight pieces in their order (0 is Skellig; a DAW
+  that counts from 1 calls them 1 to 8), as PRESETS does. Programs 8 and above are ignored, and so is a change to the piece already playing, because a DAW sends
+  one at the start of every clip.
+- **In, CCs:** on any channel, a CC turns a knob (see the table below). It sets the value outright: 0 to 127 spans
+  the knob's range, and on the centred knobs (Filter, Wet, Energy, the sound pages' ±50) 64 is the middle. A CC counts
+  as a touch for the sleep timer, as a note does. CCs never save, and never turn Setup's Tune, MIDI out, Lights or
+  Save; while the effects grid is up, 16 to 19 rest, as the knobs do. A change is saved by itself later, as a turn's
+  is (Filter, Wet, Energy and Chorus aren't saved at all). Other CCs are ignored.
+- **In, effects:** each of PERFORM's 27 effects has a CC, on any channel (the second table below). 64 or more holds
+  the effect, less lets it go, as its key does. They work on any page, PERFORM or not; in PERFORM the screen flashes
+  as it does for a key. All notes off and all sound off (CC 123 and 120) let every one go, and so does leaving
+  PERFORM.
+- **Out, effects:** an effect you play by hand, in PERFORM or on the effects grid, sends its CC on channel 16: 127 as
+  it starts, 0 as it ends. So a DAW can record a performance and play it back, and a screen can follow which effects
+  are sounding. Only with MIDI out on. An effect held by a CC isn't sent back.
 - **Don't send it straight back:** if a computer returns the FM-1's own MIDI out (a DAW's thru, say), every layer's
   notes play the Lead. Turn thru off, or MIDI out off on GLO's Setup page.
+
+| CC | Turns |
+|---|---|
+| 16–19 | KNOB 1–4 of the page on the screen |
+| 74 | Filter |
+| 75 | Evolve |
+| 76 | Motion |
+| 77 | Drift |
+| 78 | Wet (PERFORM's) |
+| 79 | Energy (PERFORM's) |
+| 80 | Chorus (PERFORM's) |
+
+The effects, in the keys' order from the lowest (the low octave is 20 to 31, the rest 102 to 116):
+
+| CC | Effect | CC | Effect | CC | Effect |
+|---|---|---|---|---|---|
+| 20 | Stutter | 29 | Macalla | 108 | Freeze |
+| 21 | Ceo | 30 | Close | 109 | Wash |
+| 22 | Half time | 31 | Tape stop | 110 | Vinyl |
+| 23 | Fras | 102 | Reverse | 111 | Flange |
+| 24 | Gate | 103 | Octave | 112 | Comb |
+| 25 | Sweep | 104 | Reverb | 113 | Phaser |
+| 26 | Roll | 105 | Dive | 114 | Drive |
+| 27 | Repeat | 106 | Shimmer | 115 | Drop |
+| 28 | Rise | 107 | Ring | 116 | Crush |
 
 ### The visualiser
 
@@ -602,7 +731,8 @@ storm: the Drone lays the swell, the Sequence the foam, each note of Sequence 2 
 light. Space is deep space: the Drone a nebula's glow, the Sequence stars that flare where its notes land, Sequence 2
 threads of gas, and the Lead a comet, up for a higher note and down for a lower. On Land, **Ground** (M) changes what it paints on
 (vellum, mist or night) and **Colours** (C) its colours (Heather, Atlantic, Kells or Evening): what is painted keeps its own, and the next notes take the new. For your own, click a layer in the list: a colour wheel and a brightness slider choose its colour, the browser remembers them, and **Copy link** gives an address that opens the page with them. Your own colours are for the landscape; the sea and space keep theirs. Connect the FM-1 by USB, open the
-page in Chrome or Edge (on a computer, a Chromebook or an Android phone; Safari can't read MIDI), and press **Listen**.
+page in Chrome or Edge on a computer (Chrome on a Chromebook or an Android phone has Web MIDI too, but hasn't been tried
+with the FM-1; Safari can't read MIDI), and press **Listen**.
 **Demo** plays a recording of Skellig, as the FM-1 plays it, and paints it as you hear it: it is the one thing the
 page fetches, and opened from disk the demo paints without sound. Paint into it with a finger or the mouse; **Save** keeps a still, and
 **Record** a video with the FM-1's sound (the browser asks to use it as a microphone, because that is how the FM-1's
@@ -643,7 +773,8 @@ jack ignores it.
 
 ## 12. Saving
 
-AISLING keeps all eight pieces in the FM-1's memory, each as you left it, with Tune, MIDI out and Lights.
+AISLING keeps all eight pieces in the FM-1's memory, each as you left it, with Tune, MIDI out, Lights and Evolve's
+timing.
 
 - **By itself:** a few seconds after a change, while resting (writing to the memory interrupts the sound
   for a moment, so it never happens while the music plays). A dot at the top means unsaved changes.
@@ -652,7 +783,7 @@ AISLING keeps all eight pieces in the FM-1's memory, each as you left it, with T
   saves.
 - **GLO held on** (1.5 s): the piece back to its recipe ("RESET"). Like any change, it's saved by itself a few seconds after the music stops.
 
-Lock and PERFORM's Filter, Wet and Energy aren't saved; a piece change (or GLO's reset) returns the three to 0, so
+The sleep timer isn't saved. Lock and PERFORM's Filter, Wet, Energy and Chorus aren't saved either; a piece change (or GLO's reset) returns the four to 0, so
 none of one piece's push carries into the next. Projects saved by DUB-1, AMB-1 or an earlier AISLING
 build aren't read: AISLING starts with its eight recipes.
 
@@ -660,11 +791,34 @@ build aren't read: AISLING starts with its eight recipes.
 
 ## 13. Troubleshooting
 
-**Update mode:** hold OCT− and OCT+ together for five seconds. A countdown appears; let go before it ends to
-cancel.
+**The FM-1 isn't found:** the web installer says FM-1 not found, or the editor, the visualiser or M-UPGRADE can't
+see it. Check that it's switched on and connected by a USB data cable: some cables only charge. Close anything else
+that may be using its MIDI, such as M-UPGRADE, music software, or another tab with the editor, the visualiser or an
+installer. Then unplug the FM-1, plug it back in and try again. On a phone or tablet, close the browser fully, not
+just the tab. We have tried AISLING from a Mac, but not yet from an Android phone or tablet or a Chromebook; if you
+try one, please say in an issue whether it worked.
+
+**Installing over AISLING:** no button is needed. While AISLING is running, the web installer, The Firmware Hub and
+M-VAVE's M-UPGRADE reach it over USB and install straight over it, whether that's a newer AISLING or another
+firmware. M-VAVE's own goes back only in the version whose bootloader is already on your FM-1: V15 and V16 come with
+different bootloaders, and AISLING refuses an update that would replace it. The FM-1 shows UPDATE, then FAILED, and
+nothing is written (The Firmware Hub says the device stopped after a few requests). An FM-1 still on V15's bootloader
+goes back with The Firmware Hub's Back to official V15; one that has had V16 needs V16, from M-UPGRADE. The Firmware Hub suggests holding OCT− while switching on when an install won't start. AISLING
+doesn't use that (OCT− alone at switch-on does nothing, and with OCT+ it's calibration), so check the cable and the
+other apps as above instead.
+
+**Download mode (UBOOT):** hold OCT− and OCT+ together for five seconds. A countdown appears; let go before it ends
+to cancel. At the end the screen goes dark but for **UBOOT**, and the FM-1 waits in the chip's own download mode.
+The Firmware Hub's Rescue button sends it to the same place, and the screen says **UBOOT (USB)**. It's only for
+M-Flasher and the rescue tools (see [A newer FM-1 on an earlier AISLING](#a-newer-fm-1-on-an-earlier-aisling)): the
+web installer and M-UPGRADE can't see the FM-1 while it's there. Nothing has been written, so switch the FM-1 off
+and on and it starts AISLING as before.
 
 **Calibration:** if a button or knob does the wrong thing, hold OCT− and OCT+ while you switch the FM-1 on.
 The screen asks you to press each button and turn each knob in turn.
+
+**Dark and silent:** if the screen went black, the button lights went out and the music stopped, the sleep timer ran
+out (GLO's Setup page). Press any button to wake it; the timer is off again after switching off and on.
 
 **After a crash:** AISLING shows a red CRASH screen and restarts by itself. The next start shows RESTARTED
 AFTER A CRASH and an address (PC ...) for a moment; if you report the problem, include it and what you were
@@ -685,14 +839,16 @@ macOS 14 and 15 haven't been tried, so if you try one, please say in an issue wh
 device.
 
 **Safe mode:** if AISLING crashes twice in a row while starting, it starts in SAFE MODE: no sound, but USB
-works, so you can reinstall with `tools/fm1_install.py` or put the stock firmware back with M-UPGRADE. Press
+works, so you can reinstall with `tools/fm1_install.py` or put the stock firmware back, as in Installing over AISLING
+above. Press
 PLAY to try starting AISLING normally. If even safe mode fails twice, the FM-1 drops into the chip's own
-update mode, and only the rescue below can reach it.
+download mode, and only the rescue below can reach it.
 
 ### Recovering an FM-1 that won't start
 
-An FM-1 in the chip's own update mode shows a blank screen, and neither the installer nor M-VAVE's updater
-can see it. On a Mac, in a checkout of the source, run:
+An FM-1 in the chip's own download mode shows a blank screen, and neither the installer nor M-VAVE's updater
+can see it. If you sent it there yourself (the five-second hold, or The Firmware Hub's Rescue), switch it off
+and on first: that brings AISLING back. On a Mac, in a checkout of the source, run:
 
 ```
 bash tools/fm1_rescue.sh
@@ -715,7 +871,8 @@ Earlier versions don't: the FM-1 plays, but SAVE shows **NOT SAVED / FLASH ERROR
 off, and it won't start an update. We have only the first chip, so no AISLING has been tried by us on the newer one.
 
 From M-VAVE's firmware or another that accepts the chip, the [web installer](https://aisling.stephen8n.com/install/)
-works as usual. From an earlier AISLING, go through the chip's own download mode, once:
+works as usual. When it finishes, it names the chip it found: Puya P25Q80 is the first, UCUN UC25HQ80 the newer. From
+an earlier AISLING, go through the chip's own download mode, once:
 
 1. Hold **OCT−** and **OCT+** for 5 seconds. The screen counts down, then stops on **UBOOT**. Nothing has been
    written yet, and switching off and on brings the FM-1 back as it was.
@@ -771,6 +928,13 @@ must also share its source code.
   Kuroshita, Hügelton Instruments, by way of [X0X](https://github.com/charlesvestal/fm1-x0x), FoMni-1,
   AMB-1 and DUB-1.
 - The idea of running FM-1 firmware in the browser comes from [Groove OS](https://www.groove-os.com/).
+- The sleep timer's idea comes from [ZEN-1](https://github.com/aceyprime/zen-1) by aceyprime and
+  [Penumbra](https://github.com/MadMooneyham/Penumbra) by Lunar Eclipse Forge, other FM-1 firmwares; the code is
+  AISLING's. Program change for the pieces and MIDI CCs for the knobs are Penumbra's ideas too.
+- Evolve on the bar line is an idea from Unholy Union (actuallysparky), Bunker Evolved (Kid Bunka) and Tessera (Theo Dainis), FM-1 firmwares listed on [the Firmware Hub](https://thefirmwarehub.com/); the code is AISLING's.
+- The flash chip's ID in the FM-1's identity (bytes 24 to 26 of the reply) follows the layout Sven proposed in
+  [Felucca's issue #320](https://github.com/hugelton/Felucca/issues/320), as
+  [felucca-bsp](https://github.com/hugelton/felucca-bsp) answers it.
 - The fonts are Barlow Semi Condensed and Terminus (SIL Open Font License).
 
 M-VAVE and FM-1 are trademarks of their owners. AISLING is not connected with M-VAVE, Hügelton Instruments or NACHTFAHRT's author.

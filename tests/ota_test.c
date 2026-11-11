@@ -19,6 +19,7 @@
 #endif
 #define FELUCCA_OTA_DRYRUN 0
 #include "fwsc.h"                        /* the package reader, and the board's addresses (T_*) */
+#define OTA_FLASH_ID() 0x856014u           /* the firmware's hook: the flash's JEDEC ID read at boot */
 
 static uint8_t nor[0x100000];
 static uint8_t *logical;
@@ -187,6 +188,26 @@ int main(int argc, char **argv)
         bad += check("handshake answered", ident_replies == 1);
         bad += check("identity frame is " FELUCCA_ID,
                      ota_msg[2] == 0x11 && !memcmp(ota_msg + 6, FELUCCA_ID, sizeof FELUCCA_ID - 1));
+    }
+    {
+        /* the plain answer: the text and zeros only (installers that strip only the trailing zeros); the query with
+         * the body 01: the same text, zeros, then the flash's JEDEC ID in bytes 24..26 */
+        static const uint8_t q1[8] = {0, 0x59, 0x11, 1, 0, 0, 1, 0xFE}, q2[8] = {0, 0x59, 0x11, 1, 0, 0, 2, 0xFD};
+        uint32_t i, z = 1;
+        for (i = sizeof FELUCCA_ID - 1u; i < 27u; i++) z &= ota_msg[6 + i] == 0;
+        bad += check("plain answer: zeros after the text, no chip ID", z);
+        host_reply(q1, 8);
+        ota_service();
+        z = 1;
+        for (i = sizeof FELUCCA_ID - 1u; i < 24u; i++) z &= ota_msg[6 + i] == 0;
+        bad += check("body 01: answered, the same text, zeros between",
+                     ident_replies == 2 && ota_msg[2] == 0x11 && ota_rd24(ota_msg + 3) == 27u &&
+                     !memcmp(ota_msg + 6, FELUCCA_ID, sizeof FELUCCA_ID - 1) && z);
+        bad += check("body 01: the JEDEC ID in bytes 24..26, big-endian",
+                     ota_msg[30] == 0x85 && ota_msg[31] == 0x60 && ota_msg[32] == 0x14);
+        host_reply(q2, 8);
+        ota_service();
+        bad += check("another one-byte body: not answered", ident_replies == 2);
     }
 
     /* full session */

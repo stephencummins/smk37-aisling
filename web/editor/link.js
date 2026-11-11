@@ -62,7 +62,8 @@
     return { view: a[0], playing: !!(f & 1), frozen: !!(f & 2), dirty: !!(f & 4), perf: !!(f & 8), saving: !!(f & 16), piece: a[2],
       moves: get14u(a, 3), act: [a[5], a[6], a[7], a[8], a[9]], muted: a[10], solo: a[11], sounds: a[12], un: a[13], rn: a[14],
       cpu: a[15], peak: a[16], xruns: get14u(a, 17), master: get14u(a, 19), raw: get14u(a, 21), lit: get14u(a, 23),
-      keys: (get14u(a, 25) | get14u(a, 27) << 14) >>> 0, gen: a[29] };
+      keys: (get14u(a, 25) | get14u(a, 27) << 14) >>> 0, gen: a[29],
+      fx: a.length >= 34 ? (get14u(a, 30) | get14u(a, 32) << 14) >>> 0 : 0 };   // (1.3: the effects sounding; 1.2 sends none)
   }
   function parseVals(a) {                            // [k, v, text, k, v, text..]: the page's worklet sends the same
     const out = [];

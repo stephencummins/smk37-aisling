@@ -96,7 +96,7 @@ said Echo page: Blur
 tap GLO
 wait 300
 expect view 6
-said Setup page: Tune 0, MIDI out On
+said Setup page, sleep off: Tune 0, MIDI out On
 tap GLO
 wait 300
 expect view 22

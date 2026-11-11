@@ -1,0 +1,35 @@
+# 1.1: MIDI program change (Penumbra's idea). Programs 0-7, on any channel, are the eight pieces, as PRESET turned
+# to them; the rest do nothing. The piece already playing: nothing (a DAW sends it at every clip's start)
+wait 500
+expect piece 0
+expect playing 1
+listen
+midi C0 03 00
+wait 300
+expect piece 3
+said PIECE
+expect playing 1
+# any channel
+midi C9 01 00
+wait 300
+expect piece 1
+said PIECE Burren
+# 8 and above: nothing
+midi C0 08 00
+wait 300
+expect piece 1
+midi C0 7F 00
+wait 300
+expect piece 1
+said_none PIECE
+# the one playing: nothing, not grown again
+midi C0 01 00
+wait 300
+expect piece 1
+said_none PIECE
+# channel 16, and the last piece
+midi CF 07 00
+wait 300
+expect piece 7
+said PIECE Tir na nOg
+expect playing 1

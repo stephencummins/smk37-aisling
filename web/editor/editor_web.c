@@ -53,10 +53,10 @@ ED int ed_colour(int i)
 ED int ed_nblack(void) { return NBLACK; }
 ED int ed_black_key(int b) { return BLACK_KEY[b]; }
 ED const char *ed_black_name(int b) { return BLACK_NAME[b]; }
-ED int ed_perf_key(int i) { return PERF_KEY[i]; }
+ED int ed_perf_key(int i) { return i; }           /* (1.3) PERFORM: every key an effect, in the keys' order */
 ED int ed_perf_n(void) { return PERF_N; }
-ED int ed_perf_shift(void) { return PERF_SHIFT; }
-ED int ed_perf_forget(void) { return PERF_FORGET; }
+ED int ed_perf_shift(void) { return -1; }         /* (1.3) no Mix key, and Forget is SAVE tapped */
+ED int ed_perf_forget(void) { return -1; }
 
 /* ------------------------------------------------------------- the knobs --- */
 static char text_buf[32];
@@ -120,14 +120,14 @@ ED void ed_piece_go(int i) { set_piece(i); }
 ED void ed_save(void) { do_save(); }
 ED void ed_voice(int p, int v) { link_voice(p, v); }
 
-/* PERFORM's keys, by the firmware's own function: 0-4 a layer's mute, 5-9 a move (held), 10-14 a layer's solo */
+/* 1.2's fifteen, by the link's own function (1.3: no longer on PERFORM's keys): 0-4 a layer's mute, 5-9 a move
+ * (held), 10-14 a layer's solo */
 ED void ed_perf(int i, int down)
 {
-    if (i >= 0 && i < PERF_N)
-        perf_key(PERF_KEY[i], down);
+    link_perf(i, down);
 }
-ED void ed_forget(void) { perf_key(PERF_FORGET, 1); }
-ED const char *ed_perf_name(int i) { return PERF_NAME[i]; }
+ED void ed_forget(void) { lead_forget(); }
+ED const char *ed_perf_name(int i) { return i >= 0 && i < PERF_N ? PKEY[i].name : ""; }
 ED int ed_layer_muted(int i) { return link_layer_muted(i); }
 ED int ed_layer_solo(int i) { return link_layer_solo(i); }
 ED int ed_layer_sounds(int i) { return perf_sounds(i); }

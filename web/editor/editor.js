@@ -752,8 +752,8 @@
     const names = new Map();
     if (perf) {
       for (let i = 0; i < Q.ed_perf_n(); i++) { const n = qstr(Q.ed_perf_name(i)); names.set(Q.ed_perf_key(i), n[0] + n.slice(1).toLowerCase()); }
-      names.set(Q.ed_perf_shift(), "Mix");
-      names.set(Q.ed_perf_forget(), "Forget");
+      if (Q.ed_perf_shift() >= 0) names.set(Q.ed_perf_shift(), "Mix");
+      if (Q.ed_perf_forget() >= 0) names.set(Q.ed_perf_forget(), "Forget");
     } else if (S.view === V_CHORDS) {
       keyEls.forEach((b, k) => names.set(k, valueText(P_ROOT, (5 + k) % 12)));
     } else if (S.view === V_PATTERN) {
@@ -769,7 +769,7 @@
       b.title = t && effects && BLACK_K.includes(k) ? `${t}, while held` : t;
       b.classList.toggle("perf", perf);
     });
-    capHint.textContent = perf ? "White keys mute a layer or hold a move, black keys solo. Hold Mix for the levels."
+    capHint.textContent = perf ? "Every key is an effect on the whole music, for as long as it's held"
       : S.view === V_CHORDS ? "The keys set this slot's root"
       : S.view === V_PATTERN ? "White keys are this lane's steps. Hold a black key with one to accent it."
       : "White keys play the Lead, black keys are effects while held";

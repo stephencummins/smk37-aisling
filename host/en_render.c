@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     struct { double t; int p, v; } ev[64];
     int nev = 0, e;
     if (argc < 3) {
-        fprintf(stderr, "usage: en_render OUT.wav SECS [piece=N] [NAME=V ...] [freeze=T0-T1] [seed=S] [log]\n");
+        fprintf(stderr, "usage: en_render OUT.wav SECS [piece=N] [NAME=V ...] [freeze=T0-T1] [chorus=V] [seed=S] [log]\n");
         return 2;
     }
     secs = atof(argv[2]);
@@ -72,6 +72,8 @@ int main(int argc, char **argv)
         } else if (!strncmp(a, "fx=", 3) && nfx < 16) {
             sscanf(a + 3, "%d@%lf-%lf", &fxn[nfx], &fx0[nfx], &fx1[nfx]);
             nfx++;
+        } else if (!strncmp(a, "chorus=", 7)) {    /* (1.3) PERFORM's Chorus, 0..100, from the start */
+            en_chorus(atoi(a + 7));
         } else if (!strncmp(a, "seed=", 5)) {
             seed = (unsigned)atoi(a + 5);
         } else if (eq && strncmp(a, "piece=", 6)) {

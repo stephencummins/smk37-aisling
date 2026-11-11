@@ -1,0 +1,125 @@
+# 1.3: PERFORM's 27 effects over MIDI. In: CC 20-31 the low octave's keys (0-11), CC 102-116 the fifteen above
+# (12-26); 64 and over holds, under lets go; on any page, any channel. Out: an effect played by hand sends its CC on
+# channel 16 (127, then 0), with MIDI out on; a CC's own effects are not sent back
+wait 500
+expect view 0
+listen
+expect fxcc 0
+# in, on HOME: Stutter (key 0, CC 20), no page change, nothing sent back
+midi B0 14 7F
+wait 300
+said Stutter
+expect pcc 1
+expect pnow 1
+expect pheld 0
+expect view 0
+expect fxcc 0
+# 63 lets go; 64 holds
+midi B0 14 3F
+wait 100
+expect pcc 0
+expect pnow 0
+midi B3 14 40
+wait 100
+expect pcc 1
+midi B3 14 00
+wait 100
+expect pcc 0
+# the top run: Reverse (key 12, CC 102), Crush (key 26, CC 116); the CCs either side are no effect's
+midi B0 66 7F
+midi B0 74 7F
+wait 300
+said Reverse
+# the link's STATE tells them
+link hello
+wait 400
+expect lfx 67112960
+expect pcc 67112960
+midi B0 65 7F
+midi B0 75 7F
+midi B0 20 7F
+wait 100
+expect pcc 67112960
+# all notes off lets them go
+midi B0 7B 00
+wait 100
+expect pcc 0
+expect pnow 0
+expect store_writes 0
+# in PERFORM a CC's effect flashes as a key's does, and its key goes dark
+tap SEL
+wait 300
+expect view 17
+midi B0 18 7F
+wait 400
+said Gate
+expect pflash 1
+expect litkey4 0
+shot cc-gate.png
+midi B0 18 00
+wait 400
+expect pflash 0
+expect litkey4 1
+# out: a key by hand, its CC on channel 16 (Half time: key 2, CC 22)
+expect fxcc 0
+key w1 down
+wait 200
+expect fxcc 1
+expect fxcclast 5759
+expect pnow 4
+key w1 up
+wait 200
+expect fxcc 2
+expect fxcclast 5632
+# the top run: Crush (key 26, CC 116)
+key w15 down
+wait 200
+expect fxcclast 29823
+key w15 up
+wait 200
+expect fxcclast 29696
+expect fxcc 4
+# a CC held, PERFORM left: let go with the rest
+midi B0 18 7F
+wait 100
+expect pcc 16
+tap SEL
+wait 300
+expect pcc 0
+expect pnow 0
+expect fxcc 4
+# the grid's effects that PERFORM has too send theirs: Reverb (the grid's ninth: w8; PERFORM's key 14, CC 104)
+press REC
+wait 500
+key w8 down
+wait 200
+expect fxcc 5
+key w8 up
+release REC
+wait 300
+expect fxcc 6
+# PERFORM's fourth knob is Chorus (1.3; Sweep is the Sequence's Move page's Width): by the knob, by CC 19 there, and
+# by CC 80 anywhere; never saved; a new piece starts without it
+tap SEL
+wait 300
+expect view 17
+listen
+midi B0 13 7F
+wait 300
+said Chorus 100
+midi B0 13 00
+wait 300
+said Chorus Off
+tap SEL
+wait 300
+expect chorus 0
+midi B0 50 40
+wait 300
+expect chorus 50
+expect view 0
+expect store_writes 0
+# a new piece starts without it
+turn PRESET 1
+wait 300
+expect piece 1
+expect chorus 0

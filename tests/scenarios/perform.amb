@@ -1,5 +1,6 @@
-# PERFORM (SEL): white 1-5 mute the Drone, the Sequence, the Lead, Sequence 2, the Atmosphere (their levels kept);
-# white 7-11 held: Sweep, Open, Shut, Drop (both sequences out), Push; SEL or a page's button leaves
+# (1.3, the Performance release) PERFORM (SEL): every key an effect while held, several together; the white keys
+# four groups of four (rhythm, echo, space, colour: w0-w3, w4-w7, w8-w11, w12-w15), the black keys eleven more; REC
+# as on any page; no mutes. At rest the screen is a map of the keys' effects. Keys whose effect 1.3 has yet to build are dark and do nothing (w0 Stutter here).
 # (on Blasket, AISLING's: both sequences on, Sequence 2 a quieter echo of the first)
 wait 500
 turn PRESET 4
@@ -10,36 +11,218 @@ tap SEL
 wait 300
 expect view 17
 said PERFORM ON
-# the Sequence muted (white 2): no note on channel 2
-tapkey w1
+expect pheld 0
+expect platch 0
+expect litbtn14 0
+# an effect, held: said, its key dark; let go: gone, lit again (w4, key 7: Repeat)
+# (the flash: the header and the main area its colour and name while held, gone two frames after; every colour reads
+# with black lettering at 4.5:1 or better, every name and line fits)
+expect pfcontrast 0
+expect pffit 0
+expect pflash 0
+expect litkey7 1
+key w4 down
 wait 300
-said SEQ
-peakreset
-wait 6000
-expect notes_ch2 0
-tapkey w1
+said Repeat
+expect pheld 128
+expect litkey7 0
+expect pflash 1
+key w4 up
+wait 500
+expect pheld 0
+expect litkey7 1
+expect pflash 0
+# two together (w8 Reverb, key 14; w13 Phaser, key 23)
+key w8 down
+key w13 down
 wait 300
-peakreset
-wait 6000
-expect notes_ch2 >0
-# Drop held (white 10): both sequences out, the Drone goes on
-key w9 down
+said Phaser
+expect pheld 8404992
+key w8 up
+wait 100
+expect pheld 8388608
+key w13 up
+wait 100
+expect pheld 0
+# step 4's, each held and let go (w0 Stutter, w7 Reverse, w12 Flange, w15 Crush; b9 Comb): every key lit now
+expect litkey0 1
+key w0 down
+wait 700
+said Stutter
+expect pheld 1
+expect pflash 1
+key w0 up
+wait 100
+expect pheld 0
+key w7 down
+wait 700
+said Reverse
+expect pheld 4096
+expect pflash 1
+key w7 up
+wait 100
+expect pheld 0
+key w12 down
+wait 700
+said Flange
+expect pheld 2097152
+expect pflash 1
+key w12 up
+wait 100
+expect pheld 0
+key w15 down
+wait 700
+said Crush
+expect pheld 67108864
+expect pflash 1
+key w15 up
+wait 100
+expect pheld 0
+key b9 down
+wait 700
+said Comb
+expect pheld 4194304
+expect pflash 1
+key b9 up
+wait 100
+expect pheld 0
+# two buffered ones and Crush together: the last pressed sounds, the first comes back
+key w0 down
+wait 400
+key w12 down
+key w15 down
+wait 800
+key w12 up
+wait 800
+shot heavy.png
+key w0 up
+key w15 up
 wait 300
+expect pheld 0
+# step 3's light effects, each held and let go: said, flashed, gone (w1 Half time, w2 Gate, w3 Roll, w14 Drive;
+# b6 Dive, b7 Ring, b8 Vinyl)
+key w1 down
+wait 60
+said Half time
+expect pheld 4
+expect pflash 1
+key w1 up
+wait 60
+expect pheld 0
+key w2 down
+wait 60
+said Gate
+expect pheld 16
+expect pflash 1
+key w2 up
+wait 60
+expect pheld 0
+key w3 down
+wait 60
+said Roll
+expect pheld 64
+expect pflash 1
+key w3 up
+wait 60
+expect pheld 0
+key w14 down
+wait 60
+said Drive
+expect pheld 16777216
+expect pflash 1
+key w14 up
+wait 60
+expect pheld 0
+key b6 down
+wait 60
+said Dive
+expect pheld 32768
+expect pflash 1
+key b6 up
+wait 60
+expect pheld 0
+key b7 down
+wait 60
+said Ring
+expect pheld 131072
+expect pflash 1
+key b7 up
+wait 60
+expect pheld 0
+key b8 down
+wait 60
+said Vinyl
+expect pheld 1048576
+expect pflash 1
+key b8 up
+wait 60
+expect pheld 0
+# three of them together, a while, and let go: the music goes on
+key w2 down
+key w14 down
+key b7 down
+wait 1500
+expect pheld 16908304
+shot light3.png
+key w2 up
+key w14 up
+key b7 up
+wait 400
+expect pheld 0
+expect pflash 0
+# Drop held (the top black key, b10: key 25): both sequences out, the Drone goes on
+key b10 down
+wait 300
+said Drop
 peakreset
 wait 6000
 expect notes_ch2 0
 expect notes_ch4 0
-key w9 up
+key b10 up
 wait 300
 peakreset
 wait 6000
 expect notes_ch2 >0
+# Rise (b3, key 8): a move, not one of the grid's (what it does to the filters: blackkeys.amb, on Aran)
+key b3 down
+wait 300
+said Rise
+expect pheld 256
+key b3 up
+wait 3000
+# REC is as everywhere else (Stephen, 2026-11-10: no latch): a tap is the echo's Hold
+tap REC
+wait 300
+expect frozen 1
+tap REC
+wait 300
+expect frozen 0
+expect platch 0
+wait 300
+expect pheld 0
+# left with a key held: let go
+key b10 down
+wait 200
+expect pheld 33554432
+tap SEL
+wait 300
+said PERFORM OFF
+expect pheld 0
+expect platch 0
+key b10 up
+wait 300
+expect bfx 0
+peakreset
+wait 6000
+expect notes_ch2 >0
 # a page's button leaves PERFORM
+tap SEL
+wait 300
+expect view 17
 tap ENV
 wait 300
 expect view 1
-# (0.5) SEL again leaves it too, back to the page it came from: here the Drone's, then its sound page. It says so,
-# and the keys are the Lead's again: mutes stay
+# (0.5) SEL again leaves it too, back to the page it came from: here the Drone's, then its sound page
 tap SEL
 wait 300
 expect view 17
@@ -56,59 +239,3 @@ expect view 17
 tap SEL
 wait 300
 expect view 8
-# (from the Mix page, D4 held: back to PERFORM's page, not out)
-tap SEL
-wait 300
-expect view 17
-key w5 down
-wait 200
-expect view 7
-tap SEL
-wait 300
-expect view 17
-key w5 up
-wait 200
-expect view 17
-tap SEL
-wait 300
-expect view 8
-tap ENV
-wait 300
-# (BERLIN) the keys follow the meters, left to right: white 4 Sequence 2 (the 4th meter), white 5 the Atmosphere (the
-# 5th), the other untouched; a solo (black 4: Sequence 2) leaves the Atmosphere out too (Aran, AISLING's: Fire,
-# both sequences, Sequence 2 opening over its first 8 bars; Sequence 2 heard: its meter above 2, a moment's reading,
-# which caught it at 6 and 9)
-turn PRESET -2
-wait 6000
-expect piece 2
-tap SEL
-wait 300
-expect view 17
-tapkey w4
-wait 300
-said ATMOS
-expect mutes 32
-wait 3000
-expect act4 0
-expect act3 >2
-tapkey w4
-wait 300
-tapkey w3
-wait 300
-said SEQ 2
-expect mutes 24
-wait 3000
-expect act3 0
-expect act4 >5
-tapkey w3
-wait 300
-tapkey b3
-wait 300
-said SOLO
-wait 3000
-expect act3 >2
-expect act4 0
-expect act1 0
-tapkey b3
-wait 3000
-expect act4 >5

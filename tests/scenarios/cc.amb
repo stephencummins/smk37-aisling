@@ -1,0 +1,75 @@
+# 1.2: MIDI CCs (Penumbra's idea, our own code), on any channel, USB and the TRS jack. 16-19: the four knobs of the
+# page on screen. 74-79: Filter, Evolve, Motion, Drift, Wet and Energy, whatever the page. 0..127 across the knob's
+# range (the centred ones: 64 is 0). A touch, as a note. Never Save, nor Setup's Tune, MIDI out or Lights
+wait 500
+expect view 0
+expect store_writes 0
+# HOME's four: Filter, Evolve, Motion, Drift
+midi B0 11 7F
+wait 50
+expect par5 100
+expect dirty 1
+midi B0 10 00
+wait 50
+expect mac0 -50
+midi B0 10 40
+wait 50
+expect mac0 0
+# any channel (6 here); Drift's 0..6, 64 its middle
+midi B5 12 00
+wait 50
+expect par15 0
+midi B5 13 40
+wait 50
+expect par6 3
+midi BF 13 7F
+wait 50
+expect par6 6
+# another page: its own four (the Drone's: Pedal first)
+tap ENV
+wait 300
+expect view 1
+midi B0 10 00
+wait 50
+expect par40 0
+expect par5 100
+# 74-79, whatever the page
+midi B0 4A 7F
+wait 50
+expect mac0 50
+midi B0 4B 00
+wait 50
+expect par5 0
+midi B0 4C 7F
+wait 50
+expect par15 100
+midi B0 4D 00
+wait 50
+expect par6 0
+midi B0 4E 7F
+wait 50
+expect mac1 50
+midi B0 4F 00
+wait 50
+expect mac2 -50
+expect view 1
+# other CCs: nothing (the mod wheel, volume, 80)
+midi B0 01 7F
+midi B0 07 00
+midi B0 50 7F
+wait 50
+expect par40 0
+expect par5 0
+expect mac0 50
+# Setup: Tune, MIDI out, Lights and Save never by a CC; nothing saved
+tap GLO
+wait 300
+expect view 6
+midi B0 10 00
+midi B0 11 00
+midi B0 12 00
+midi B0 13 7F
+wait 300
+expect par16 0
+expect par17 1
+expect store_writes 0

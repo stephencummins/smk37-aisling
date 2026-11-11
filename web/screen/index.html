@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AISLING · the add-on screen</title>
+<meta name="description" content="A 3.5-inch touch screen for the M-VAVE FM-1 running AISLING: it paints the visualiser's landscape from the FM-1's MIDI, shows the FM-1's own screen, and turns its knobs. How it was made, the parts, and an FAQ.">
+<meta property="og:title" content="AISLING · the add-on screen">
+<meta property="og:description" content="A small touch screen beside the FM-1: the landscape painted from its MIDI, the FM-1's own screen, and its knobs under your finger. How it was made, and the parts.">
+<meta property="og:url" content="https://aisling.stephen8n.com/screen/">
+<meta property="og:image" content="https://aisling.stephen8n.com/screen/img/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+/* The screen page's own: the clip beside what it is, the pictures, the parts list, the questions. The rest is the
+   site's (web/brand/site.css) */
+.pane p { margin: 0 0 10px; }
+.pane p:last-child { margin-bottom: 0; }
+.pane p b, .pane li b { font-weight: 400; color: var(--brand-green); }
+.pane.clip { display: flex; align-items: center; padding: 0; background: #1c1610; }
+.clip video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.lede { font-size: 14.5px; }
+.note { padding: 10px 12px; border: 1px solid var(--brand-rule); background: var(--brand-strip); font-size: 13px; }
+.pics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.pics figure { margin: 0; min-width: 0; }
+.pics img { display: block; box-sizing: border-box; width: 100%; height: auto; border: 1px solid var(--brand-rule); }
+.pics figcaption { margin-top: 6px; font-size: 12.5px; color: var(--brand-muted); }
+/* the two photos side by side at one height (their widths in the ratio of their shapes) */
+.photos { display: grid; grid-template-columns: minmax(0, 1.136fr) minmax(0, 1fr); gap: 12px; max-width: 760px; margin: 0 0 14px; }
+.photos figure { margin: 0; min-width: 0; }
+.photos img { display: block; box-sizing: border-box; width: 100%; height: auto; border: 1px solid var(--brand-rule); }
+.photos figcaption { margin-top: 6px; font-size: 12.5px; color: var(--brand-muted); }
+.parts { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.parts th, .parts td { padding: 9px 10px 9px 0; border-top: 1px solid var(--brand-rule); text-align: left; vertical-align: top; }
+.parts thead th { border-top: 0; padding-top: 0; font: 400 12px/1.4 var(--brand-mono); letter-spacing: .04em; color: var(--brand-muted); }
+.parts td:last-child { white-space: nowrap; padding-right: 0; font: 400 12px/1.5 var(--brand-mono); }
+.parts .what { display: block; color: var(--brand-muted); font-size: 12.5px; }
+.ad { display: inline-block; margin-right: 6px; padding: 0 5px; font: 400 10.5px/1.6 var(--brand-mono); letter-spacing: .04em;
+  background: var(--brand-soft); border: 1px solid var(--brand-rule); color: var(--brand-muted); }
+ol.steps, ul.how { padding-left: 1.3rem; margin: 0 0 10px; }
+ol.steps li, ul.how li { margin: 0 0 8px; }
+ul.how { list-style: square; }
+ul.how li::marker, ol.steps li::marker { color: var(--brand-green); }
+.never { color: var(--brand-rust); }
+.faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 32px; }
+.faq h3 { margin: 10px 0 4px; font: 600 15.5px/1.3 var(--brand-display); letter-spacing: .02em; }
+.faq div > p { font-size: 13.5px; }
+p.small { color: var(--brand-muted); font-size: 12.5px; }
+p.small code { overflow-wrap: anywhere; }
+.vids { display: flex; flex-wrap: wrap; gap: 8px; }
+/* which firmware: the row names on the left, both answers in plain text (not the parts list's mono "where" column) */
+.fw { margin: 0 0 6px; }
+.fw tbody th { width: 22%; font: 600 14px/1.35 var(--brand-display); letter-spacing: .02em; }
+.fw td { width: 39%; }
+.fw td:last-child { white-space: normal; font: inherit; }
+@media (max-width: 59.99rem) {
+  .two.hero { grid-template-columns: minmax(0, 1fr); }
+  .two.hero > * + * { border-left: 0; border-top: 1px solid var(--brand-rule); }
+  .pics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 47.99rem) {
+  .faq, .photos { grid-template-columns: minmax(0, 1fr); }
+  .parts thead { display: none; }
+  .parts, .parts tbody, .parts tr, .parts td { display: block; }
+  .parts tr { border-top: 1px solid var(--brand-rule); padding: 9px 0; }
+  .parts tr:first-child { border-top: 0; padding-top: 0; }
+  .parts td { border: 0; padding: 0 0 4px; }
+  .parts td:last-child { white-space: normal; }
+  .fw tbody th, .fw td { display: block; width: auto; border: 0; padding: 0 0 6px; }
+  .fw td::before { content: attr(data-l); display: block; font: 400 11.5px/1.5 var(--brand-mono); letter-spacing: .04em; color: var(--brand-muted); }
+}
+@media (max-width: 26rem) { .pics { grid-template-columns: minmax(0, 1fr); } }
+@media print { .clip { display: none; } }
+</style>
+<!--AISLING-HEAD-->
+</head>
+<body>
+<!--AISLING-BAR-->
+<main class="bench">
+<div class="strip">
+<h1 class="lab"><b>aisling</b> · the add-on screen</h1>
+<p class="lab">a touch screen for the FM-1 · made and tried on one FM-1, on AISLING 1.3</p>
+</div>
+
+<div class="two hero">
+<div class="pane clip">
+<video id="loop" src="img/loop.mp4" poster="img/loop-poster.jpg" width="960" height="540" autoplay muted loop playsinline preload="metadata"
+  aria-label="The screen on a stand above the FM-1, painting the landscape as AISLING plays, then a close look at it"></video>
+</div>
+<div class="pane">
+<p class="lede">A 3.5-inch touch screen that sits beside the FM-1 and gives it a second, bigger screen. It has two pages,
+a tap apart:</p>
+<ul class="how">
+<li><b>The landscape.</b> The <a href="../visualiser/">visualiser</a>'s Irish landscape, painted from what the FM-1
+plays: the flute the sky, the harps the hills and fields, the drone the bog. A strip of the eight pieces runs along
+the bottom; touch one and the FM-1 changes to it.</li>
+<li><b>The FM-1's own screen,</b> bigger: the page, the four knobs and their values, as AISLING shows them. Drag a
+knob sideways and the FM-1's knob turns.</li>
+<li><b>PERFORM's flash:</b> hold an effect on the FM-1's PERFORM page and the box fills with that effect's colour
+and name for a second, as the FM-1's own screen does.</li>
+</ul>
+<p>It's two cheap boards pushed together, with no computer in the loop: the FM-1 plugs into the box, and the box
+into a USB charger. Nothing changes on the FM-1 but one setting.</p>
+<p class="vids"><a class="btn go" href="https://youtu.be/m0fL2Crroo4">Watch the touchscreen demo</a><a class="btn" href="https://youtube.com/shorts/WtvuUBjDFCo">Watch PERFORM played</a><a class="btn" href="https://youtu.be/NsIO6Zmxpek">Watch the first test</a></p>
+<p class="note">You can make one: the parts are below, and the box's program is a
+<a href="aisling-screen-test7.uf2" download>ready-built file</a> you drag onto the board. It's the seventh test build,
+the one on mine, for this board and this screen only.</p>
+</div>
+</div>
+
+<section class="pane" aria-labelledby="seeh">
+<h2 class="bh" id="seeh">What it looks like</h2>
+<div class="pics">
+<figure><img src="img/over-fm1.jpg" width="1280" height="720" loading="lazy" alt="The screen on a stand above the whole FM-1, showing the landscape in mauve, pink and gold, with the strip of pieces along its bottom"><figcaption>The landscape above the FM-1, as it plays Blasket.</figcaption></figure>
+<figure><img src="img/landscape.jpg" width="1280" height="720" loading="lazy" alt="Close up: the landscape's soft bands of colour, and the strip of the eight pieces with Blasket lit"><figcaption>Close up: the sky, hills and fields, and the strip of pieces.</figcaption></figure>
+<figure><img src="img/fm1-page.jpg" width="1280" height="720" loading="lazy" alt="The FM-1's Aisling page on the box: the piece, its key and tempo, four knobs with their values, and the scale"><figcaption>The FM-1's own page: Blasket, E Dorian, tempo 70.</figcaption></figure>
+<figure><img src="img/drag.jpg" width="1280" height="720" loading="lazy" alt="A knob being dragged on the box: MOTION reads 58 in orange, and NOT SAVED shows"><figcaption>A finger on Motion: 58 in orange while it turns, and the FM-1's NOT SAVED.</figcaption></figure>
+</div>
+</section>
+
+<section class="pane" aria-labelledby="needh">
+<h2 class="bh" id="needh">What you need</h2>
+<div class="photos">
+<figure><img src="img/parts.jpg" width="1200" height="1078" loading="lazy" alt="The Waveshare RP2350-PiZero board beside the back of the ELEGOO 3.5 inch screen, its 26-pin socket at the top left"><figcaption>The two boards: the RP2350-PiZero, and the back of the screen with its 26-pin socket.</figcaption></figure>
+<figure><img src="img/fitted.jpg" width="900" height="918" loading="lazy" alt="The board laid on the back of the screen, its pin labels lined up with the screen's socket"><figcaption>The board lines up with the screen's socket at one corner: header pins 1 to 26.</figcaption></figure>
+</div>
+<table class="parts">
+<thead><tr><th scope="col">Part</th><th scope="col">What it does</th><th scope="col">Where</th></tr></thead>
+<tbody>
+<tr><td>Waveshare RP2350-PiZero</td><td><span class="what">The brains: a Raspberry Pi RP2350 chip on a board the shape of a Pi Zero, with two USB-C
+sockets. One of them can be a USB host, which is what lets the FM-1 plug straight into it.</span></td>
+<td><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B0FGH8KNB2?tag=stephen8n-21"><span class="ad">ad</span>Amazon</a></td></tr>
+<tr><td>ELEGOO 3.5" touch screen for Raspberry Pi</td><td><span class="what">480 × 320, SPI, with a resistive touch layer
+and a pen. Made for a Raspberry Pi's header, so it pushes straight onto the RP2350-PiZero's.</span></td>
+<td><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B01MRQTMTD?tag=stephen8n-21"><span class="ad">ad</span>Amazon</a></td></tr>
+<tr><td>USB-C to USB-C data cable</td><td><span class="what">From the box's PIO-USB socket to the FM-1. It must carry data, not
+just charge.</span></td>
+<td><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B088NMR44C?tag=stephen8n-21"><span class="ad">ad</span>Anker</a></td></tr>
+<tr><td>Power: a USB cable and a supply</td><td><span class="what">Into the box's other socket, marked USB. Any USB charger
+or power bank, or a computer. The box powers the FM-1 too. A power bank needs to be one that stays on at a small
+load.</span></td>
+<td><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B01GGKYO1I?tag=stephen8n-21"><span class="ad">ad</span>A to C cable</a><br>
+<a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B08JTQ66K7?tag=stephen8n-21"><span class="ad">ad</span>power bank</a></td></tr>
+<tr><td>An FM-1 on AISLING 1.3</td><td><span class="what">Free. This build knows 1.3's knobs; there's an older one for 1.2 below.</span></td>
+<td><a href="../install/">install</a><br>
+<a href="https://store.stephen8n.com/#g-fm1">buy an FM-1</a></td></tr>
+</tbody>
+</table>
+<p class="small">The same parts are on one card in the store, with the rest of the FM-1's kit: <a href="https://store.stephen8n.com/#g-screen">the screen kit</a>.</p>
+<p class="small">No soldering on mine: the board came with its header fitted and the screen pushes onto it. If yours
+comes without a header, it needs one soldered on first. Something to prop it up behind the FM-1 helps.</p>
+</section>
+
+<div class="two">
+<section class="pane" aria-labelledby="howh">
+<h2 class="bh" id="howh">How it was done</h2>
+<ul class="how">
+<li><b>The FM-1 is a USB MIDI device,</b> and AISLING sends everything it plays out of its USB socket: the drone, the
+harps and the flute on channels 1 to 4, and the clock. The RP2350 runs as a USB host on its second socket (in
+software, with Pico-PIO-USB), so the FM-1 plugs into it as it would into a computer.</li>
+<li><b>The landscape</b> is a cut-down version of the visualiser's, rewritten in C for a 480 × 320 screen. Each note
+lays colour into its layer and the clock sets the pace. It draws about ten frames a second over SPI.</li>
+<li><b>The FM-1's page</b> comes from what AISLING says to a screen reader: every time its screen changes, it sends
+the page and its values as text over MIDI (the FM-1 Screen Reader protocol, by Charles Vestal). The box reads that
+text and draws the page.</li>
+<li><b>The knobs</b> use something AISLING has listened for since 1.2: MIDI CC 16 to 19 turn the four knobs of whatever
+page is on its screen. The box knows each knob's values in order, so a drag steps through them from where the knob
+is and never jumps. If the FM-1 doesn't say the knob back, the box says so in red.</li>
+<li><b>The strip of pieces</b> sends a program change, 0 to 7, back to the FM-1.</li>
+</ul>
+<p>It's all new code, on the Raspberry Pi Pico SDK with TinyUSB and Pico-PIO-USB, under the GPL like AISLING:
+<a href="https://github.com/stephencummins/aisling-viz-box">the source is on GitHub</a>. The screen's settings were
+written from the panel chip's datasheet and tuned by eye on a calibration screen. It was built up in seven test
+builds, from "does the screen light up" to the knobs, tried on the board as it went.</p>
+</section>
+
+<section class="pane" aria-labelledby="seth">
+<h2 class="bh" id="seth">Putting it together</h2>
+<ol class="steps">
+<li>Put the program on the board first, before the screen goes on. Download
+<a href="aisling-screen-test7.uf2" download>aisling-screen-test7.uf2</a>. Hold the board's <b>BOOT</b> button while you
+plug its socket marked <b>USB</b> into a computer: a drive called RP2350 appears. Drag the file onto it. The drive
+goes away by itself, and that's it loaded. Unplug the board.</li>
+<li>Push the screen onto the board's header, so its socket covers pins 1 to 26 and the screen lies over the
+board.</li>
+<li>Plug the FM-1 into the socket marked <b>PIO-USB</b>, with a data cable.</li>
+<li>Plug power into the socket marked <b>USB</b>.</li>
+<li>On the FM-1, in AISLING's Setup page, turn <b>MIDI out</b> on.</li>
+<li>Play. Tap the screen to switch between the landscape and the FM-1's page. Holding a finger on it for two
+seconds brings up the calibration screen.</li>
+</ol>
+<p class="never">Never power both of the board's sockets from two sources at once: they share one power line, which
+also feeds the FM-1.</p>
+<p>The screen covers the board's BOOT button, which is why the program goes on first. After that, a new build loads
+over USB with the screen in place: <a href="https://github.com/stephencummins/aisling-viz-box#load">the source's README</a> has the two lines.</p>
+<p class="small">The file is 238,592 bytes; its SHA-256 is
+<code>bb2310c51972623b296af71686f15f94126eaeff6c12ff06f86e32dee3b327c3</code>. It's a hobby build with no warranty,
+tried on one board. It's for AISLING 1.3. Still on 1.2? Use
+<a href="aisling-screen-test7-for-1.2.uf2" download>the build made for 1.2</a> (233,984 bytes, SHA-256
+<code>60510ee6d58301f22f45206a0a64d5a9527fbd9dfe7391b9a7f87dad48945adc</code>): it has 1.2's PERFORM knobs and no
+flash.</p>
+</section>
+</div>
+
+<section class="pane" aria-labelledby="faqh">
+<h2 class="bh" id="faqh">Questions</h2>
+<p class="lede">The short answer: the landscape works with any firmware that sends its notes over USB MIDI, but the
+touch controls for the FM-1 (its page, its knobs and the strip of pieces) are made for AISLING. Part by part:</p>
+<table class="parts fw">
+<thead><tr><th scope="col">On the screen</th><th scope="col">With AISLING 1.3</th><th scope="col">With any other firmware</th></tr></thead>
+<tbody>
+<tr><th scope="row">The landscape</th><td data-l="AISLING 1.3">Paints the sky from the flute, the hills and fields from the
+harps, and the bog from the drone.</td><td data-l="Other firmware">Paints, if the firmware sends its notes over USB MIDI. Each part lands
+where its channel puts it (DUB-1's drums on channel 10 would paint fields, its bass on channel 3 the sky), so the
+picture means less.</td></tr>
+<tr><th scope="row">Tap to switch pages, hold for calibration</th><td data-l="AISLING 1.3">Works.</td><td data-l="Other firmware">Works.
+That part is the box's own and doesn't ask the FM-1 anything.</td></tr>
+<tr><th scope="row">The strip of pieces</th><td data-l="AISLING 1.3">A tap changes the piece, and the strip follows the FM-1's
+piece however it was picked.</td><td data-l="Other firmware">Still shows AISLING's eight names. A tap sends a program change, 0 to 7,
+and lights the one you tapped; what the FM-1 does with it is up to its firmware.</td></tr>
+<tr><th scope="row">The FM-1's page</th><td data-l="AISLING 1.3">The FM-1's own screen, bigger, kept up to date as you play.</td>
+<td data-l="Other firmware">A firmware without a screen reader leaves it at WAITING FOR THE FM-1'S SCREEN READER. DUB-1 and its
+relatives have one, but they describe their own pages in their own words, which the box doesn't know, so expect
+little or nothing. Untried.</td></tr>
+<tr><th scope="row">Turning the knobs from the screen</th><td data-l="AISLING 1.3">Drag a knob sideways and the FM-1's knob
+turns.</td><td data-l="Other firmware">Nothing to turn. The box only turns a knob whose values it knows, and it knows
+AISLING's.</td></tr>
+<tr><th scope="row">PERFORM's flash</th><td data-l="AISLING 1.3">A held effect's colour and name fill the box for a
+second.</td><td data-l="Other firmware">Never shows.</td></tr>
+</tbody>
+</table>
+<div class="faq">
+<div>
+<h3>Which AISLING do I need?</h3>
+<p>1.3 for this build: it knows 1.3's knobs (PERFORM's fourth is Chorus) and its 27 effects. On 1.2, use the older
+build under the steps above: with this one, PERFORM's fourth knob would be wrong. The knobs need 1.2 or later, the
+first AISLING to take them over MIDI (CC 16 to 19); the strip of pieces needs 1.1 or later, for program change.</p>
+<h3>What about the FM-1's stock firmware?</h3>
+<p>Untried. If it sends its notes over USB MIDI, the landscape should paint from them. The FM-1's page and the knobs
+won't work, and what it does with the strip's program change is up to it.</p>
+<h3>What if the FM-1 doesn't take a turn?</h3>
+<p>While you drag, the box shows the value it's sending in orange, until the FM-1 says the knob back. If nothing comes
+back within a second and a half (on an older AISLING, say, or with the grid up), it puts the FM-1's own value back
+and says THE FM-1 DIDN'T TAKE IT. The screen never keeps a value the FM-1 doesn't have.</p>
+<h3>Will a new AISLING break the FM-1's page?</h3>
+<p>It could, if a release changes the words AISLING uses to describe its screen; the box would then need an update to
+match. The landscape doesn't depend on them.</p>
+</div>
+<div>
+<h3>Finger or pen?</h3>
+<p>Either: the screen comes with a pen. It's a resistive panel, so press it rather than brush it. A knob only turns once
+your finger has moved about 10 pixels sideways, so resting a finger on one does nothing, and a touch on the knobs
+never switches the page.</p>
+<h3>If I turn a knob on the FM-1, does the screen follow?</h3>
+<p>Yes. The page is rebuilt from what the FM-1 says, so a knob turned on the FM-1, a new page or a new piece shows on
+the screen too. So does the strip of pieces.</p>
+<h3>Can every knob be turned from the screen?</h3>
+<p>Nearly. Setup's four can't (AISLING doesn't take them over MIDI), so their labels show dimmed, and nor can Mode
+while it says Custom.</p>
+<h3>Does turning a knob on the screen save it?</h3>
+<p>No. It's the same as turning the knob on the FM-1: NOT SAVED shows, and you save on the FM-1 as usual. Nothing is
+stored on the box.</p>
+</div>
+<div>
+<h3>Does the box change what the FM-1 plays?</h3>
+<p>Only when you touch it: a tap on the strip changes the piece, and a drag turns a knob. The rest of the time it
+listens to the FM-1's MIDI and asks what's on its screen, which changes nothing.</p>
+<h3>Can I play notes from the screen?</h3>
+<p>No. It turns knobs and picks pieces; the FM-1 still does the playing.</p>
+<h3>Can I get the code?</h3>
+<p>Yes: <a href="https://github.com/stephencummins/aisling-viz-box">github.com/stephencummins/aisling-viz-box</a>, under the GPL-3.0 like AISLING. Each of the
+seven test builds has its own folder and notes. The <a href="aisling-screen-test7.uf2" download>ready-built file</a>
+is test 7's, and the licences of the libraries inside it are in the source's <code>NOTICES.md</code>.</p>
+</div>
+<div>
+<h3>Why are the colours paler than on a computer?</h3>
+<p>It's a cheap panel, and it squashes its brightest colours together, so the visualiser's vellum shows white. The
+box sets the panel's tone curve every time it starts, which helps the middle and dark colours. It still looks
+good.</p>
+<h3>Do I need a Raspberry Pi?</h3>
+<p>No. The RP2350 is the chip from the Raspberry Pi Pico 2 and does the whole job on its own; the screen just happens
+to be made for a Pi's header.</p>
+<h3>Does it work with the visualiser on a computer?</h3>
+<p>They're separate: the box is for when the FM-1 is on its own. The <a href="../visualiser/">visualiser</a> in Chrome
+or Edge still paints the full landscape from an FM-1 plugged into the computer.</p>
+</div>
+</div>
+</section>
+
+<section class="pane">
+<p class="small">Links marked <span class="ad">ad</span> are affiliate links: if you buy through one, I may earn a small
+commission, at no cost to you. As an Amazon Associate I earn from qualifying purchases. "Tried" means tried by me, on
+one FM-1 running AISLING, not a promise from any maker. The screen-reader protocol is Charles Vestal's
+(fm1-reader). M-VAVE and FM-1 are trademarks of their owners, as are Waveshare, ELEGOO and Raspberry Pi. AISLING is
+not affiliated with any of them.</p>
+</section>
+</main>
+<script>
+// a still picture for anyone who has asked for less motion; they can still play it
+const v = document.getElementById('loop')
+if (v && matchMedia('(prefers-reduced-motion: reduce)').matches) { v.removeAttribute('autoplay'); v.pause(); v.controls = true }
+</script>
+</body>
+</html>

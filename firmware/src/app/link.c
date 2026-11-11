@@ -57,7 +57,7 @@ enum { LKF_PLAYING = 1, LKF_FROZEN = 2, LKF_DIRTY = 4, LKF_PERF = 8, LKF_SAVING 
 
 /* the knobs that aren't settings, sent as settings are (K_CPU is in STATE; K_NONE is nothing) */
 static const uint8_t LK_EXTRA[] = {K_LEDS, K_SLOT, K_CQ, K_CX, K_LANE, K_LCH, K_FILTER, K_DUB, K_ENERGY, K_SPACE, K_MODE,
-                                   K_PLAY, K_SAVE};
+                                   K_PLAY, K_SAVE, K_CHORUS};
 #define LK_NEXTRA ((int)(sizeof LK_EXTRA / sizeof LK_EXTRA[0]))
 #define LK_NVALS (P_NPARAMS + LK_NEXTRA)
 #define LK_UNSENT ((int16_t)0x7FFF)
@@ -320,9 +320,9 @@ static void lk_release(void)                     /* whatever it held down lets g
 {
     int i;
     link_v_btn = link_v_keys = 0;
-    for (i = 0; i < PERF_N; i++)
+    for (i = 0; i < LPERF_N; i++)
         if (lk.perf >> i & 1u)
-            perf_key(PERF_KEY[i], 0);
+            link_perf(i, 0);
     lk.perf = 0;
 }
 static void link_off(void)
@@ -425,16 +425,16 @@ static int lk_do(int cmd, const uint8_t *a, uint32_t n)
         link_hold_toggle();
         break;
     case LK_PERF:
-        if (a[0] >= PERF_N)
+        if (a[0] >= LPERF_N)
             return LK_BAD;
         if (a[1])
             lk.perf |= 1u << a[0];
         else
             lk.perf &= ~(1u << a[0]);
-        perf_key(PERF_KEY[a[0]], a[1] != 0);
+        link_perf(a[0], a[1] != 0);
         break;
     case LK_FORGET:
-        perf_key(PERF_FORGET, 1);
+        lead_forget();
         break;
     case LK_KEYS:
         link_v_keys = (uint32_t)(a[0] | a[1] << 7 | a[2] << 14 | a[3] << 21) & ((1u << NKEYS) - 1u);
@@ -590,6 +590,8 @@ static void link_state(void)
     put14(f + n, (int)(link_lit_k & 0x3FFFu)), n += 2u;
     put14(f + n, (int)(link_lit_k >> 14 & 0x3FFFu)), n += 2u;
     f[n++] = link_gen & 0x7Fu;
+    put14(f + n, (int)(ui.pnow & 0x3FFFu)), n += 2u;   /* (1.3) the effects sounding, a bit a key (PKEY's) */
+    put14(f + n, (int)(ui.pnow >> 14 & 0x3FFFu)), n += 2u;
     lk_send(f, n);
 }
 

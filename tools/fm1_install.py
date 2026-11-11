@@ -65,6 +65,11 @@ def pack7(data):
     return bytes(out)
 
 
+# the handshake with the one-byte body 01: newer firmwares (AISLING from 1.1, felucca-bsp's) answer it with the whole
+# identity and the flash's JEDEC ID in bytes 24..26; older ones and the update loader do not answer it
+HS_WHOLE = b"\xF0" + pack7(bytes([0, 0x59, 0x11, 1, 0, 0, 1, 0xFE])) + b"\xF7"
+
+
 def unpack7(s):
     out, acc, nb = [], 0, 0
     for b in s:
@@ -96,8 +101,8 @@ def parse_request(pkt):
 
 
 class Identity:
-    def __init__(self, text, model, version):
-        self.text, self.model, self.version = text, model, version
+    def __init__(self, text, model, version, chip=0):
+        self.text, self.model, self.version, self.chip = text, model, version, chip   # chip: JEDEC ID, 0 = none
 
     @property
     def loader(self):
@@ -110,9 +115,11 @@ def parse_identity(pkt):
     d = unpack7(pkt[1:-1])
     if len(d) != 34 or d[:3] != b"\x00\x59\x11":
         return None
-    txt = d[6:33].rstrip(b"\0").decode("latin-1")
+    body = d[6:33]
+    txt = body.split(b"\0", 1)[0].decode("latin-1")   # the text up to its first zero: bytes 24..26 may hold the chip
     m = re.fullmatch(r"([^_]+)_(\d+)", txt)
-    return Identity(txt, m[1], int(m[2])) if m else None
+    chip = int.from_bytes(body[24:27], "big") if len(txt) < 24 else 0
+    return Identity(txt, m[1], int(m[2]), chip) if m else None
 
 
 # --------------------------------------------------------------- package ---
@@ -265,6 +272,22 @@ def handshake(link, tries=3):
             if ident:
                 return ident
     return None
+
+
+def flash_chip(link):
+    """the flash's JEDEC ID, from the answer to the handshake with the body 01; 0 if the firmware does not say"""
+    link.drain()
+    if not link.send(HS_WHOLE):
+        return 0
+    end = time.monotonic() + DELAY["hs"]
+    while (left := end - time.monotonic()) > 0:
+        p = link.read(left)
+        if p is None:
+            break
+        ident = parse_identity(p)
+        if ident:
+            return ident.chip
+    return 0
 
 
 class Updater:
@@ -447,9 +470,12 @@ def run(a, backend, out, ask):
         dev = up.find()
         if not dev:
             raise not_found(up)
+        chip = dev.id.chip or (0 if dev.id.loader else flash_chip(dev.link))
         dev.link.close()
         mode = "update loader (update not finished)" if dev.id.loader else "running"
         print(f"{dev.id.text}  [{mode}]  port: {dev.name}", file=out)
+        if chip:
+            print(f"flash chip: JEDEC ID {chip:06X}", file=out)
         return 0
     product, image = load_package(a.package, a.force)
     print(f"package: {product}  ({a.package})", file=out)

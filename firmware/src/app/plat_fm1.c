@@ -71,6 +71,33 @@ void plat_leds(uint32_t buttons, uint32_t keys)
  * column 8, row PA5 (found on the device). Green, unless recording. */
 static uint8_t play_red;
 void plat_play_red(int red) { play_red = (uint8_t)(red != 0); }
+/* (1.1) the screen asleep and awake (the sleep timer), by the panel's own commands: DISPOFF and SLPIN, then SLPOUT
+ * and DISPON. Not by the backlight: on the FM-1, PA2 high (the light off) took the panel and the panel scan down with
+ * it, so no button woke it and the screen stayed dark after waking (the 1.1 candidate, found on the device). PA2 is
+ * left as fm1_lcd_hw_init leaves it; asleep, the panel shows black under its light. The ST7789V wants 120 ms between
+ * SLPIN and SLPOUT either way round, and 5 ms after SLPOUT before the next command */
+static uint8_t screen_on = 1;                    /* (lcd_init leaves it awake) */
+static uint32_t screen_t;                        /* fm1_ms at the last SLPIN or SLPOUT */
+void plat_screen(int on)
+{
+    uint32_t gone;
+    on = on != 0;
+    if (on == screen_on)
+        return;
+    gone = fm1_ms - screen_t;
+    if (screen_t && gone < 125u)
+        fm1_delay_ms(125u - gone);
+    if (on) {
+        lcd_cmd(0x11);                           /* SLPOUT */
+        fm1_delay_ms(10);
+        lcd_cmd(0x29);                           /* DISPON */
+    } else {
+        lcd_cmd(0x28);                           /* DISPOFF */
+        lcd_cmd(0x10);                           /* SLPIN */
+    }
+    screen_on = (uint8_t)on;
+    screen_t = fm1_ms;
+}
 void plat_leds(uint32_t buttons, uint32_t keys)
 {
     uint8_t nl[FM1_NCOL] = {0}, dl[FM1_NCOL] = {0};

@@ -15,6 +15,7 @@
   @media (min-width: 48rem) { main .two { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } }
   .pane p { margin: 0 0 12px; }
   .pane p:last-child { margin-bottom: 0; }
+  .pane .btns { display: flex; flex-wrap: wrap; gap: 8px; }
   .small { color: var(--brand-muted); font-size: 12.5px; }
   .small a { color: inherit; }
   /* the three steps: a number, a heading, a line or two */
@@ -29,6 +30,8 @@
   .pane * + .bh { margin-top: 22px; }
   #status, #alert { margin: 12px 0 0; min-height: 1.6em; }
   #alert:empty { display: none; }
+  #chip { margin: 6px 0 0; }
+  #chip:empty { display: none; }
   #alert { color: var(--brand-rust); }
   #alert::before { content: "⚠ "; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -61,25 +64,28 @@
   <label class="bar" for="bar"><span data-t="progress"></span>
     <progress id="bar" max="100" value="0"></progress></label>
   <p id="status" role="status"></p>
+  <p id="chip" aria-live="polite"></p>
   <p id="alert" role="alert"></p>
   <pre id="log"></pre>
   </section>
   </div>
   <div class="two">
-  <section class="pane">
+  <section class="pane" id="stock">
   <h2 class="bh" data-t="stockh"></h2>
   <p data-t="stockwhy"></p>
   <ol class="plain">
     <li data-t="stock1"></li>
     <li data-t="stock2"></li>
     <li data-t="stock3"></li>
+    <li data-t="stock4"></li>
   </ol>
-  <p><a class="btn" href="https://www.m-vave.com/download" target="_blank" rel="noopener"><span data-t="stockgo"></span><span class="sr" data-t="newtab"></span></a></p>
+  <p class="btns"><a class="btn" href="https://www.m-vave.com/download" target="_blank" rel="noopener"><span data-t="stockgo"></span><span class="sr" data-t="newtab"></span></a>
+  <a class="btn" href="https://thefirmwarehub.com/#official" target="_blank" rel="noopener"><span data-t="stockhub"></span><span class="sr" data-t="newtab"></span></a></p>
   </section>
   <section class="pane">
   <h2 class="bh" data-t="wrongh"></h2>
   <p><span data-t="brick"></span>
-    <a href="../manual/#recovering-an-fm-1-that-won-t-start" data-t="bricklink"></a></p>
+    <a href="../manual/#recovering-an-fm-1-that-wont-start" data-t="bricklink"></a></p>
   <h2 class="bh" data-t="riskh"></h2>
   <p data-t="beta"></p>
   </section>
@@ -89,7 +95,7 @@
   <p class="small">AISLING is by CU_STE, <a href="https://www.stephen8n.com" target="_blank" rel="noopener">www.stephen8n.com<span class="sr" data-t="newtab"></span></a>.
     It is built on Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener">Hügelton Instruments<span class="sr" data-t="newtab"></span></a>,
     by way of X0X, FoMni, AMB-1, DUB-1 and <a href="https://github.com/FartyPants/fm1-nachtfahrt" target="_blank" rel="noopener">NACHTFAHRT<span class="sr" data-t="newtab"></span></a>.<br>
-    Fonts: Barlow Semi Condensed and IBM Plex Mono (SIL OFL 1.1). M-VAVE and FM-1 are trademarks of their respective owners.<br>
+    Fonts: Barlow Semi Condensed, IBM Plex Mono and Uncial Antiqua (SIL OFL 1.1). M-VAVE and FM-1 are trademarks of their respective owners.<br>
     <span data-t="license"></span> <a href="https://github.com/stephencummins/fm1-aisling" target="_blank" rel="noopener">github.com/stephencummins/fm1-aisling<span class="sr" data-t="newtab"></span></a></p>
   </section>
 </main>
@@ -114,11 +120,13 @@ const TEXT = {
     riskh: "自己責任で",
     beta: "このカスタムファームウェアを使ったことで FM-1 が壊れたり不具合が起きたりしても、作者は一切の責任を負いません。自己責任でお使いください。",
     stockh: "純正ファームウェアに戻す",
-    stockwhy: "M-VAVE 公式のアップデーター M-UPGRADE で、AISLING（またはそのセーフモード）から同じ USB ケーブルで純正ファームウェアを書き込めます。AISLING で保存した曲の設定は消えることがあります。",
-    stock1: "M-VAVE のダウンロードページから、M-UPGRADE（PC Software、Windows または Mac）と FM-1 のファームウェア（PC Firmware）を入手する。",
-    stock2: "FM-1 を USB で接続し、MIDI を使う他のアプリを閉じて、M-UPGRADE でファームウェアを書き込む。",
-    stock3: "「Failed to enter upgrade mode!」と表示されたら、M-UPGRADE を開いたまま USB ケーブルを挿し直して続ける。",
+    stockwhy: "純正ファームウェアは AISLING（またはそのセーフモード）から同じ USB ケーブルで戻せますが、FM-1 にすでに入っているブートローダーと同じバージョンに限ります。V15 と V16 はブートローダーが異なり、AISLING は合わないほうを受け付けません（FM-1 に UPDATE、続いて FAILED と表示され、何も書き込まれません）。AISLING で保存した曲の設定は消えることがあります。",
+    stock1: "FM-1 に V16 が入ったことがある場合（購入時から、またはアップデートで）: M-VAVE のダウンロードページから M-UPGRADE（PC Software、Windows または Mac）と FM-1 のファームウェア（PC Firmware）を入手し、FM-1 を USB で接続し、MIDI を使う他のアプリを閉じて、M-UPGRADE で書き込む。",
+    stock2: "「Failed to enter upgrade mode!」と表示されたら、M-UPGRADE を開いたまま USB ケーブルを挿し直して続ける。",
+    stock3: "V15 しか入ったことがない場合: M-VAVE のページには今は V16 しかないので、The Firmware Hub の「Back to official V15」を使う。",
+    stock4: "どちらかわからなければ、片方を試してください。合わないほうは受け付けられず、何も書き込まれません。",
     stockgo: "M-VAVE のダウンロードページへ",
+    stockhub: "The Firmware Hub へ",
     nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "読み込めませんでした: ",
     start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
     reboot: "再起動中", done: "完了しました", stopped: "途中で止まりました。USB を挿し直してもう一度押してください。",
@@ -132,6 +140,8 @@ const TEXT = {
     mismatch: "書き込みは終わりましたが、FM-1 が別のバージョンを報告しています: ",
     badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
     leave: "書き込み中です。ページを閉じないでください。",
+    chip: "フラッシュチップ: ", chipid: "、ID ", chipend: "", chip856014: "Puya P25Q80（初期のもの）",
+    chipB36014: "UCUN UC25HQ80（2026 年秋以降に販売された FM-1 の新しいもの）", chipother: "AISLING の知らないチップ",
     license: "GPL-3.0、無保証。ソース:",
   },
   en: {
@@ -151,11 +161,13 @@ const TEXT = {
     riskh: "At your own risk",
     beta: "The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
     stockh: "Back to the stock firmware",
-    stockwhy: "M-VAVE's own updater, M-UPGRADE, writes the official firmware back from AISLING (or its safe mode, X0X or Felucca) over the same USB cable. The pieces saved in AISLING may be lost.",
-    stock1: "On M-VAVE's download page, get M-UPGRADE (under PC Software, for Windows or Mac) and the FM-1 firmware (under PC Firmware).",
-    stock2: "Connect the FM-1 by USB, close other apps that use MIDI, and write the firmware with M-UPGRADE.",
-    stock3: "If M-UPGRADE says \"Failed to enter upgrade mode!\", leave it open, replug the USB cable and carry on.",
+    stockwhy: "The official firmware goes back from AISLING (or its safe mode) over the same USB cable, but only in the version whose bootloader your FM-1 already has. V15 and V16 have different ones, and AISLING refuses the other: the FM-1 shows UPDATE, then FAILED, and nothing is written. The pieces saved in AISLING may be lost.",
+    stock1: "If your FM-1 has had V16, new or as an update: on M-VAVE's download page, get M-UPGRADE (under PC Software, for Windows or Mac) and the FM-1 firmware (under PC Firmware). Connect the FM-1 by USB, close other apps that use MIDI, and write the firmware with M-UPGRADE.",
+    stock2: "If M-UPGRADE says \"Failed to enter upgrade mode!\", leave it open, replug the USB cable and carry on.",
+    stock3: "If it has only had V15: M-VAVE's page offers only V16 now, so use Back to official V15 on The Firmware Hub instead.",
+    stock4: "Not sure which? Try one: the other is refused, and nothing is written.",
     stockgo: "Go to M-VAVE's download page",
+    stockhub: "Go to The Firmware Hub",
     nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
     start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
     reboot: "Restarting", done: "Done", stopped: "Stopped. Replug the USB cable and press Install again.",
@@ -169,6 +181,8 @@ const TEXT = {
     mismatch: "Written, but the FM-1 reports another version: ",
     badpkg: "The file to install is damaged. Reload the page.",
     leave: "Writing. Do not close the page.",
+    chip: "Flash chip: ", chipid: " (ID ", chipend: ")", chip856014: "Puya P25Q80, the first one",
+    chipB36014: "UCUN UC25HQ80, the newer one in FM-1s sold since autumn 2026", chipother: "not one AISLING knows",
     license: "GPL-3.0, no warranty. Source:",
   },
 };
@@ -182,12 +196,21 @@ function show(k, txt) {
   $(FAIL.has(k) ? "alert" : "status").textContent = txt;
   $(FAIL.has(k) ? "status" : "alert").textContent = "";
 }
+/* the flash chip, as the FM-1 reports it once it restarts on the new firmware (AISLING from 1.1 says; 0 = not known) */
+let chip = 0;
+function showChip() {
+  if (!chip) { $("chip").textContent = ""; return; }
+  const id = chip.toString(16).toUpperCase().padStart(6, "0");
+  const name = TEXT[lang]["chip" + id] || t("chipother");
+  $("chip").textContent = t("chip") + name + t("chipid") + id + t("chipend");
+}
 function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = t(e.dataset.t); });
   $("lang").textContent = t("other");
   $("lang").lang = lang === "ja" ? "en" : "ja";
   if (lastKey) show(lastKey, t(lastKey) + lastArg);
+  showChip();
 }
 $("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; applyLang(); });
 applyLang();
@@ -222,24 +245,27 @@ window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault
   } catch (e) { sayK("loadfail", e.message); }
 })();
 
-/* stock firmware: M-VAVE's own updater, M-UPGRADE (the link under "Back to the stock firmware"); this
-   page wrote M-VAVE's FM-1 V15 itself until M-VAVE replaced it with V16 */
+/* stock firmware: M-VAVE's own updater, M-UPGRADE, for V16, or The Firmware Hub for V15 (the links under "Back to
+   the stock firmware"); this page wrote M-VAVE's FM-1 V15 itself until M-VAVE replaced it with V16 */
 async function run(img, product) {
   let midi;
   try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
   catch (e) { sayK("denied"); return; }
   writing = true;
   $("go").disabled = true;
+  chip = 0;
+  showChip();
   try {
     const up = new Updater(midi, log);
     const total = 74 + 1167;
     const step = (k, a) => {
-      log(`${k} ${a ?? ""}`);
+      log(`${k} ${k === "chip" ? a.toString(16).toUpperCase().padStart(6, "0") : a ?? ""}`);
       if (k === "start") sayK("start");
       if (k === "verify") progress("verify", (a / total) * 100);
       if (k === "loader") sayK("loader");
       if (k === "write") progress("write", ((74 + a) / total) * 100);
       if (k === "reboot") sayK("reboot");
+      if (k === "chip") { chip = a; showChip(); }
       if (k === "done") { $("bar").value = 100; sayK("done"); }
     };
     const ota = await up.find((id) => /^ota-/i.test(id.model));

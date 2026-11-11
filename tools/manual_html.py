@@ -113,6 +113,7 @@ def inline(t):
     t = re.sub(r"(?<![\w*])\*([^*\s][^*]*)\*(?![\w*])", r"<em>\1</em>", t)
     # a link up to another of the repo's documents (../EMULATOR.md) works on GitHub; from the site it goes to GitHub
     t = re.sub(r"\]\(\.\./([A-Z]+\.md)\)", r"](https://github.com/stephencummins/fm1-aisling/blob/main/\1)", t)
+    t = re.sub(r"\]\(#(\d+)-[a-z0-9-]+\)", r"](#s\1)", t)    # (GitHub's section anchors, as slug() names them)
     t = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>', t)
     for name, col in PART_COLOURS.items():          # a part named at the start of a table cell gets its swatch
         t = re.sub(rf"^<strong>{name}</strong>", f'<span class="swatch" style="background:{col}"></span><strong>{name}</strong>', t)
@@ -126,7 +127,7 @@ def lead(t):
 
 def slug(title):
     m = re.match(r"(\d+)\.", title)
-    return f"s{m.group(1)}" if m else re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    return f"s{m.group(1)}" if m else re.sub(r"[^a-z0-9]+", "-", re.sub(r"['’]", "", title.lower())).strip("-")  # (as GitHub: no apostrophes)
 
 
 NAME = "AISLING"

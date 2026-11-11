@@ -9,11 +9,11 @@
 .fl-w { position:absolute;box-sizing:border-box;width:11px;height:34px;border-radius:2px;background:#fff;border:1px solid #5b4a3a }
 .fl-n { position:absolute;width:11px;height:22px;border-radius:2px;background:#5b4a3a }
 .fl-h2 { font:600 18px/22px 'Barlow Semi Condensed',sans-serif }
-.fl-btn { position:absolute;left:76px;width:64px;height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #2b2219;border-radius:10px;font:600 18px/22px 'Barlow Semi Condensed',sans-serif;color:#2b2219 }
+.fl-btn { position:absolute;left:76px;width:64px;height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#8f4d40;border:2px solid #5a2c23;border-radius:9px;font:600 16px/20px 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.05em;color:#fbf0e4 }
 .fl-lay { position:absolute;left:188px;width:136px;height:46px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;background:#fff;border:1.5px solid #5b4a3a;border-radius:4px;color:#2b2219 }
 .fl-strip { position:absolute;left:480px;width:240px;height:26px;overflow:hidden;border-radius:4px;background:#000 }
 .fl-strip img { display:block;width:240px;height:240px }
-.fl-none { position:absolute;top:598px;width:104px;height:40px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#fff;border:1.5px dashed #5b4a3a;border-radius:10px;font:600 18px/22px 'Barlow Semi Condensed',sans-serif;color:#5b4a3a }
+.fl-none { position:absolute;top:598px;width:104px;height:40px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#fff;border:1.5px dashed #8f4d40;border-radius:9px;font:600 16px/20px 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.05em;color:#8f4d40 }
 .fl-heading { position:absolute;font:600 18px/22px 'Barlow Semi Condensed',sans-serif;color:#2b2219 }
 .fl-card { position:absolute;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;background:#fff;border:2px solid #2b2219;border-radius:10px;padding:6px;color:#2b2219 }
 .fl-bk { position:absolute;top:348px;width:44px;height:52px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;background:#2b2219;border-radius:3px;color:#fff;font:600 13px/16px 'Barlow Semi Condensed',sans-serif }
@@ -23,7 +23,7 @@
 .fl-wk.fl-held { background:#f3ead7 }
 .fl-wk small { font:400 12px/16px 'IBM Plex Mono',monospace }
 .fl-rule { position:absolute;top:492px;height:2px;background:#2b2219 }
-.fl-bt { position:absolute;width:64px;height:54px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #2b2219;border-radius:10px;font:600 18px/22px 'Barlow Semi Condensed',sans-serif;color:#2b2219 }
+.fl-bt { position:absolute;width:64px;height:54px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#8f4d40;border:2px solid #5a2c23;border-radius:9px;font:600 16px/20px 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.05em;color:#fbf0e4 }
 .fl-pg { position:absolute;width:184px;height:54px;box-sizing:border-box;background:#fff;border:1.5px solid #2b2219;border-radius:6px;padding:2px 6px 0 6px;color:#2b2219;line-height:15px }
 .fl-lead { border:3px solid #146c41;padding:0 6px 0 6px }
 .fl-n2 { display:inline-block;width:15px;height:15px;border-radius:8px;background:#146c41;color:#fff;font:600 12px/15px 'Barlow Semi Condensed',sans-serif;text-align:center;margin-right:5px;vertical-align:1px }
@@ -31,3 +31,6 @@
 .fl-kn { font:400 12px/15px 'IBM Plex Mono',monospace }
 .fl-a { position:absolute;overflow:visible;fill:none;stroke:#5b4a3a;stroke-width:2;stroke-linecap:round;stroke-linejoin:round }
 .fl-r { position:absolute;overflow:visible;fill:none;stroke:#5b4a3a;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round }
+/* a button's name in the words: the button, as on the panel */
+.fl-c { display:inline-block;padding:0 .24em;border-radius:.28em;background:#8f4d40;box-shadow:inset 0 0 0 1px #5a2c23;color:#fbf0e4;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:600;font-size:.78em;line-height:1.4;letter-spacing:.04em;vertical-align:.06em }
+#flow-perform .fl-wk { font-size:14px }

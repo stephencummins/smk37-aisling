@@ -116,7 +116,8 @@ def parse_state(a):
     return dict(view=a[0], playing=bool(f & 1), frozen=bool(f & 2), dirty=bool(f & 4), perf=bool(f & 8),
                 saving=bool(f & 16), piece=a[2], moves=get14u(a, 3), act=list(a[5:10]), muted=a[10], solo=a[11],
                 sounds=a[12], un=a[13], rn=a[14], cpu=a[15], peak=a[16], xruns=get14u(a, 17), master=get14u(a, 19),
-                raw=get14u(a, 21), lit=get14u(a, 23), keys=get14u(a, 25) | get14u(a, 27) << 14, gen=a[29])
+                raw=get14u(a, 21), lit=get14u(a, 23), keys=get14u(a, 25) | get14u(a, 27) << 14, gen=a[29],
+                fx=get14u(a, 30) | get14u(a, 32) << 14 if len(a) >= 34 else 0)   # (1.3: the effects sounding)
 
 
 def pars_of(project):

@@ -2,8 +2,8 @@
 
 <img src="docs/card.png" width="240" height="240" alt="AISLING: a gold 8-bit harp on green">
 
-**[Install](https://aisling.stephen8n.com/install/)** (Chrome or Edge, also Chrome on Android or
-Chromebook; the FM-1 on USB) · **[Try it in the browser](https://aisling.stephen8n.com/emu/)** ·
+**[Install](https://aisling.stephen8n.com/install/)** (Chrome or Edge on a computer, the FM-1 on USB;
+Android and Chromebooks not tried yet) · **[Try it in the browser](https://aisling.stephen8n.com/emu/)** ·
 **[Manual](https://aisling.stephen8n.com/manual/)** ·
 **[Cheat sheet](https://aisling.stephen8n.com/cheat/)** ·
 **[Visualiser](https://aisling.stephen8n.com/visualiser/)** ·
@@ -18,7 +18,8 @@ The same source also builds for the M-VAVE SMK-37 Elite, not yet tried on one: s
 AISLING turns the M-VAVE FM-1 into a generative Irish ambient instrument: harps over a held drone, and a flute, a
 fiddle or a voice leading, in the old modes, with the weather of the west coast behind them. It plays
 itself from the moment it's switched on, and it never ends. You can play with it: the white keys give you the Lead,
-always in the piece's scale, and it answers you. (An *aisling*, said "ash-ling", is an Irish vision poem.)
+always in the piece's scale, and it answers you. (AISLING is said ASH-ling. It's Irish for a dream or a vision, and a pun on *AI Synth Link*;
+[Saying the names](docs/MANUAL.md#saying-the-names) has the rest.)
 
 It is a fork of [NACHTFAHRT](https://github.com/FartyPants/fm1-nachtfahrt), FartyPants's Berlin School firmware.
 AISLING keeps NACHTFAHRT's whole machine (its five layers, its arc, its slowly moving filters, its lead that
@@ -35,11 +36,11 @@ remembers and answers) and changes what it plays:
   tunes do;
 - **the jig's threes**: harps of 12 and 9 steps, with every third step accented;
 - **eight pieces** named for places in the west and for a harper;
-- three of the black keys' effects named in Irish: **Ceo** (fog), **Macalla** (an echo) and **Fras** (a burst
-  of rain);
+- three of the black keys' effects named in Irish: **Ceo** (KYOH, fog), **Macalla** (MOCK-al-a, an echo) and
+  **Fras** (FRASS, a burst of rain);
 - a green triskele on the launch screen and the main page.
 
-**Status: 1.0, the first version out of testing** (see [the releases](https://github.com/stephencummins/fm1-aisling/releases)).
+**Status: 1.3.1** (see [the releases](https://github.com/stephencummins/fm1-aisling/releases)).
 It runs on the FM-1, installed from the [web installer](https://aisling.stephen8n.com/install/), and
 in the [browser emulator](https://aisling.stephen8n.com/emu/), from the same code.
 
@@ -47,7 +48,8 @@ in the [browser emulator](https://aisling.stephen8n.com/emu/), from the same cod
 landscape in oils: the Lead is the sky, Sequence 2 the hills, the Sequence the fields, the Drone the bog. Or as
 the Atlantic from above, eddies spun up by Sequence 2, or as deep space, a comet drawn by the Lead. No FM-1? Demo plays a
 recording of Skellig and paints it as you hear it. Plug the FM-1
-into a computer or Android phone, open the page in Chrome or Edge and press Listen; it reads the FM-1's MIDI out
+into a computer, open the page in Chrome or Edge and press Listen (Chrome on Android should work too, but hasn't
+been tried with the FM-1); it reads the FM-1's MIDI out
 (on by default) in your browser, and nothing is sent anywhere. You can paint into it with a finger or the mouse, save a
 picture, record a video with the FM-1's own sound from its USB audio, and drop a sound file on it to mix in: it loops in
 time with the FM-1 and paints as the weather. It is one file,
@@ -60,7 +62,8 @@ page's own sound off. The FM-1 says nothing on that link until the page connects
 [manual](docs/MANUAL.md#the-editor) has the details.
 
 **MIDI.** A note on any channel, over USB or the TRS jack, plays the Lead as a white key does, and the sequences
-follow MIDI clock, start, continue and stop. MIDI out goes over USB: the Drone, the Sequence, the Lead and Sequence 2
+follow MIDI clock, start, continue and stop; a program change from 0 to 7 picks the piece; CCs 16 to 19 turn the page's four knobs, and 74 to 79 Filter, Evolve,
+Motion, Drift, Wet and Energy. MIDI out goes over USB: the Drone, the Sequence, the Lead and Sequence 2
 on channels 1 to 4, and clock. The TRS jack has been tried with Type A, from a Korg nanoKEY Fold; Type B hasn't been
 tried. The [manual](docs/MANUAL.md#11-midi) has the details.
 
@@ -68,6 +71,38 @@ tried. The [manual](docs/MANUAL.md#11-midi) has the details.
 AMB-1. It doesn't read what they saved (it starts with its own eight recipes), and its first save, a few seconds
 after you change something, replaces theirs; they ignore AISLING's in the same way and replace it when they save.
 Installing another firmware may lose what AISLING saved. AISLING uses no samples.
+
+## What's new in 1.3.1
+
+- **The effects grid in PERFORM's look.** Hold REC and the grid has a colour for each group (Echo, Filter, Space, Moves), its name in the uncial hand and a plaited rule under each group's name; a held effect's cell fills with its colour. Only the drawing changed: the keys, the effects and the sound are 1.3's.
+- **PERFORM, from 1.3, played:** every key an effect on the whole music for as long as you hold it, with the screen flashing its colour and name. [Watch a short demo](https://youtube.com/shorts/WtvuUBjDFCo).
+- **[Photos and videos](https://aisling.stephen8n.com/screen/)** are on the touch screen's page: AISLING playing, PERFORM's flash, and the box that gives the FM-1 a second, bigger screen.
+- Everything else 1.3 brought is in [its release notes](https://github.com/stephencummins/fm1-aisling/releases/tag/v1.3), and listed below.
+
+## What's new in 1.3
+
+- **PERFORM is all effects.** Tap SEL and every one of the 27 keys plays an effect on the whole music for as long as you hold it; hold several and they sound together. The piece goes on underneath, so you can stay there and play a whole track. The white keys are four groups of four (Rhythm, Echo, Space, Colour) and the black keys have groups of their own.
+- **Twelve new effects:** Stutter, Half time, Gate, Roll, Reverse, Flange, Drive, Crush, Dive, Ring, Vinyl and Comb, beside the ones the effects grid already had, and Drop, which takes both sequences out. The [manual](https://aisling.stephen8n.com/manual/#s10) says what each does.
+- **The screen shows what you're holding.** At rest PERFORM is a map of its 27 effects in their groups' colours; hold a key and the screen flashes that effect's colour and name.
+- **Chorus.** PERFORM's fourth knob thickens and widens the whole music, from off to 100. It was Sweep, which is still Width on the Sequence's Move page. Like Wet and Energy it's for playing and isn't saved.
+- **Effects over MIDI.** Each effect has a CC (20 to 31 and 102 to 116), on any channel: 64 or more holds it, less lets it go, on any page. An effect played by hand sends its CC on channel 16, so a DAW can record a performance and play it back. CC 80 is Chorus.
+- **A more Celtic screen.** A plaited rule over the knobs on every page, page names in the uncial hand, and a small green triskele in PERFORM's map that turns with the music.
+- **Gone from PERFORM:** the mutes and solos (a layer's level is SELECT on its own page), and SAVE tapped there is now Forget, which clears what the Lead remembers.
+- **[The touch screen](https://aisling.stephen8n.com/screen/)** build for 1.3 follows all of this: Chorus under your finger, the flash of a held effect, and it now shows as a serial port on a Mac, so it can be reloaded without its BOOT button.
+
+## What's new in 1.2
+
+- **MIDI CCs turn the knobs.** On any channel, over USB or the TRS jack: CC 16 to 19 are KNOB 1 to 4 of the page on the screen, and CC 74 to 79 are Filter, Evolve, Motion, Drift, Wet and Energy whatever the page. 0 to 127 spans the knob, and on the centred ones 64 is the middle. CCs never save, and leave Setup's Tune, MIDI out and Lights alone. The idea is Penumbra's.
+- **Evolve on the bar line.** On the Aisling page, ALGORITHM sets when Evolve's nudges land: now and then at a phrase's start, as before, or every 4, 8, 16 or 32 bars, every time. It's saved, and the knobs' rule shows it ("EVOLVE EVERY 8 BARS"). The idea comes from Unholy Union, Bunker Evolved and Tessera.
+- **How to say the names.** The [manual](https://aisling.stephen8n.com/manual/#saying-the-names) says AISLING, the pieces and the Irish effects aloud, with what they mean.
+- **[Gear gnome](https://gear.stephen8n.com/):** a page of things that go with the FM-1 under AISLING: keyboards and cables that play with it, and cases and stands that carry it. Some links earn a small commission, and each says so. Decals in AISLING's colours are coming soon.
+- **Help when the FM-1 isn't found.** The manual's [troubleshooting](https://aisling.stephen8n.com/manual/#s13) now covers an FM-1 the browser can't see, installing over AISLING, and the chip's download mode, where The Firmware Hub's Rescue button also sends it: switching off and on brings AISLING back. Going back to M-VAVE's firmware works only in the version whose bootloader the FM-1 already has: V16 with M-UPGRADE, or V15 from The Firmware Hub. AISLING refuses the other, and nothing is written. We haven't tried AISLING from an Android phone or tablet or a Chromebook yet.
+
+## What's new in 1.1
+
+- **A sleep timer.** On GLO's Setup page, ALGORITHM sets it: off, 15 or 30 minutes, 1, 2, 4 or 8 hours from the last touch. The sound fades out over the last 30 seconds, then the music stops and the screen goes black and the button lights go out; any button, key or knob wakes it. It isn't saved. The idea comes from [ZEN-1](https://github.com/aceyprime/zen-1) and [Penumbra](https://github.com/MadMooneyham/Penumbra).
+- **Program change picks the piece.** Programs 0 to 7, on any channel, over USB or the TRS jack, are the eight pieces. Penumbra's idea too.
+- **The flash chip in the identity.** Asked for its whole identity, the FM-1 now gives its flash chip's ID as well, in the layout proposed for Felucca that felucca-bsp uses, so an installer can tell the two chips apart. The [web installer](https://aisling.stephen8n.com/install/) shows it when an install finishes, and `tools/fm1_install.py --info` prints it. The plain answer is as before, so installers that know 1.0 still know 1.1.
 
 ## What's new in 1.0
 
@@ -105,6 +140,9 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 | 7 | Connemara | Bog, lake and rain | G hexatonic minor, 92 | An organ, a harp's slip jig of 9 over a low bodhrán's 8, a low flute held back in a long echo, rain; Gm and F in turn |
 | 8 | Tir na nOg | The land of the young, over the western sea | D hexatonic major, 80 | A phased glass drone, two harps, a long reverb, a curlew far out over the bog; D and G in turn |
 
+Say them SKEL-ig, BURR-en, ARR-an, KARR-o-lan, BLASS-kit, SOW-in (sow as in cow), kon-eh-MAH-ra and teer na NOHG;
+Inis Mór is IN-ish MORE, and a bodhrán is a BOW-rawn.
+
 The keys, modes and tempos are starting points, tuned by ear. Each piece's Lead opens on an air, the first phrase of a
 public-domain tune from O'Neill's *Music of Ireland* (Chicago, 1903), played as written; its own ideas grow from it.
 The eight are listed in the manual's [The pieces](docs/MANUAL.md#7-the-pieces).
@@ -116,22 +154,22 @@ The eight are listed in the manual's [The pieces](docs/MANUAL.md#7-the-pieces).
 | White keys | Play the Lead (the piece's flute, fiddle or voice), in the piece's scale (the key it sounds is lit) |
 | Black keys | Eleven effects, each while held (lit; dark while held): Ceo, Macalla, Fras, Repeat, Shimmer, Freeze, Octave, Return, then Rise, Close, Transpose (in PERFORM: the solos) |
 | PLAY · REC · EDIT | Play / rest · a tap: hold (the echo repeats what it holds), held: the effects grid (16 effects on the white keys) · a tap: the Chords page, held: the next chord |
-| SEL | PERFORM (again: back to the page you came from): the knobs Filter, Wet, Energy, Sweep; white 1–5 mute the Drone, Sequence, Lead, Sequence 2, Atmosphere; black 1–5 solo them; white 6 held: the levels; white 7–11 held: Sweep, Open, Shut, Drop (both sequences out), Echo; the top key (G): the Lead forgets its ideas and its theme. Held: Lock |
-| HOME | The Aisling page (Filter, Evolve, Motion, Drift); again, the Key page (Tempo, Root, Mode, Transpose). Held, with OCT− or OCT+: undo or redo |
+| SEL | PERFORM (again: back to the page you came from): the knobs Filter, Wet, Energy, Chorus; every one of the 27 keys an effect on the whole music while held (the white keys in fours: Rhythm, Echo, Space, Colour); SAVE tapped there: the Lead forgets its ideas and its theme. Held: Lock |
+| HOME | The Aisling page (Filter, Evolve, Motion, Drift; ALGORITHM, Evolve's timing); again, the Key page (Tempo, Root, Mode, Transpose). Held, with OCT− or OCT+: undo or redo |
 | ENV | The Drone (Pedal, Reso, Phaser, Attack); again, its sound (Colour, Release, Reverb, Echo); again, its Move page (Width, Time, Rate, Intro) |
 | ARP | The Sequence (Density, Octave, Length, Grid); again, its sound (Cutoff, Decay, Reverb, Echo); again, its Repeats (Repeat A, A time, Repeat B, B time); again, its Move page |
 | LFO | The Lead (Phrases, Octave, Ornament, Vibrato); again, its sound (Tone, Attack, Reverb, Echo); again, its style (Ornament, Glide, Vibrato, Memory); again, its Move page |
 | SEQ | Sequence 2 (Chance, Octave, Length, Level); again, its sound; again, the Pattern page (write the steps on the keys); again, its Move page |
 | SAVE | The Atmosphere (Density, Width, Drift, Air); again, its sound (Colour, Ring, Reverb, Echo); again, its Move page. Held: save |
 | FX | Space (Echo, Echo time, Feedback, Reverb); again, the Echo page (Blur, Tone, Width, Size) |
-| GLO | Setup (Tune, MIDI out, Lights, Save); again, the Arc (Lead in, Bridge, Arc, Memory). Held: save; held on: the piece back to its recipe |
-| ALGORITHM | On a layer's page, its voice (the Atmosphere: its character) |
+| GLO | Setup (Tune, MIDI out, Lights, Save; ALGORITHM, the sleep timer); again, the Arc (Lead in, Bridge, Arc, Memory). Held: save; held on: the piece back to its recipe |
+| ALGORITHM | On a layer's page, its voice (the Atmosphere: its character); on the Aisling page, Evolve's timing; on the Setup page, the sleep timer |
 | PRESETS | The piece |
 | SELECT | On a layer's pages, its level; on the Aisling page, Energy (elsewhere nothing) |
 | OCT− / OCT+ | On the Sequence's, the Lead's and Sequence 2's pages, its octave (lit while it's above or below where the piece was loaded) |
 
 The [manual](docs/MANUAL.md) has the rest; the [cheat sheet](https://aisling.stephen8n.com/cheat/)
-is this table on one page, to print, with the steps drawn as flows.
+draws the steps as flows, then this table with each control as it looks, to print on one sheet.
 
 ## Building and testing
 
@@ -172,7 +210,11 @@ note, two delays), which AISLING's harps keep, owes much to Synth Seeker's video
 platform (hardware layer, USB, update loader, storage, installer) is [Felucca](https://github.com/hugelton/Felucca)'s
 by Leo Kuroshita (Hügelton Instruments), by way of [X0X](https://github.com/charlesvestal/fm1-x0x), FoMni-1, AMB-1,
 DUB-1 and NACHTFAHRT. The idea of running FM-1 firmware in the browser comes from
-[Groove OS](https://www.groove-os.com/). GPL-3.0-only; see [LICENSING.md](LICENSING.md).
+[Groove OS](https://www.groove-os.com/). The sleep timer is an idea from [ZEN-1](https://github.com/aceyprime/zen-1)
+(aceyprime) and [Penumbra](https://github.com/MadMooneyham/Penumbra) (Lunar Eclipse Forge), and program change for
+the pieces and MIDI CCs for the knobs from Penumbra; Evolve on the bar line is an idea from Unholy Union (actuallysparky), Bunker Evolved (Kid Bunka) and Tessera (Theo Dainis), FM-1 firmwares listed on [the Firmware Hub](https://thefirmwarehub.com/); the flash chip's ID in the identity follows the layout Sven proposed in
+[Felucca's issue #320](https://github.com/hugelton/Felucca/issues/320), as
+[felucca-bsp](https://github.com/hugelton/felucca-bsp) answers it. GPL-3.0-only; see [LICENSING.md](LICENSING.md).
 
 M-VAVE and FM-1 are trademarks of their owners. AISLING is not affiliated with M-VAVE, Hügelton Instruments or
 NACHTFAHRT's author.

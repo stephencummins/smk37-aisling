@@ -58,6 +58,11 @@ import os  # noqa: E402
 FONTSET = os.environ.get("X0X_FONTSET", "barlow")    # the others need X0X_FONT_DIRS (not in assets/)
 FONTDIRS = [Path(p) for p in os.environ.get("X0X_FONT_DIRS", "").split(":") if p]
 SIZES = FONTSETS[FONTSET]
+# (AISLING 1.3) PERFORM's flash names an effect in an uncial hand: Uncial Antiqua (SIL OFL 1.1), capitals, figures and
+# signs only (32..95), at three sizes for one or two, three or four, and more bands. Whatever the font set.
+SIZES = SIZES + [("UL", "UncialAntiqua-Regular.ttf", 30, 1, False, 32, 95),
+                 ("UM", "UncialAntiqua-Regular.ttf", 20, 1, False, 32, 95),
+                 ("US", "UncialAntiqua-Regular.ttf", 15, 1, False, 32, 95)]
 PAD = 2
 
 

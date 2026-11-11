@@ -30,7 +30,9 @@ typedef struct {
     uint8_t leds;                        /* lights: 0 off, 1 keys and the buttons' glow, 2 keys only */
     uint8_t piece;                       /* which piece */
     uint8_t screen;                      /* the Dub page's middle: 0 ripples, 1 scope, 2 spectrum (HOME again) */
-    uint8_t rsv0;
+    uint8_t evbars;                      /* (1.2) Evolve's timing, HOME's ALGORITHM: 0 now and then on a phrase's
+                                         * start, as before; 1..4 every 4, 8, 16, 32 bars. Global, as Tune (the
+                                         * byte was spare: a save from 1.1 reads 0) */
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
     uint8_t rsv[16];                     /* room to grow */
 } project_t;

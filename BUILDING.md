@@ -91,7 +91,7 @@ From the command line (needs `pip3 install mido python-rtmidi`):
 
 ```
 python3 tools/fm1_install.py build/amb.fwsc
-python3 tools/fm1_install.py --info          # identity of the connected FM-1
+python3 tools/fm1_install.py --info          # identity of the connected FM-1, and its flash chip where the firmware sends it
 ```
 
 Installing firmware is at your own risk. Hold OCT− and OCT+ for 5 seconds for Felucca's update
