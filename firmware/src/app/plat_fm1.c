@@ -71,6 +71,7 @@ void plat_leds(uint32_t buttons, uint32_t keys)
  * column 8, row PA5 (found on the device). Green, unless recording. */
 static uint8_t play_red;
 void plat_play_red(int red) { play_red = (uint8_t)(red != 0); }
+#endif
 /* (1.1) the screen asleep and awake (the sleep timer), by the panel's own commands: DISPOFF and SLPIN, then SLPOUT
  * and DISPON. Not by the backlight: on the FM-1, PA2 high (the light off) took the panel and the panel scan down with
  * it, so no button woke it and the screen stayed dark after waking (the 1.1 candidate, found on the device). PA2 is
@@ -98,6 +99,7 @@ void plat_screen(int on)
     screen_on = (uint8_t)on;
     screen_t = fm1_ms;
 }
+#if !AISLING_BOARD_SMK37                         /* (the SMK's plat_leds is above; the screen's sleep is both boards') */
 void plat_leds(uint32_t buttons, uint32_t keys)
 {
     uint8_t nl[FM1_NCOL] = {0}, dl[FM1_NCOL] = {0};
