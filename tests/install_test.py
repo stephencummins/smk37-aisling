@@ -343,6 +343,23 @@ def smk37():
     ok(rc == 0 and dev.bad == 0 and dev.upgrades == 1 and dev.uboot_keys == 1 and dev.served == 4 and
        "Nothing was written" in out,
        "--uboot on a running SMK-37 Elite: step 1, then the key to the loader; no write request")
+    class Beside(FakeFM1):         # a second board on USB the whole time (an FM-1 in use)
+        probes = 0
+
+        def input_names(self):
+            return super().input_names() + ["DUB-1 FM-1"]
+
+        output_names = input_names
+
+        def open(self, in_name, out_name):
+            if in_name == "DUB-1 FM-1":
+                Beside.probes += 1
+                raise IOError("busy")
+            return super().open(in_name, out_name)
+    dev = Beside(image, identity="SMK-37 Elite_016", name="SMK-37 Elite", loader="ota-SMK-37 Elite_900")
+    rc, out, err = cli([dry, "--uboot", "--yes", "--port", "SMK-37 Elite"], dev)
+    ok(rc == 0 and dev.uboot_keys == 1 and Beside.probes == 0,
+       "  with an FM-1 beside it and --port: the FM-1's port is never opened")
     dev = FakeFM1(image, identity="SMK-37 Elite_016", name="SMK-37 Elite", loader="ota-SMK-37 Elite_900")
     rc, out, err = cli([p, "--uboot", "--yes"], dev)
     ok(rc == 2 and dev.upgrades == 0 and dev.uboot_keys == 0 and "not a backup package" in err,

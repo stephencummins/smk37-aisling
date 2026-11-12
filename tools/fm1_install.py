@@ -308,10 +308,12 @@ class Updater:
             return mine + [n for n in names if n not in mine and PORT_RE.search(n)]
         return [n for n in names if PORT_RE.search(n)]
 
-    def find(self, want=None, only_port=True):
-        """the first matching port that answers the handshake (and want(identity))"""
+    def find(self, want=None, only_port=True, skip=()):
+        """the first matching port that answers the handshake (and want(identity)); never a port in `skip`"""
         outs = self.backend.output_names()
         for name in self.candidates(only_port):
+            if name in skip:
+                continue
             out = pair_output(name, outs)
             if not out:
                 continue
@@ -325,10 +327,10 @@ class Updater:
             link.close()
         return None
 
-    def wait_for(self, want, secs):
+    def wait_for(self, want, secs, skip=()):
         end = time.monotonic() + secs
         while time.monotonic() < end:
-            dev = self.find(want, only_port=False)
+            dev = self.find(want, only_port=False, skip=skip)
             if dev:
                 return dev
             time.sleep(DELAY["retry"])
@@ -366,6 +368,8 @@ class Updater:
     def check(self, dev, image, step):
         """step 1: the running firmware checks the package and starts the loader"""
         step("start", dev.id.text)
+        # other gear already on USB (a second board, say) is not this device's loader: leave it alone
+        others = {n for n in self.backend.input_names() if n != dev.name}
         dev.link.send(UPGRADE)
         time.sleep(DELAY["start"])
         served, finished, lost = self.serve(dev.link, image, FINISH_CHECK, DELAY["idle_check"],
@@ -377,7 +381,7 @@ class Updater:
                                f"{served} requests; nothing was written")
         step("loader")
         time.sleep(DELAY["loader"])
-        ota = self.wait_for(lambda i: i.loader, DELAY["wait_loader"])
+        ota = self.wait_for(lambda i: i.loader, DELAY["wait_loader"], skip=others)
         if not ota:
             raise InstallError("noloader", "the update loader did not appear. Replug the USB cable and "
                                            "run the install again: the FM-1 stays in update mode until it is done")
@@ -417,6 +421,9 @@ class Updater:
             dev.link.close()
             raise InstallError("model", f"the device is {dev.id.text}, the package is for {product}")
         ota = dev if dev.id.loader else self.check(dev, image, step)
+        if model_of(ota.id.text) != model_of(product):         # another board's loader: not ours to send a key to
+            ota.link.close()
+            raise InstallError("model", f"the loader that appeared is {ota.id.text}, the package is for {product}")
         step("uboot")
         sent = ota.link.send(UBOOT_KEY)
         time.sleep(DELAY["uboot"])
