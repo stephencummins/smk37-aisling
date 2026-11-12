@@ -285,6 +285,35 @@ def packages():
             R.STOCK.update(saved)
 
 
+class FakeUsbDev:
+    def __init__(self, bus, ports):
+        self.bus, self.port_numbers = bus, ports
+
+
+def locations():
+    hub, direct = FakeUsbDev(1, (1, 2)), FakeUsbDev(0, (1,))
+    ok(R.location_of(hub) == 0x01120000 and R.location_of(direct) == 0x00100000,
+       "location: bus and hub ports, as ioreg shows them")
+    ok(R.location_of(FakeUsbDev(0, None)) is None and R.location_of(FakeUsbDev(None, (1,))) is None and
+       R.location_of(FakeUsbDev(0, (16,))) is None, "  no ports, no bus or a port over 15 -> unknown")
+    ok(R.pick_device([]) is None and R.pick_device([], 0x01120000) is None, "  nothing there yet -> wait")
+    ok(R.pick_device([hub]) is hub, "  one device, no --location -> that one")
+    try:
+        R.pick_device([hub, direct])
+        ok(False, "  two devices, no --location -> refused")
+    except R.Refuse as e:
+        ok("0x01120000" in str(e) and "0x00100000" in str(e), "  two devices, no --location -> refused, both listed")
+    ok(R.pick_device([hub, direct], 0x01120000) is hub and R.pick_device([direct, hub], 0x00100000) is direct,
+       "  two devices and --location -> the one plugged in there")
+    for devs, what in (([direct], "the only device is somewhere else"),
+                       ([FakeUsbDev(0, None)], "the only device has no known location")):
+        try:
+            R.pick_device(devs, 0x01120000)
+            ok(False, f"  --location, {what} -> refused")
+        except R.Refuse:
+            ok(True, f"  --location, {what} -> refused")
+
+
 def real_packages():
     pk = {n: Path.home() / "fm1-rescue" / f"FM-1-{n}.fwsc" for n in ("V15", "V16")}
     if not all(p.exists() for p in pk.values()):
@@ -314,6 +343,7 @@ refusals()
 flash_chips()
 smk37()
 packages()
+locations()
 real_packages()
 print("rescue: " + ("all ok" if not failed else f"{failed} FAILED"))
 sys.exit(1 if failed else 0)

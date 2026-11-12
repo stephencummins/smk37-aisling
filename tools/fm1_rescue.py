@@ -35,6 +35,10 @@ cannot tell the two apart; the board comes from the package, and FM-1 and SMK-37
 together. Its flash ID must be the SMK's (EB6014, read on an SMK-37 Pro), its backup must hold the
 velocity calibration's "trimdat" at 0xC1224 (and an FM-1's must not), and only [0x4000, 0x9D000) is
 written: never the head, the calibration (0xC0000-0xC1FFF) or the resources and key above 0xF4000.
+
+Two devices: in update mode an FM-1 and an SMK-37 are the same USB device. With more than one present the
+script stops, lists where each is plugged in, and wants --location (macOS's location ID, which belongs to
+the socket and not to the device: the same cable in another socket has another).
 """
 import argparse
 import hashlib
@@ -395,15 +399,49 @@ def backend(usb):
     raise Fail("libusb not found: pip install libusb-package")
 
 
-def open_device(usb, timeout, label="FM-1"):
-    """Wait for 4C4A:8057 and take it from macOS's mass storage driver."""
-    print(f"waiting for the {label} in update mode (switch it on, or wait for it to cycle) ...")
+def location_of(dev):
+    """macOS's location ID of a USB device, as ioreg and System Information show it: the bus in the top
+    byte, then one hex digit a hub port, from the Mac outwards. None if libusb does not give the ports."""
+    ports = getattr(dev, "port_numbers", None)
+    bus = getattr(dev, "bus", None)
+    if bus is None or not ports or len(ports) > 6 or any(not 0 < p < 16 for p in ports):
+        return None
+    loc = bus << 24
+    for i, p in enumerate(ports):
+        loc |= p << (20 - 4 * i)
+    return loc
+
+
+def loc_text(loc):
+    return "an unknown location" if loc is None else f"location 0x{loc:08x}"
+
+
+def pick_device(devs, want=None):
+    """the one device in update mode to work on, or None if it is not there (yet). More than one and no
+    --location, or none of them at the location asked for: refuse, since they cannot be told apart."""
+    devs = list(devs)
+    if want is not None:
+        mine = [d for d in devs if location_of(d) == want]
+        if not mine and devs:
+            raise Refuse(f"a device is in update mode at {', '.join(loc_text(location_of(d)) for d in devs)}, "
+                         f"not at the --location given (0x{want:08x}): nothing done")
+        return mine[0] if mine else None
+    if len(devs) > 1:
+        raise Refuse(f"{len(devs)} devices are in update mode ({', '.join(loc_text(location_of(d)) for d in devs)}) "
+                     "and they look the same: give --location, or unplug the other one")
+    return devs[0] if devs else None
+
+
+def open_device(usb, timeout, label="FM-1", location=None):
+    """Wait for 4C4A:8057 (at `location`, if given) and take it from macOS's mass storage driver."""
+    at = "" if location is None else f" at location 0x{location:08x}"
+    print(f"waiting for the {label} in update mode{at} (switch it on, or wait for it to cycle) ...")
     be = backend(usb)
     t0 = time.time()
     while time.time() - t0 < timeout:
-        dev = usb.core.find(idVendor=VID, idProduct=PID, backend=be)
+        dev = pick_device(usb.core.find(find_all=True, idVendor=VID, idProduct=PID, backend=be) or (), location)
         if dev is not None:
-            print(f"found it after {time.time() - t0:.1f} s")
+            print(f"found it after {time.time() - t0:.1f} s, at {loc_text(location_of(dev))}")
             try:
                 try:
                     if dev.is_kernel_driver_active(0):
@@ -463,6 +501,10 @@ def main():
     ap.add_argument("--loader", help="a local wl82loader.bin instead of downloading it")
     ap.add_argument("--wait", type=float, default=120, help="seconds to wait for the device (default 120)")
     ap.add_argument("--tries", type=int, default=5, help="attempts if it drops out mid-way (default 5)")
+    ap.add_argument("--location", type=lambda s: int(s, 16), metavar="HEX",
+                    help="only the device plugged in here: macOS's location ID (0x01120000), from the list this "
+                         "script prints, System Information > USB, or ioreg -p IOUSB. Needed with two devices "
+                         "in update mode")
     args = ap.parse_args()
     try:
         stock, board = load_stock(args.package)
@@ -477,7 +519,7 @@ def main():
             raise Fail("pyusb is missing: ~/fm1-rescue/bin/pip install pyusb libusb-package")
         backup_dir = os.path.dirname(os.path.abspath(args.package[0]))
         for attempt in range(1, args.tries + 1):
-            bot = open_device(usb, args.wait, label)
+            bot = open_device(usb, args.wait, label, args.location)
             try:
                 rescue(Uboot(bot), stock, loader, args.write, backup_dir,
                        say=lambda *a, **k: print(*a, **k, flush=True),
