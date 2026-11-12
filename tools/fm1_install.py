@@ -401,10 +401,13 @@ class Updater:
                                f"{served} requests. Replug the USB cable and run the install again to finish")
         step("write", 100)
 
-    def verify(self, product, step):
+    def verify(self, product, step, others=()):
         step("reboot")
         time.sleep(DELAY["reboot"])
-        back = self.wait_for(lambda i: not i.loader, DELAY["wait_reboot"])
+        # a second board on USB is running too: it is not the one that restarted. (If the device comes back
+        # under a bystander's very name, two of one model, it is found by the second look.)
+        back = self.wait_for(lambda i: not i.loader, DELAY["wait_reboot"], skip=others) or \
+            (others and self.wait_for(lambda i: not i.loader, DELAY["retry"]))
         if not back:
             raise InstallError("noreturn", "the FM-1 did not come back: power-cycle it")
         back.link.close()
@@ -440,9 +443,10 @@ class Updater:
         if model_of(dev.id.text) != model_of(product):
             dev.link.close()
             raise InstallError("model", f"the device is {dev.id.text}, the package is for {product}")
+        others = {n for n in self.backend.input_names() if n != dev.name}
         ota = dev if dev.id.loader else self.check(dev, image, step)
         self.write(ota, image, step)
-        return self.verify(product, step)
+        return self.verify(product, step, others)
 
 
 # ------------------------------------------------------------------- CLI ---

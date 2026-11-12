@@ -360,6 +360,17 @@ def smk37():
     rc, out, err = cli([dry, "--uboot", "--yes", "--port", "SMK-37 Elite"], dev)
     ok(rc == 0 and dev.uboot_keys == 1 and Beside.probes == 0,
        "  with an FM-1 beside it and --port: the FM-1's port is never opened")
+    class Running(Beside):         # ... and it answers the identity query, as an FM-1 on AISLING does
+        def open(self, in_name, out_name):
+            if in_name == "DUB-1 FM-1":
+                Running.asked = True
+                return FakeFM1(image, identity="FM-1_353010400", name="DUB-1 FM-1").open(in_name, out_name)
+            return FakeFM1.open(self, in_name, out_name)
+    Running.asked = False
+    dev = Running(image, identity="SMK-37 Elite_016", name="SMK-37 Elite", loader="ota-SMK-37 Elite_900",
+                  after_write="SMK-37 Elite_900")
+    rc, out, err = cli([p, "--yes", "--port", "SMK-37 Elite"], dev)
+    ok(rc == 0 and not Running.asked, "  an install with a running FM-1 beside it: the identity checked is the Elite's own")
     dev = FakeFM1(image, identity="SMK-37 Elite_016", name="SMK-37 Elite", loader="ota-SMK-37 Elite_900")
     rc, out, err = cli([p, "--uboot", "--yes"], dev)
     ok(rc == 2 and dev.upgrades == 0 and dev.uboot_keys == 0 and "not a backup package" in err,
