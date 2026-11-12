@@ -35,6 +35,15 @@ void plat_glow(int on);                /* the unlit buttons glow dimly, readable
 void plat_play_red(int red);           /* PLAY lights green; red (its other LED) while recording (before plat_leds) */
 void plat_screen(int on);              /* (1.1) the screen: off (black) while asleep (the sleep timer, ui.c) */
 
+/* the SMK-37 Elite's own controls (board_caps.h CAP_PADS, CAP_FADERS; only called where those are not 0) */
+uint32_t plat_pads(void);              /* down: bit p = pad p, 0..7 the top row left to right, 8..15 the bottom */
+void plat_pads_rest(void);             /* every pad let go, its resting level learned again (one stuck: the way out) */
+int32_t plat_fader(int i);             /* fader i (0..3, left to right), 0..1023; -1: not read yet */
+int32_t plat_wheel(int i);             /* 0 the pitch wheel, 1 the mod wheel, 0..1023 as read; -1: not read yet */
+enum { X_KNOB_BANK = 1, X_FADER_BANK = 2, X_LEFT = 4, X_RIGHT = 8 };
+uint32_t plat_extra(void);             /* KNOB BANK, FADER BANK, < and > held: X_* */
+void plat_extra_leds(uint32_t lit);    /* and their lights: X_* (before plat_leds) */
+
 /* USB MIDI, 4-byte USB-MIDI event packets (cable 0) */
 int plat_midi_in(uint32_t *pkt);       /* 1 = got one (called from the audio ISR) */
 void plat_midi_out(uint32_t pkt);      /* queue one (audio ISR or main loop) */

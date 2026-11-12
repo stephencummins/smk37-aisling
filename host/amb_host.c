@@ -107,6 +107,15 @@ int32_t plat_enc(int role)
 }
 uint32_t plat_master(void) { return master; }
 #if AISLING_BOARD_SMK37
+/* the pads, the faders and the four more buttons (`pad`, `fader`, `press KNOB_BANK` ..): as the HAL would report them */
+static uint32_t sim_pads, sim_extra_lit, sim_pad_rests;
+static int32_t sim_fader[CAP_FADERS] = {-1, -1, -1, -1}, sim_wheel[CAP_WHEELS] = {-1, -1};
+uint32_t plat_pads(void) { return sim_pads; }
+void plat_pads_rest(void) { sim_pads = 0, sim_pad_rests++; }
+int32_t plat_fader(int i) { return sim_fader[i & 3]; }
+int32_t plat_wheel(int i) { return sim_wheel[i & 1]; }
+uint32_t plat_extra(void) { return held_extra; }
+void plat_extra_leds(uint32_t lit) { sim_extra_lit = lit; }
 uint32_t plat_master_raw(void) { return master_k10; }
 /* MASTER is K1, an encoder, as main_fm1.c has it: at power-on the knob position nearest MASTER_START from below,
  * and the level MASTER_START itself until the first turn; a turn moves the position and the level follows it */
@@ -700,6 +709,22 @@ static int expect(const char *what, const char *val)
     }
     else if (!strcmp(what, "pheld"))              /* (1.3) PERFORM's keys held, a bit a key (0..26) */
         got = (int)ui.pheld;
+#if AISLING_BOARD_SMK37
+    else if (!strcmp(what, "padfx"))              /* (the SMK) the effects its pads hold, and latched (a bit a key) */
+        got = (int)pd.held;
+    else if (!strcmp(what, "padlatch"))
+        got = (int)pd.latch;
+    else if (!strcmp(what, "padrests"))           /* times the pads were told to rest (<) */
+        got = (int)sim_pad_rests;
+    else if (!strcmp(what, "xlit"))               /* KNOB BANK 1, FADER BANK 2, < 4, > 8: lit */
+        got = (int)sim_extra_lit;
+    else if (!strcmp(what, "fbank"))
+        got = pd.bank;
+    else if (!strncmp(what, "mac", 3) && what[3] >= '0' && what[3] < '0' + EN_NMAC && !what[4])
+        got = ui.mac[what[3] - '0'];              /* a master action as set: Filter, Wet, Energy, Duck, -50..50 */
+    else if (!strncmp(what, "level", 5) && what[5] >= '0' && what[5] < '4' && !what[6])
+        got = proj.par[LAYER_LEVEL[what[5] - '0']];   /* a layer's level: Drone, Sequence, Lead, Sequence 2 */
+#endif
     else if (!strcmp(what, "pcc"))                /* (1.3) the effects a CC holds */
         got = (int)ui.pcc;
     else if (!strcmp(what, "ptrisk"))             /* (1.3) the map's triskele: its angle within 2 sixteenths of the music's */
@@ -1229,6 +1254,29 @@ int main(int argc, char **argv)
             return 2;
 #else
             master = (uint32_t)atoi(a);
+#endif
+#if AISLING_BOARD_SMK37
+        } else if (!strcmp(cmd, "pad") || !strcmp(cmd, "tappad")) {   /* pad N down|up, tappad N: N 0..15 */
+            int i = atoi(a);
+            if (i < 0 || i > 15 || !a[0]) {
+                printf("line %d: no pad %s\n", lineno, a);
+                return 2;
+            }
+            if (cmd[0] == 't' || !strcmp(b, "down"))
+                sim_pads |= 1u << i;
+            if (cmd[0] == 't')
+                run_ms(60);
+            if (cmd[0] == 't' || !strcmp(b, "up"))
+                sim_pads &= ~(1u << i);
+            run_ms(20);
+        } else if (!strcmp(cmd, "fader")) {          /* fader N V: N 0..3, V 0..1023 */
+            int i = atoi(a);
+            if (i < 0 || i >= CAP_FADERS || !b[0]) {
+                printf("line %d: fader N V\n", lineno);
+                return 2;
+            }
+            sim_fader[i] = atoi(b);
+            run_ms(20);
 #endif
         } else if (!strcmp(cmd, "battery"))
             sim_batt_set = 1, sim_batt = atoi(a);

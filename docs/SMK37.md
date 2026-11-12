@@ -145,7 +145,8 @@ The Elite wires the same chip's pins to other things: PH8, the FM-1's TRS MIDI i
 matrix, for instance, so the Elite has no MIDI in on its jack. The FM-1's drivers would set pins up wrongly here, so:
 
 - The Elite build never touches PB1 (the charger's status line: held low for eight seconds, it resets the chip), PC7
-  (TRS MIDI out) or PA8, PC9 and PC10 (the pads, for later).
+  (TRS MIDI out) or PC10 (the pads' lights, for later). PA8, PC9 and PA10, the pads', faders' and wheels' three
+  analog lines, are inputs only.
 - Every pin it does set up is in one table, `firmware/hal/smk37/smk_pins.h`. Each driver sets up its own rows from it,
   inputs first, and an output's level before its direction.
 - The build fails if any of the FM-1's hardware headers (`fm1_input.h`, `fm1_adc.h`, `fm1_lcd_hw.h`, `fm1_uart.h`) is
@@ -187,7 +188,7 @@ package are unchanged.
 | `ota-entry-smk37` | the update's way in, with an Elite package (needs a `build/smk37` package) |
 | `update-loader-smk37` | the update loader, staging and record on the Elite's map (also needs the SDK) |
 | `smk37-<scenario>` | all 34 of the FM-1's simulator scenarios, renamed to the Elite's controls, must give the FM-1's screens and sound byte for byte |
-| `smk37-own-*` | the Elite's own scenarios (`tests/scenarios_smk37/`): MASTER on K1, the outer keys, the buttons that reach nothing, the battery |
+| `smk37-own-*` | the Elite's own scenarios (`tests/scenarios_smk37/`): MASTER on K1, the outer keys, the four more buttons, the pads and faders, the battery |
 | `smk37-control` | an FM-1 script, and a script that sets MASTER, must be refused by the Elite's simulator |
 
 ## 10. The simulator
@@ -197,7 +198,9 @@ command list is at the top of `host/amb_host.c`), with the Elite's controls by t
 spaces:
 
 - **Buttons:** FX, SCALE, CHORD, NOTE_REPEAT, PARA, GLOBE, PATCH, BT, ARP, SEQ, SEQ_PLAY, SEQ_REC, OCT- and OCT+, and
-  KNOB_BANK, FADER_BANK, < and >, which reach nothing.
+  KNOB_BANK (nothing yet), FADER_BANK, < and >.
+- **Pads and faders:** `pad N down`, `pad N up`, `tappad N` (0 to 7 the top row, 8 to 15 the bottom); `fader N V`
+  (0 to 3, V 0 to 1023).
 - **Knobs:** K1 to K8. K1 is MASTER, turned like the others (`turn`, `spin`), so `master N` is refused.
 - **Keys:** 0 to 36 (C3 to C6), or w0 to w21 for the white keys and b0 to b14 for the black.
 - **The battery:** `battery N` sets its reading.

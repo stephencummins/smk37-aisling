@@ -50,7 +50,7 @@
 enum { LK_HELLO = 1, LK_BYE, LK_BEAT, LK_SET, LK_VIEW, LK_PIECE, LK_PLAY, LK_HOLD, LK_PERF, LK_FORGET, LK_KEYS, LK_BUTTONS,
        LK_UNDO, LK_REDO, LK_SAVE, LK_VOICE, LK_COPY, LK_SWAP, LK_RESET, LK_OPEN, LK_READ, LK_BEGIN, LK_WRITE, LK_COMMIT };
 enum { LKR_HELLO = 65, LKR_ACK, LKR_STATE, LKR_VALS, LKR_CHUNK };
-enum { LK_DIAG = 40, LKR_DIAG = 70 };            /* (AISLING_SMK_DIAG builds only) */
+enum { LK_DIAG = 40, LK_DIAG_AN = 41, LKR_DIAG = 70, LKR_DIAG_AN = 71 };            /* (AISLING_SMK_DIAG builds only) */
 enum { LK_OK, LK_BAD, LK_REFUSED, LK_SUM, LK_BUSY, LK_NONE };
 /* areas: the project as it plays; pieces 1..8's slots (LK_A_SLOT + i); the bytes saved in flash */
 enum { LK_A_PROJ, LK_A_SLOT, LK_A_FLASH = LK_A_SLOT + NPIECES };
@@ -545,6 +545,19 @@ static int link_frame(const uint8_t *p, uint32_t n, uint32_t now)   /* the bytes
         for (i = 0; i < SMK_DIAG_NREG; i++)
             for (k = 0; k < 5u; k++)
                 f[n++] = (uint8_t)(reg[i] >> (7u * k) & 0x7Fu);
+        lk_send(f, n);
+        return 1;
+    }
+    if (cmd == LK_DIAG_AN) {
+        uint8_t f[LK_FRAME];
+        uint32_t i;
+        n = lk_head(f, LKR_DIAG_AN, p[4]);
+        for (i = 0; i < 24u; i++)                /* (stage 4) the analog scan: mux A, B, C by address, as read */
+            put14(f + n, smk_an.raw[i >> 3][i & 7u]), n += 2u;
+        put14(f + n, smk_an.pads & 0xFFu), n += 2u;
+        put14(f + n, smk_an.pads >> 8), n += 2u;
+        put14(f + n, (int)(smk_an.scans & 0x3FFFu)), n += 2u;
+        put14(f + n, (int)(smk_an.misses & 0x3FFFu)), n += 2u;
         lk_send(f, n);
         return 1;
     }

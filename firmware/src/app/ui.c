@@ -282,6 +282,22 @@ static struct {
     uint32_t frame;
     uint32_t sig[3];                   /* what each band shows: redrawn when it changes */
 } ui;
+#if CAP_PADS
+/* (the SMK-37 Elite) the pads: the sixteen effects of PERFORM's white keys, on any page, each as long as its pad is
+ * down; the faders: the mix, or (FADER BANK) the master actions. pads_input() below */
+static struct {
+    uint32_t held, latch;              /* the effects the pads hold, and those latched (a bit a key, PKEY's) */
+    uint16_t pads;                     /* the pads down, as last seen */
+    uint8_t extra;                     /* KNOB BANK, FADER BANK, <, > as last seen (X_*) */
+    uint8_t bank;                      /* the faders: 0 the mix, 1 the master actions */
+    uint8_t thrown;                    /* a knob turned with a pad down: the master actions go back when the pads are up */
+    int8_t mac0[EN_NMAC];              /* where they were */
+    int16_t fad[CAP_FADERS];           /* each fader where it last did something (-1: not seen yet) */
+} pd = {.fad = {-1, -1, -1, -1}};
+#define UI_PPAD (pd.held | pd.latch)
+#else
+#define UI_PPAD 0u
+#endif
 
 /* the screen reader (announce.c; speak() below): a message went to it this frame, so speak() leaves what it
  * changed be; and the transport as last said (PLAY says its own: the engine takes it a block later) */
@@ -885,11 +901,11 @@ static void fx_send(void)                        /* all that is held, to the eng
                                                   * keys' (ui.bfx, ui.mv), the link's moves, and PERFORM's keys,
                                                   * held or latched */
 {
-    uint32_t on = (ui.perf ? ui.pheld | ui.platch : 0u) | ui.pcc, fx = 0, mv = 0, pf = 0, hand;
+    uint32_t on = (ui.perf ? ui.pheld | ui.platch : 0u) | ui.pcc | UI_PPAD, fx = 0, mv = 0, pf = 0, hand;
     int i;
     /* (1.3) by hand (PERFORM's keys, the grid's that PERFORM has too): each change a CC out, on channel 16, with
      * MIDI out on. A CC's own are not sent back */
-    hand = ui.perf ? ui.pheld | ui.platch : 0u;
+    hand = (ui.perf ? ui.pheld | ui.platch : 0u) | UI_PPAD;   /* (and the SMK's pads) */
     for (i = 0; i < PERF_N; i++)
         if (PKEY[i].d < 100 && ((ui.fx | ui.bfx) >> PKEY[i].d & 1u))
             hand |= 1u << i;
@@ -1723,6 +1739,116 @@ static void nudge_tick(void)                     /* Evolve's nudges: on a phrase
     }
     ud.evolve = 0;
 }
+#if CAP_PADS
+/* ------------------------------------------------- the SMK-37 Elite's pads and faders --- */
+/* The pads, on any page: the top row rhythm (Stutter, Half time, Gate, Roll) and echo (Repeat, Macalla, Tape stop,
+ * Reverse), the bottom row space (Reverb, Shimmer, Freeze, Wash) and colour (Flange, Phaser, Drive, Crush): PERFORM's
+ * white keys, in their order. Down: on; up: off; several together.
+ *   > held, a pad hit    that effect stays on (latched); again: let go. > is lit while any is latched
+ *   < tapped             every latch let go, and every pad (their resting levels learned again: one stuck is freed)
+ *   a pad down, KNOB 1-4 turned   a throw: Filter, Wet, Energy, Duck (the master actions) move, and go back to where
+ *                        they were when the last pad is up
+ *   FADER BANK           the faders: the mix (Drone, Sequence, Lead, Sequence 2; dark) or the master actions (Filter,
+ *                        Wet, Energy, Duck; lit). A fader does nothing until it is moved, so a piece's own mix holds */
+static const uint8_t PAD_KEY[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
+#define FADER_STEP 8                             /* of 1023: under it a fader has not moved */
+#define FADER_END 16                             /* the travel's ends: all the way */
+static int pad_throw(int i, int32_t e)           /* KNOB 1-4 (i 0..3) turned by e: 1 if a pad took it */
+{
+    char t[12];
+    int k;
+    if (!pd.pads)
+        return 0;
+    if (!pd.thrown) {
+        for (k = 0; k < EN_NMAC; k++)
+            pd.mac0[k] = ui.mac[k];
+        pd.thrown = 1;
+    }
+    turn(EN_K1 + i, K_FILTER + i, e);
+    knob_text(K_FILTER + i, t);
+    say(knob_name(K_FILTER + i), t);
+    ui.act_t = ui.turn_t = plat_ms();
+    return 1;
+}
+static void pads_input(void)
+{
+    const uint32_t pads = plat_pads(), extra = plat_extra();
+    uint32_t hit = pads & ~(uint32_t)pd.pads, xhit = extra & ~(uint32_t)pd.extra, held = 0, latch = pd.latch, i;
+    if (xhit & X_FADER_BANK) {
+        pd.bank ^= 1u;
+        for (i = 0; i < CAP_FADERS; i++)         /* (where each is: it takes its new job when it is next moved) */
+            pd.fad[i] = (int16_t)plat_fader((int)i);
+        say("FADERS", pd.bank ? "Filter, Wet, Energy, Duck" : "Drone, Sequence, Lead, Sequence 2");
+    }
+    if (xhit & X_LEFT) {
+        latch = 0;
+        plat_pads_rest();
+        say("PADS", "all let go");
+    }
+    for (i = 0; i < 16u; i++) {
+        const uint32_t b = 1u << PAD_KEY[i];
+        if (xhit & X_LEFT)
+            break;
+        if (pads >> i & 1u)
+            held |= b;
+        if (!(hit >> i & 1u))
+            continue;
+        if (extra & X_RIGHT) {
+            latch ^= b;
+            say(PKEY[PAD_KEY[i]].name, latch & b ? "latched" : "let go");
+        } else {
+            say(PKEY[PAD_KEY[i]].name, 0);
+        }
+    }
+    pd.pads = (uint16_t)(xhit & X_LEFT ? 0u : pads);
+    pd.extra = (uint8_t)extra;
+    if (held != pd.held || latch != pd.latch) {
+        pd.held = held, pd.latch = latch;
+        fx_send();
+        ui.act_t = plat_ms();
+    }
+    if (pd.thrown && !pd.pads) {                 /* the throw's over: the master actions back where they were */
+        for (i = 0; i < EN_NMAC; i++)
+            knob_set(K_FILTER + (int)i, pd.mac0[i]);
+        pd.thrown = 0;
+    }
+    for (i = 0; i < CAP_FADERS; i++) {
+        const int32_t f = plat_fader((int)i);
+        const int k = pd.bank ? K_FILTER + (int)i : LAYER_LEVEL[i];
+        int lo, hi, v, d;
+        char t[12];
+        if (f < 0)
+            continue;
+        d = (int)f - pd.fad[i];
+        if (pd.fad[i] < 0) {
+            pd.fad[i] = (int16_t)f;
+            continue;
+        }
+        if (d > -FADER_STEP && d < FADER_STEP)
+            continue;
+        pd.fad[i] = (int16_t)f;
+        knob_range(k, &lo, &hi);
+        v = (int)f - FADER_END;
+        v = v < 0 ? 0 : v > 1023 - 2 * FADER_END ? 1023 - 2 * FADER_END : v;
+        v = lo + (v * (hi - lo) + (1023 - 2 * FADER_END) / 2) / (1023 - 2 * FADER_END);
+        if (lo < 0 && v > -(hi - lo) / 25 && v < (hi - lo) / 25)
+            v = 0;                               /* (a centred one: the middle of the travel is 0) */
+        if (v == knob_get(k))
+            continue;
+        knob_set(k, v);
+        if (pd.bank) {
+            knob_text(k, t);
+            say(knob_name(k), t);
+        } else {
+            itoa_u((uint32_t)proj.par[k], t);
+            say(LAYER_NAME[i], t);
+        }
+        ui.act_t = ui.turn_t = plat_ms();
+    }
+    plat_extra_leds((pd.bank ? X_FADER_BANK : 0u) | (pd.latch ? X_RIGHT : 0u));
+}
+#endif
+
 static void input(void)
 {
     uint32_t btn = plat_buttons() | link_v_btn, keys = plat_keys() | link_v_keys, ch, i;
@@ -1854,6 +1980,9 @@ static void input(void)
     if (btn || keys || ch)
         ui.act_t = plat_ms();
     midi_in();
+#if CAP_PADS
+    pads_input();
+#endif
     if ((e = plat_enc(EN_SELECT)) != 0) {        /* (the user, 2026-10-28) a layer's pages: its level; HOME: Energy;
                                                   * elsewhere nothing (no pages, no tempo: one knob, one job) */
         if (oct_layer(ui.view) >= 0)
@@ -1906,6 +2035,10 @@ static void input(void)
     }
     for (i = 0; i < 4; i++)
         if ((e = plat_enc(EN_K1 + (int)i)) != 0) {
+#if CAP_PADS
+            if (pad_throw((int)i, e))            /* (the SMK: a pad down, the knobs throw the master actions) */
+                continue;
+#endif
             if (grid_up())
                 continue;                        /* (the grid on the screen: the knobs rest) */
             turn(EN_K1 + (int)i, VIEW_KNOB[ui.view][i], e);
@@ -2652,7 +2785,7 @@ static uint16_t pkey_col(int k)
         n += PKEY[i].g == PKEY[k].g;
     return mix(PG_COL[PKEY[k].g], K_BAININ, PKEY[k].g == PG_BLACK ? n : n * 3);
 }
-static int pflash_up(void) { return ui.perf && (ui.pheld | ui.pcc); }
+static int pflash_up(void) { return ui.perf && (ui.pheld | ui.pcc | UI_PPAD); }
 static void pflash_band(uint32_t m, int32_t oy, int32_t hh, int fade)
 {
     int n = 0, k, j = 0, more;
@@ -2700,7 +2833,7 @@ static void draw_pflash(void)                    /* (each third frame, as the ma
 {
     static uint32_t last;                        /* what was held, for the two frames it takes to go */
     static uint8_t fade;
-    uint32_t m = pflash_up() ? ui.pheld | ui.pcc : 0, h;
+    uint32_t m = pflash_up() ? ui.pheld | ui.pcc | UI_PPAD : 0, h;
     if (m) {
         last = m;
         fade = 0;
@@ -3239,7 +3372,7 @@ static void leds(void)
         const int blink = (plat_ms() / 250u) & 1u;
         b |= 1u << B_SEL;
         for (i = 0; i < PERF_N; i++) {
-            if (PKEY[i].d == PK_SOON || ((ui.pheld | ui.pcc) >> i & 1u))
+            if (PKEY[i].d == PK_SOON || ((ui.pheld | ui.pcc | UI_PPAD) >> i & 1u))
                 continue;
             if (!(ui.platch >> i & 1u) || blink)
                 k |= 1u << i;

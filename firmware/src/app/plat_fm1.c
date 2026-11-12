@@ -30,8 +30,20 @@ uint32_t plat_master_raw(void) { return master_raw; }
 
 #if AISLING_BOARD_SMK37
 /* LEDs on the SMK: one per button (the keys have none), by the HAL's button id through the panel map; the extras
- * (KNOB BANK, FADER BANK, <, >) stay dark. smk_leds builds the picture off-line, then copies it. */
+ * (KNOB BANK, FADER BANK, <, >) by plat_extra_leds. smk_leds builds the picture off-line, then copies it. */
 static void led_pos_init(void) {}
+static uint8_t extra_lit;
+void plat_extra_leds(uint32_t lit) { extra_lit = (uint8_t)(lit & 15u); }
+uint32_t plat_extra(void) { return fm1_in.extra; }
+uint32_t plat_pads(void) { return smk_an.pads; }
+void plat_pads_rest(void)
+{
+    uint32_t k = fm1__lock();
+    smk_pads_rest();
+    fm1__unlock(k);
+}
+int32_t plat_fader(int i) { return smk_an.scans < SMK_AN_SKIP + 2u ? -1 : (int32_t)smk_an.pos[i & 3]; }
+int32_t plat_wheel(int i) { return smk_an.scans < SMK_AN_SKIP + 2u ? -1 : (int32_t)smk_an.pos[SMK_AN_PITCH + (i & 1)]; }
 #else
 /* LEDs: the picture is built off-line and copied one byte per column (Felucca: clearing
  * and relighting would let the 10 kHz scan catch the dark gap and flicker) */
@@ -64,6 +76,7 @@ void plat_leds(uint32_t buttons, uint32_t keys)
         else if (glow_on)
             dim |= 1u << panel.btn[i];
     }
+    lit |= (uint32_t)extra_lit << 14;                /* (KNOB BANK, FADER BANK, <, >: the HAL's 14..17) */
     smk_leds(lit, dim, glow_on ? GLOW_DIV : 0u);
 }
 #else

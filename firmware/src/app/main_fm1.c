@@ -124,7 +124,13 @@ void fm1_timer5_irq(void)
     en_dbg.timer_irqs++;
     if (en_dbg.in_audio)
         en_dbg.nested++;
+#if AISLING_BOARD_SMK37                          /* the pads, faders and wheels: a reading a tick (smk_adc.h) */
+    smk_mux = (uint8_t)smk_an_pre();
     fm1_input_tick();
+    smk_an_post();
+#else
+    fm1_input_tick();
+#endif
     /* 2 kHz: all USB SIE traffic lives here. This ISR now nests into the audio render (so the key
      * matrix keeps its rhythm, below); USB shares the MIDI queues with the audio ISR, so a poll that
      * falls inside the render waits for the first tick outside it, as it did before the nesting. */
@@ -364,13 +370,12 @@ static void fm1_main(void)
                 master_q12 = master_curve(k10);
             }
         }
-        {   /* the battery: mux C, address 7 (smk_mux, latched by the matrix scan), twice a second, smoothed */
+        {   /* the battery: mux C, address 7, from the timer's scan (smk_adc.h), twice a second, smoothed */
             static uint32_t t_batt;
-            if (fm1_ms - t_batt >= 500u && smk_mux == SMK_MUX_BATT) {
-                int32_t b = smk_adc_read(SMK_ADC_MUXC);
+            if (fm1_ms - t_batt >= 500u && smk_an.scans > SMK_AN_SKIP) {
+                int32_t b = smk_an.batt;
                 t_batt = fm1_ms;
-                if (b >= 0)
-                    batt_raw = batt_raw < 0 ? b : batt_raw + (b - batt_raw) / 4;
+                batt_raw = batt_raw < 0 ? b : batt_raw + (b - batt_raw) / 4;
             }
         }
 #else

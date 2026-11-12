@@ -45,12 +45,12 @@ static const struct { const char *name; uint8_t owner, port, bit, mode; } WANT[]
     {"PA3 595 clock", SMK_OWN_INPUT, PA, 3, SMK_OUT_LO}, {"PA4 595 data", SMK_OWN_INPUT, PA, 4, SMK_OUT_LO},
     {"PB5 screen D/C", SMK_OWN_LCD, PB, 5, SMK_OUT_LO},  {"PB6 screen CLK", SMK_OWN_LCD, PB, 6, SMK_OUT_LO},
     {"PB7 screen DO", SMK_OWN_LCD, PB, 7, SMK_OUT_LO},   {"PC8 screen CS", SMK_OWN_LCD, PC, 8, SMK_OUT_HI},
-    {"PA10 mux C", SMK_OWN_ADC, PA, 10, SMK_ANALOG},
+    {"PA10 mux C", SMK_OWN_ADC, PA, 10, SMK_ANALOG},     {"PA8 mux A", SMK_OWN_ADC, PA, 8, SMK_ANALOG},
+    {"PC9 mux B", SMK_OWN_ADC, PC, 9, SMK_ANALOG},
 };
 #define NWANT (sizeof WANT / sizeof WANT[0])
 static const struct { const char *name; uint8_t port, bit, shared; } NEVER[] = {
-    {"PB1 charger status", PB, 1, 0}, {"PC7 MIDI OUT", PC, 7, 0}, {"PA8 mux A", PA, 8, 0},
-    {"PC9 mux B", PC, 9, 0},          {"PC10 pad LEDs", PC, 10, 0},
+    {"PB1 charger status", PB, 1, 0}, {"PC7 MIDI OUT", PC, 7, 0}, {"PC10 pad LEDs", PC, 10, 0},
     {"PC0 codec", PC, 0, 1},          {"PC1 codec", PC, 1, 1}, {"PC2 codec", PC, 2, 1}, {"PC6 codec", PC, 6, 1},
 };
 #define NNEVER (sizeof NEVER / sizeof NEVER[0])
@@ -258,7 +258,7 @@ int main(void)
         snprintf(what, sizeof what, "%s init: levels before drive%s", OWNER[o],
                  o == SMK_OWN_INPUT ? ", the rows inputs before a 595 pin drives" : "");
         check(what, order_ok);
-        snprintf(what, sizeof what, "%s init: never PB1 PC7 PA8 PC9 PC10, nor the codec's PC0 PC1 PC2 PC6", OWNER[o]);
+        snprintf(what, sizeof what, "%s init: never PB1 PC7 PC10, nor the codec's PC0 PC1 PC2 PC6", OWNER[o]);
         check(what, never_ok);
     }
     printf(fails ? "smk_pins: %d FAILED\n" : "smk_pins: ok\n", fails);

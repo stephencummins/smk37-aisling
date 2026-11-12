@@ -111,7 +111,7 @@ for s in tests/scenarios/*.amb; do
 done
 # the SMK-37 Elite (build/host/amb_host_smk37): every FM-1 scenario with its controls' names (tests/smk37_scenario.py)
 # must pass and write what the FM-1's run just wrote, file for file (screens, MIDI out, audio): the same app on its
-# controls. Then its own (tests/scenarios_smk37/: K1 as MASTER, the outer keys, the buttons that reach nothing, the
+# controls. Then its own (tests/scenarios_smk37/: K1 as MASTER, the outer keys, the four more buttons, the pads and faders, the
 # battery). The controls must fail: an FM-1 scenario as written, `master N` (and the renamer on it), and its battery
 # scenario on the FM-1's simulator
 smk_same() {

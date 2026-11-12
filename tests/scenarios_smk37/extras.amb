@@ -1,6 +1,6 @@
-# the SMK-37 Elite's KNOB BANK, FADER BANK, < and > reach nothing in stage 1 (the FM-1's layout; the HAL reads them into
-# fm1_in.extra, tests/host/smk_input_test.c): tapped, and held while others are tapped, on the home page and a layer's;
-# the page, the piece, the play and every setting as they were
+# the SMK-37 Elite's KNOB BANK, FADER BANK, < and > (the HAL reads them into fm1_in.extra, tests/host/smk_input_test.c)
+# change no page, piece, play or setting: KNOB BANK does nothing yet; FADER BANK, < and > are the pads' and faders'
+# (pads.amb). Tapped, and held while others are tapped, on the home page and a layer's
 wait 300
 expect view 0
 mark

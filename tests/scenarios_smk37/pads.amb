@@ -1,0 +1,121 @@
+# the SMK-37 Elite's pads and faders (ui.c pads_input): a pad holds one of PERFORM's sixteen white-key effects on any
+# page; > latches; < lets everything go; a knob turned with a pad down throws a master action, which goes back when
+# the pads are up; the faders are the mix, or (FADER BANK) the master actions, and do nothing until moved
+wait 300
+expect view 0
+expect pnow 0
+# pad 0: Stutter (key 0); pad 5: Macalla (key 9), together; on the home page, not PERFORM
+pad 0 down
+expect padfx 1
+expect pnow 1
+pad 5 down
+expect padfx 513
+expect pnow 513
+pad 0 up
+expect pnow 512
+pad 5 up
+expect pnow 0
+expect view 0
+# the bottom row: pad 8 Reverb (key 14), pad 15 Crush (key 26)
+pad 8 down
+expect pnow 16384
+pad 8 up
+pad 15 down
+expect pnow 67108864
+pad 15 up
+expect pnow 0
+# on a layer's page too
+tap CHORD
+wait 300
+expect view 1
+tappad 2
+expect pnow 0
+pad 2 down
+expect pnow 16
+pad 2 up
+tap PATCH
+wait 300
+expect view 0
+# > held and a pad hit: latched, > lit; the pad up, it stays; hit again with >: let go
+press >
+pad 10 down
+expect padlatch 262144
+pad 10 up
+release >
+wait 100
+expect pnow 262144
+expect xlit 8
+pad 1 down
+expect pnow 262148
+pad 1 up
+expect pnow 262144
+press >
+tappad 10
+release >
+expect padlatch 0
+expect pnow 0
+expect xlit 0
+# < : every latch let go, the pads told to rest
+press >
+tappad 3
+tappad 4
+release >
+expect padlatch 192
+tap <
+expect padlatch 0
+expect pnow 0
+expect padrests 1
+# a throw: a pad down, KNOB 1 (K5) turned: Filter moves; the pad up: back at 0. The page's own knob did not move
+mark
+expect mac0 0
+pad 0 down
+turn K5 8
+expect mac0 6
+turn K7 -5
+expect mac2 -3
+pad 0 up
+wait 50
+expect mac0 0
+expect mac2 0
+expect marked 0
+# no pad down: KNOB 1 is the page's own again (HOME's Filter: it stays where it is put)
+turn K5 8
+expect mac0 6
+turn K5 -6
+expect mac0 0
+# the faders: nothing until moved (the first position seen is where it is)
+mark
+fader 0 500
+fader 1 500
+fader 2 500
+fader 3 500
+wait 100
+expect marked 0
+fader 0 1023
+expect level0 100
+fader 0 0
+expect level0 0
+fader 2 519
+expect level2 51
+fader 2 521
+expect level2 51
+# FADER BANK: the master actions, lit; a fader takes its new job when next moved; the middle is 0
+tap FADER_BANK
+expect fbank 1
+expect xlit 2
+expect mac0 0
+expect level0 0
+fader 0 1023
+expect mac0 50
+expect level0 0
+fader 0 0
+expect mac0 -50
+fader 0 511
+expect mac0 0
+fader 1 1023
+expect mac1 50
+fader 1 511
+expect mac1 0
+tap FADER_BANK
+expect fbank 0
+expect xlit 0
