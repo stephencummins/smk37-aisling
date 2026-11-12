@@ -32,7 +32,8 @@ on hardware:
 The SMK-37 Elite (AISLING's second board): the package is M-VAVE's SMK-37 Elite_016.fwsc, and the same
 steps run with the Elite's own checks. Its flash head is byte-identical to the FM-1 V15's, so the head
 cannot tell the two apart; the board comes from the package, and FM-1 and SMK-37 packages are never given
-together. Its flash ID must be the SMK's (EB6014, read on an SMK-37 Pro), its backup must hold the
+together. Its flash ID must be an SMK's (856014, read on an Elite: the first FM-1s' part too; or EB6014, read
+on an SMK-37 Pro), its backup must hold the
 velocity calibration's "trimdat" at 0xC1224 (and an FM-1's must not), and only [0x4000, 0x9D000) is
 written: never the head, the calibration (0xC0000-0xC1FFF) or the resources and key above 0xF4000.
 
@@ -73,7 +74,7 @@ TRIM_AT, TRIM_MARK = 0xC1224, b"trimdat\0"
 # whether its backup must hold the calibration
 BOARDS = {
     "fm1": dict(label="FM-1", flash_ids=FLASH_IDS, never=((0, WRITE_MIN),), trim=False),
-    "smk37": dict(label="SMK-37 Elite", flash_ids=(0xEB6014,),
+    "smk37": dict(label="SMK-37 Elite", flash_ids=(0x856014, 0xEB6014),
                   never=((0, WRITE_MIN), (0xC0000, 0xC2000), (0xF4000, FLASH_SIZE)), trim=True),
 }
 

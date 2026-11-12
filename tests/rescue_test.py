@@ -211,9 +211,15 @@ def smk37():
     ok(isinstance(r, R.Refuse) and "lacks an SMK-37's velocity calibration" in str(r) and "trimdat" in str(r) and not bot.erased
        and backup is not None, "no calibration at 0xC1224: refused after the backup, nothing written")
 
-    r, bot, backup, _ = run(smk_flash(), ELITE, flash_id=0x856014, board="smk37")
-    ok(isinstance(r, R.Refuse) and "not the SMK-37 Elite's chip and flash" in str(r) and "id EB6014)" in str(r)
-       and not bot.erased and backup is None, "an FM-1's flash ID with the Elite's package: refused before reading")
+    r, bot, backup, _ = run(smk_flash(), ELITE, flash_id=0xB36014, board="smk37")
+    ok(isinstance(r, R.Refuse) and "not the SMK-37 Elite's chip and flash" in str(r) and "id 856014 or EB6014)" in str(r)
+       and not bot.erased and backup is None, "a flash ID never read on an SMK (B36014): refused before reading")
+    before = smk_flash()
+    r, bot, backup, _ = run(before, ELITE, flash_id=0x856014, board="smk37")
+    ok(r is True and bot.flash == E16 + before[0x9D000:] and backup == bytes(before),
+       "the Elite's own flash ID (856014, the first FM-1s' too): accepted")
+    r, bot, backup, _ = run(flash_with(V15, "AISLING", "data"), ELITE, flash_id=0x856014, board="smk37")
+    ok(isinstance(r, R.Refuse) and not bot.erased, "  an FM-1 behind that ID: its missing calibration refuses it")
     r, bot, backup, _ = run(flash_with(V15, "AISLING", "data"), ELITE, flash_id=SMK_ID, board="smk37")
     ok(isinstance(r, R.Refuse) and not bot.erased, "an FM-1 flash (no calibration) with the SMK's ID: refused")
 

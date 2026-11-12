@@ -165,8 +165,8 @@ int main(void)
     sweep(G_LDR, LOADER, NW(LOADER), "loader FL_LDR_RANGE_OK");
 
 #ifdef FL_JEDEC_OK
-    ok(FL_JEDEC_OK(0xEB6014u) && !FL_JEDEC_OK(0x856014u) && !FL_JEDEC_OK(0xB36014u) && !FL_JEDEC_OK(0u) &&
-       !FL_JEDEC_OK(0xFFFFFFu), "flash part: 0xEB6014 only (the FM-1's parts are not this board's)");
+    ok(FL_JEDEC_OK(0x856014u) && FL_JEDEC_OK(0xEB6014u) && !FL_JEDEC_OK(0xB36014u) && !FL_JEDEC_OK(0u) &&
+       !FL_JEDEC_OK(0xFFFFFFu), "flash part: 0x856014 (read on an Elite) or 0xEB6014 (a Pro), no other");
 #else
     ok(0, "flash part: the map brings no JEDEC list");
 #endif

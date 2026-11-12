@@ -240,7 +240,8 @@ Each is one place in the code:
 - **The update record:** whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00). If
   not, an update keeps its record in RAM only (`FELUCCA_OTA_RAMONLY`), and a cable pulled mid-update can't resume.
 - **The stock loader's USB name,** `OTA_LDR_NAME` in `firmware/src/ota.c`, a guess: "ota-SMK-37 Elite_016".
-- **The flash chip's ID:** EB6014 was read on an SMK-37 Pro. The Elite's own goes on the list once it has been read.
+- **The flash chip's ID:** read on an Elite on V016, it is 856014, the part of the first FM-1s. EB6014 was read on an
+  SMK-37 Pro. Both are on the list; any other part runs from RAM and saves nothing until it has been read and added.
 
 ## 13. The files
 

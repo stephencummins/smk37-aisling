@@ -47,10 +47,11 @@
 #define FL_STORE_OK(off, n) FL_IN(off, n, FL_DATA_LO, FL_DATA_HI)
 #define FL_LDR_RANGE_OK(off, n) (FL_IN(off, n, FL_APP_LO, FL_APP_HI) || FL_IN(off, n, FL_REC_LO, FL_REC_HI))
 
-/* The flash part: 0xEB6014 (1 MiB), as genkigenki's fm1-to-smk37 guide read it on an SMK-37 Pro. Any other
- * part: RAM only, nothing saved, until it is read from a unit and added here. (The FM-1's list is in
- * fm1_flash.h.) */
-#define FL_JEDEC_OK(id) ((id) == 0xEB6014u)
+/* The flash part (1 MiB): 0x856014, a Puya P25Q80 as in the first FM-1s, read from an SMK-37 Elite on V016
+ * (2026-11-12, by the chip's ROM update mode); or 0xEB6014, as genkigenki's fm1-to-smk37 guide read it on an
+ * SMK-37 Pro. Any other part: RAM only, nothing saved, until it is read from a unit and added here. (The FM-1's
+ * list is in fm1_flash.h.) */
+#define FL_JEDEC_OK(id) ((id) == 0x856014u || (id) == 0xEB6014u)
 
 /* [lo, hi) clear of every protected range */
 #define SMK_CLEAR(lo, hi) ((hi) <= (lo) || (((hi) <= SMK_HEAD_LO || (lo) >= SMK_HEAD_HI) && \
