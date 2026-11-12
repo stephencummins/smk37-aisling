@@ -65,6 +65,9 @@ if [ -f build/amb.fwsc ]; then
     run update-loader sh -c "head -c 100000 build/amb.bin > $OUT/old_app.bin && \
         python3 tools/fm1pkg_make.py $OUT/old_app.bin build/loader/ota.bin $OUT/old.fwsc >/dev/null && \
         $CC -o $OUT/ldr_test tests/ldr_test.c && $OUT/ldr_test $OUT/old.fwsc build/amb.fwsc"
+    # a backup package's loader (tools/build.py --dry-loader): it compares, and writes no byte of the app area
+    run update-loader-dry sh -c "$CC -DLDR_DRYRUN=1 -o $OUT/ldr_test_dry tests/ldr_test.c && \
+        $OUT/ldr_test_dry $OUT/old.fwsc build/amb.fwsc"
     fi
     run installer python3 tests/install_test.py
 else
@@ -74,7 +77,10 @@ fi
 # (tests/fwsc.h); against its package from tools/mini_build.sh --board smk37. The control runs the FM-1's build of
 # the test on it, which must fail (36 marker blocks, not 20)
 SMK_PKG=
-for f in build/smk37/amb.fwsc build/smk37/aisling-smk37-elite-*.fwsc; do [ -f "$f" ] && SMK_PKG="$f"; done
+for f in build/smk37/amb.fwsc build/smk37/aisling-smk37-elite-*.fwsc; do
+    case "$f" in *-dryloader.fwsc) continue ;; esac     # a backup package: the same app, another loader
+    [ -f "$f" ] && SMK_PKG="$f"
+done
 if [ -n "$SMK_PKG" ]; then
     run ota-entry-smk37 sh -c "$CC -DAISLING_BOARD_SMK37=1 -o $OUT/ota_test_smk tests/ota_test.c && $OUT/ota_test_smk $SMK_PKG && \
         $CC -o $OUT/ota_test_fm1 tests/ota_test.c && ! $OUT/ota_test_fm1 $SMK_PKG >/dev/null"
@@ -82,6 +88,8 @@ if [ -n "$SMK_PKG" ]; then
     run update-loader-smk37 sh -c "head -c 100000 build/smk37/amb.bin > $OUT/old_smk_app.bin && \
         python3 tools/fm1pkg_make.py --board smk37 $OUT/old_smk_app.bin build/smk37/loader/ota.bin $OUT/old_smk.fwsc >/dev/null && \
         $CC -DAISLING_BOARD_SMK37=1 -o $OUT/ldr_test_smk tests/ldr_test.c && $OUT/ldr_test_smk $OUT/old_smk.fwsc $SMK_PKG"
+    run update-loader-dry-smk37 sh -c "$CC -DAISLING_BOARD_SMK37=1 -DLDR_DRYRUN=1 -o $OUT/ldr_test_dry_smk tests/ldr_test.c && \
+        $OUT/ldr_test_dry_smk $OUT/old_smk.fwsc $SMK_PKG"
     else
         echo "  skip update-loader-smk37 (needs AC79_SDK and the SMK build's amb.bin and loader/ota.bin)"
     fi

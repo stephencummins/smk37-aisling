@@ -4,7 +4,8 @@
  * host serves a package over the SysEx protocol, the "device" flash starts as
  * another package's flash.bin (as if that firmware were installed).
  *   ldr_test OLD.fwsc NEW.fwsc
- * Built with -DAISLING_BOARD_SMK37=1 -Ifirmware/hal/smk37, the SMK-37 Elite's (addresses in tests/fwsc.h). */
+ * Built with -DAISLING_BOARD_SMK37=1 -Ifirmware/hal/smk37, the SMK-37 Elite's (addresses in tests/fwsc.h).
+ * Built with -DLDR_DRYRUN=1, a backup package's loader: it must not change a byte of the app area. */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +22,7 @@
 static uint8_t nor[0x100000], *logical;
 static size_t logical_len;
 static uint8_t rx[1024];
-static uint32_t rx_len, rx_full, now_ms, requests, erases, bad_range, record_cleared, f0_asked;
+static uint32_t rx_len, rx_full, now_ms, requests, erases, progs, bad_range, record_cleared, f0_asked;
 
 static uint32_t pack7(const uint8_t *in, uint32_t n, uint8_t *out)
 {
@@ -98,6 +99,7 @@ static int ldr_prog(uint32_t off, const void *p, uint32_t n)
     const uint8_t *s = p;
     uint32_t i;
     if (off < 0x4000u || off + n > T_APP_HI || ((off & 0xFFu) + n) > 256u) bad_range++;
+    progs++;
     for (i = 0; i < n; i++) nor[off + i] &= s[i];
     return 0;
 }
@@ -160,6 +162,35 @@ int main(int argc, char **argv)
         ota_wr16(r, ota_crc16(r + 2, 78, 0));
         memcpy(nor + T_RES, r, sizeof r);
     }
+#if defined(LDR_DRYRUN) && LDR_DRYRUN
+    {
+        static uint8_t before[sizeof nor];
+        uint32_t whole = (T_APP_HI - 0x4000u) / 512u;
+        memcpy(before, nor, sizeof nor);
+        rc = ldr_session();
+        printf("  rc %d, %u requests, %u erases, %u programs\n", rc, requests, erases, progs);
+        bad += check("dry run, another package: refused with -20", rc == -20);
+        bad += check("  it read the whole app area first", requests >= whole);
+        bad += check("  no erase, no program, the flash unchanged", !erases && !progs && !memcmp(nor, before, sizeof nor));
+        bad += check("  the record kept (the loader stays), no finish asked", !record_cleared && !f0_asked &&
+                     nor[T_RES + 6] != 0xFF);
+        /* the installed package itself (stock on a stock device): the way out of update mode */
+        free(logical);
+        logical = old; logical_len = olen;
+        requests = 0;
+        rc = ldr_session();
+        printf("  rc %d, %u requests, %u erases, %u programs\n", rc, requests, erases, progs);
+        bad += check("dry run, the installed package: finishes", rc == 0 && f0_asked >= 1);
+        bad += check("  the app area and the head unchanged, nothing programmed",
+                     !progs && !memcmp(nor, before, T_APP_HI));
+        bad += check("  only the update record's sector erased", erases == 1 && record_cleared &&
+                     nor[T_RES + 6] == 0xFF && bad_range == 0);
+        memset(before + (T_RES & ~0xFFFu), 0xFF, 0x1000);
+        bad += check("  nothing else in the flash changed", !memcmp(nor, before, sizeof nor));
+        printf("%s\n", bad ? "DRY LOADER TEST FAILED" : "dry loader test passed");
+        return bad != 0;
+    }
+#endif
     rc = ldr_session();
     printf("  rc %d, %u requests, %u sector erases\n", rc, requests, erases);
     bad += check("install completes", rc == 0);

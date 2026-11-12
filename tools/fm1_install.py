@@ -11,6 +11,7 @@ the FM-1 restarts and the installed identity is checked.
 
   fm1_install.py PACKAGE.fwsc [--port NAME] [--yes] [--force]
   fm1_install.py --info [--port NAME]
+  fm1_install.py PACKAGE-dryloader.fwsc --uboot      no install: the loader, then the chip's UBOOT (for a backup)
 
 If the FM-1 is still in update mode (an earlier install was cut off), the
 install finishes the write. Needs mido with python-rtmidi.
@@ -20,6 +21,7 @@ Exit codes: 0 done, 1 cancelled or other error, 2 bad arguments or package,
 loader / no restart), 6 wrong model, or another identity after the install.
 """
 import argparse
+import os
 import queue
 import re
 import sys
@@ -27,6 +29,8 @@ import time
 
 HS_QUERY = bytes([0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7])
 UPGRADE = bytes([0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7])
+UBOOT_KEY = bytes([0xF0, 0x22, 0x24, 0x35, 0x7D, 0xF7])    # Felucca's soft key (firmware/src/usb.c): the chip's ROM update mode
+DRY_MARK = b"-dryloader"               # in a backup package's name (tools/build.py --dry-loader)
 FINISH_CHECK, FINISH_WRITE = 0xE0000000, 0xF0000000
 MAXDATA = 512
 BLOCKS, BLK, KEEP = 20, 0x30, 0x2F     # BLOCKS: the fewest marker blocks (M-VAVE's FM-1 packages)
@@ -37,7 +41,7 @@ PORT_RE = re.compile(r"fm-1|smk-37|felucca|ota|composite|sinco|usb-midi", re.I) 
 # seconds; the tests shorten them
 DELAY = {"open": 0.3, "start": 2.0, "reply": 0.01, "loader": 3.0, "reboot": 3.0, "retry": 1.0,
          "poll": 1.0, "hs": 1.0, "idle_check": 8.0, "idle_write": 180.0,
-         "wait_loader": 30.0, "wait_reboot": 40.0}
+         "wait_loader": 30.0, "wait_reboot": 40.0, "uboot": 2.0}
 
 EXIT = {"usage": 2, "badpkg": 2, "notfound": 3, "model": 6, "lost": 4, "stopped": 4, "badreq": 4,
         "noloader": 5, "noreturn": 5, "mismatch": 6}
@@ -405,6 +409,24 @@ class Updater:
         step("done", back.id.text)
         return back.id.text
 
+    def uboot(self, dev, image, product, step=lambda *a: None):
+        """running firmware -> the package's loader -> the chip's ROM update mode (UBOOT), for a backup with
+        tools/fm1_rescue.py. The loader is sent the soft key and no write request: nothing is written by us.
+        A device already in update mode only needs the key."""
+        if model_of(dev.id.text) != model_of(product):
+            dev.link.close()
+            raise InstallError("model", f"the device is {dev.id.text}, the package is for {product}")
+        ota = dev if dev.id.loader else self.check(dev, image, step)
+        step("uboot")
+        sent = ota.link.send(UBOOT_KEY)
+        time.sleep(DELAY["uboot"])
+        ota.link.close()
+        if not sent:
+            raise InstallError("lost", "the loader was disconnected before the UBOOT key was sent")
+        if any(n == ota.name for n in self.backend.input_names()):
+            raise InstallError("stopped", "the loader is still there: it did not take the UBOOT key")
+        step("ubootdone")
+
     def install(self, dev, image, product, step=lambda *a: None):
         """running firmware -> loader -> new firmware; dev from find(). A device already in
         update mode only needs the write."""
@@ -451,7 +473,10 @@ class Progress:
         else:
             self.end()
             msg = {"start": f"starting the update on {a}", "loader": "switching to update mode",
-                   "reboot": "restarting", "done": f"done: the FM-1 runs {a}"}[k]
+                   "reboot": "restarting", "done": f"done: the FM-1 runs {a}",
+                   "uboot": "sending the UBOOT key to the loader",
+                   "ubootdone": "the loader has left: the chip should now be in its ROM update mode (UBOOT).\n"
+                                "Back up with tools/fm1_rescue.py (no --write). Nothing was written by this tool."}[k]
             print(msg, file=self.out, flush=True)
 
     def put(self, s):
@@ -482,6 +507,24 @@ def run(a, backend, out, ask):
     dev = up.find()
     if not dev:
         raise not_found(up)
+    if a.uboot:
+        if not dev.id.loader and DRY_MARK not in os.path.basename(a.package).encode():
+            dev.link.close()
+            raise InstallError("usage", f"--uboot starts the package's loader on a running device, and {a.package} "
+                                        "is not a backup package (NAME-dryloader.fwsc, tools/build.py --dry-loader): "
+                                        "its loader could write")
+        print(f"device:  {dev.id.text}  ({dev.name})" + ("  in update mode: only the key is sent" if dev.id.loader else ""),
+              file=out)
+        if not a.yes and not ask("Start the loader and enter UBOOT (for a backup; nothing is installed)? [y/N] "):
+            dev.link.close()
+            print("cancelled", file=out)
+            return 1
+        prog = Progress(out)
+        try:
+            up.uboot(dev, image, product, prog)
+        finally:
+            prog.end()
+        return 0
     print(f"device:  {dev.id.text}  ({dev.name})" + ("  in update mode: the write will be finished" if dev.id.loader else ""),
           file=out)
     if not a.yes and not ask("Install? Do not unplug the FM-1 while writing. [y/N] "):
@@ -510,8 +553,11 @@ def main(argv=None, backend=None, out=sys.stdout, ask=ask_tty):
     ap.add_argument("--port", metavar="NAME", help="MIDI port to use (part of its name)")
     ap.add_argument("--yes", action="store_true", help="do not ask for confirmation")
     ap.add_argument("--force", action="store_true", help="install a package without the Felucca loader marker")
+    ap.add_argument("--uboot", action="store_true",
+                    help="do not install: start the loader of a backup package (NAME-dryloader.fwsc) and send it "
+                         "the UBOOT key, for a backup with tools/fm1_rescue.py")
     a = ap.parse_args(argv)
-    if bool(a.info) == bool(a.package):
+    if bool(a.info) == bool(a.package) or (a.info and a.uboot):
         ap.error("give a PACKAGE.fwsc or --info")
     try:
         if backend is None:

@@ -17,6 +17,14 @@
  * Power loss during 3: the record is still there, the SPL runs the loader
  * again on the next power-on and the host can resume.
  *
+ * LDR_DRYRUN 1 (the loader of a backup package, tools/build.py --dry-loader):
+ * step 3 reads and compares the whole app area and never erases or programs a
+ * byte of it. A package that differs from what is installed ends in -20 with
+ * the record kept, so the loader stays up for the UBOOT soft key. A package
+ * that EQUALS what is installed (the stock one, on a stock device) finishes
+ * as usual: step 4's record clear is the only flash it touches, and it is the
+ * way back out of update mode.
+ *
  * Hooks from the platform (loader.c, tests/ldr_test.c):
  *   ldr_fread(off, p, n)  ldr_erase(off)  ldr_prog(off, p, n)   flash, 0 = ok
  *   ldr_record_clear()    forget the RAM update record
@@ -27,6 +35,9 @@
 #define LDR_APP_HI FL_APP_HI
 #define LDR_REC_LO FL_REC_LO                    /* update records live above the app ... */
 #define LDR_REC_HI FL_REC_HI                    /* ... and below Felucca's globals (FM-1: 0xFC000) */
+#ifndef LDR_DRYRUN
+#define LDR_DRYRUN 0
+#endif
 
 static int ldr_fread(uint32_t off, void *p, uint32_t n);
 static int ldr_erase(uint32_t off);
@@ -81,7 +92,7 @@ static int ldr_chip_key(uint32_t *key)
 static int ldr_session(void)
 {
     static uint8_t hdr[0x400], sec[0x1000], cur[0x1000];
-    uint32_t i, k, fl_off, fl_size, ota_off, ota_len, key, s, done = 0;
+    uint32_t i, k, fl_off, fl_size, ota_off, ota_len, key, s, done = 0, differ = 0;
     int rc;
     /* 1. UFW header + entry list (ota.c) */
     if ((rc = ota_ufw(hdr, &fl_off, &fl_size, &ota_off, &ota_len)) != 0)
@@ -103,6 +114,10 @@ static int ldr_session(void)
                 return -7;
         if (ldr_fread(s, cur, 0x1000u))
             return -8;
+#if LDR_DRYRUN
+        if (!ota_memeq(sec, cur, 0x1000u))
+            differ++;                                    /* counted, never written */
+#else
         if (!ota_memeq(sec, cur, 0x1000u)) {
             uint32_t tries;
             for (tries = 0; tries < 2u; tries++) {
@@ -119,9 +134,12 @@ static int ldr_session(void)
             if (tries == 2u)
                 return -11;                              /* verify failed twice */
         }
+#endif
         done += 0x1000u;
         ldr_progress(done, LDR_APP_HI - LDR_APP_LO);
     }
+    if (differ)
+        return -20;                                      /* dry run: the package is not what is installed */
     /* 4. finish: the host confirms, the record goes, the SPL boots the app */
     for (i = 0; i < 4u; i++)
         if (!ota_read(0xF0000000u, sec, 8))

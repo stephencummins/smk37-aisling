@@ -11,7 +11,11 @@
 #define FELUCCA_LOADER 1
 #define FELUCCA_CDC 0
 #define FELUCCA_OTA 1
-#define FELUCCA_OTA_DRYRUN 0
+#define FELUCCA_OTA_DRYRUN 0                        /* ota.c's, the app's step 1: nothing here reads it. The
+                                                     * loader's own dry run is LDR_DRYRUN (ldr_core.c) */
+#ifndef LDR_DRYRUN
+#define LDR_DRYRUN 0
+#endif
 #define FELUCCA_USB_PID 0x0002
 #if defined(AISLING_BOARD_SMK37) && AISLING_BOARD_SMK37
 #define FELUCCA_ID "ota-SMK-37 Elite_900"
@@ -62,6 +66,17 @@ static void ota_commit(const uint8_t *parm) { (void)parm; }
 
 /* ---- ldr_core.c hooks: interrupts are off for the whole loader ---- */
 static int ldr_fread(uint32_t off, void *p, uint32_t n) { return fl_read_ram(off, p, n); }
+#if LDR_DRYRUN                                      /* a backup package's loader: no programming at all, and no
+                                                     * erase outside the update records */
+static int ldr_erase(uint32_t off)
+{
+    uint32_t took;
+    if (off < FL_REC_LO || off >= FL_REC_HI)
+        return -1;
+    return fl_erase4k_ram(off, &took);
+}
+static int ldr_prog(uint32_t off, const void *p, uint32_t n) { (void)off; (void)p; (void)n; return -1; }
+#else
 static int ldr_erase(uint32_t off)
 {
     uint32_t took;
@@ -72,6 +87,7 @@ static int ldr_prog(uint32_t off, const void *p, uint32_t n)
     uint32_t took;
     return fl_prog_ram(off, p, n, &took);
 }
+#endif
 static void ldr_record_clear(void)
 {
     fm1_updata_parm_clear();                        /* CRC 0: the SPL ignores it on a warm reset */

@@ -27,7 +27,7 @@ import fm1_install as I  # noqa: E402
 import fm1pkg_make as P  # noqa: E402
 
 I.DELAY.update(open=0, start=0.01, reply=0, loader=0.01, reboot=0.01, retry=0.02, poll=0.05, hs=0.1,
-               idle_check=0.4, idle_write=0.4, wait_loader=2, wait_reboot=2)
+               idle_check=0.4, idle_write=0.4, wait_loader=2, wait_reboot=2, uboot=0.05)
 failed = 0
 
 
@@ -83,7 +83,8 @@ class FakeFM1:
         self.image, self.unplug_after, self.after_write, self.loader = image, unplug_after, after_write, loader
         self.chip = chip                           # JEDEC ID: answers the handshake with the body 01 (else silent)
         self.stall_after, self.bad_addr = stall_after, bad_addr
-        self.served = self.bad = self.upgrades = 0
+        self.served = self.bad = self.upgrades = self.uboot_keys = 0
+        self.deaf = False                          # a loader that ignores the UBOOT key
         self.sent, self.links, self.gen, self.lock = [], [], 0, threading.Lock()
         self.boot(identity, name)
 
@@ -117,6 +118,10 @@ class FakeFM1:
         elif d == I.HS_WHOLE:
             if self.chip is not None:
                 self.tx(ident_frame(self.identity, self.chip))
+        elif d == I.UBOOT_KEY:
+            self.uboot_keys += 1
+            if self.identity.startswith("ota-") and not self.deaf:
+                self.connected = False             # the loader detaches: the chip's ROM takes the USB
         elif d == I.UPGRADE:
             self.upgrades += 1
             first = self.bad_addr if self.bad_addr is not None else 0
@@ -330,6 +335,31 @@ def smk37():
     dev = FakeFM1(image, identity="ota-SMK-37 Elite_900", name="Felucca Update", after_write="SMK-37 Elite_900")
     rc, out, err = cli([p, "--yes"], dev)
     ok(rc == 0 and dev.bad == 0 and dev.upgrades == 1, "  ... and its own package finishes the write")
+
+    # --uboot: a backup package's loader, then the UBOOT key; never a write request
+    dry = pkgfile("smk-dryloader.fwsc", raw)
+    dev = FakeFM1(image, identity="SMK-37 Elite_016", name="SMK-37 Elite", loader="ota-SMK-37 Elite_900")
+    rc, out, err = cli([dry, "--uboot", "--yes"], dev)
+    ok(rc == 0 and dev.bad == 0 and dev.upgrades == 1 and dev.uboot_keys == 1 and dev.served == 4 and
+       "Nothing was written" in out,
+       "--uboot on a running SMK-37 Elite: step 1, then the key to the loader; no write request")
+    dev = FakeFM1(image, identity="SMK-37 Elite_016", name="SMK-37 Elite", loader="ota-SMK-37 Elite_900")
+    rc, out, err = cli([p, "--uboot", "--yes"], dev)
+    ok(rc == 2 and dev.upgrades == 0 and dev.uboot_keys == 0 and "not a backup package" in err,
+       "  a package that is not NAME-dryloader.fwsc -> exit 2, nothing sent")
+    dev = FakeFM1(image, identity="ota-SMK-37 Elite_900", name="Felucca Update")
+    rc, out, err = cli([p, "--uboot", "--yes"], dev)
+    ok(rc == 0 and dev.upgrades == 0 and dev.uboot_keys == 1, "  a device already in update mode: the key only")
+    dev = FakeFM1(image, identity="SMK-37 Elite_016", name="SMK-37 Elite", loader="ota-SMK-37 Elite_900")
+    rc, out, err = cli([dry, "--uboot"], dev, answer=False)
+    ok(rc == 1 and dev.upgrades == 0 and dev.uboot_keys == 0, "  answered no -> nothing sent")
+    dev = FakeFM1(image)
+    rc, out, err = cli([dry, "--uboot", "--yes"], dev)
+    ok(rc == 6 and dev.upgrades == 0 and dev.uboot_keys == 0, "  on an FM-1 -> exit 6, nothing sent")
+    dev = FakeFM1(image, identity="ota-SMK-37 Elite_900", name="Felucca Update")
+    dev.deaf = True
+    rc, out, err = cli([dry, "--uboot", "--yes"], dev)
+    ok(rc == 4 and "did not take the UBOOT key" in err, "  a loader that stays after the key -> exit 4")
 
     bad = bytearray(raw)
     bad[5] ^= 1                                    # in the header: its CRC no longer matches

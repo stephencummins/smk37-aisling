@@ -72,6 +72,7 @@ FM1_PIN_HEADERS = ("fm1_input.h", "fm1_adc.h", "fm1_lcd_hw.h", "fm1_uart.h")
 BOARD = BOARDS["fm1"]
 VERSION = None                      # FELUCCA_VERSION for release builds (default: firmware/src/ui.c)
 QUIET = False                       # a test build that makes no sound (--release X.Y-quiet)
+DRY_LOADER = False                  # --dry-loader: a backup package, whose loader never writes the app area
 
 
 def toolchain():
@@ -198,6 +199,8 @@ def build_loader():
     LDR.mkdir(parents=True, exist_ok=True)
     src = FW / "loader"
     flags = [*CFLAGS, *BOARD["flags"], "-Ifirmware/hal", "-Ifirmware/src"]
+    if DRY_LOADER:
+        flags.append("-DLDR_DRYRUN=1")              # firmware/loader/ldr_core.c
     tc_all(("cc", "-c", src / "crt0_ldr.S", "-o", LDR / "crt0_ldr.o"),
            ("cc", *flags, *deps_flags(LDR / "loader.d"), "-c", src / "loader.c", "-o", LDR / "loader.o"))
     elf = LDR / "loader.elf"
@@ -412,14 +415,19 @@ def pin_guard(units):
 
 
 def main():
-    global PRODUCT, VERSION, QUIET, BOARD, OUT, LDR
+    global PRODUCT, VERSION, QUIET, BOARD, OUT, LDR, DRY_LOADER
     ap = argparse.ArgumentParser()
     ap.add_argument("--board", choices=sorted(BOARDS), default="fm1", help="fm1 (default) or smk37 (SMK-37 Elite)")
     ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity FM-1_353XXYYZZ (SMK-37 Elite_353XXYYZZ), version string X.Y[.Z]")
+    ap.add_argument("--dry-loader", action="store_true",
+                    help="a backup package (NAME-dryloader.fwsc, loader in loader-dry/): its update loader compares "
+                         "the app area and never writes it, and stays up for the UBOOT soft key "
+                         "(tools/fm1_install.py --uboot)")
     ap.add_argument("--sdk", type=Path, help="JieLi AC79 SDK checkout (default: $AC79_SDK)")
     a = ap.parse_args()
     BOARD = BOARDS[a.board]
-    OUT, LDR = BOARD["out"], BOARD["out"] / "loader"
+    DRY_LOADER = a.dry_loader
+    OUT, LDR = BOARD["out"], BOARD["out"] / ("loader-dry" if DRY_LOADER else "loader")
     model = BOARD["model"]
     PRODUCT = PRODUCT.replace("FM-1", model, 1)
     name = "amb.fwsc"
@@ -436,6 +444,8 @@ def main():
         VERSION = a.release.upper()
         QUIET = (m[4] or "").lower() == "-quiet"    # (the suffix sets it, so a quiet build can't be mislabelled)
         name = f"{BOARD['stem']}-{a.release}.fwsc"
+    if DRY_LOADER:
+        name = name[:-5] + "-dryloader.fwsc"
     fm1pkg_make.SDK = a.sdk
     for rel, sha in SDK_SHA256.items():          # fail early without the SDK
         if hashlib.sha256(fm1pkg_make.sdk_file(rel)).hexdigest() != sha:
