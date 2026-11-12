@@ -50,6 +50,7 @@
 enum { LK_HELLO = 1, LK_BYE, LK_BEAT, LK_SET, LK_VIEW, LK_PIECE, LK_PLAY, LK_HOLD, LK_PERF, LK_FORGET, LK_KEYS, LK_BUTTONS,
        LK_UNDO, LK_REDO, LK_SAVE, LK_VOICE, LK_COPY, LK_SWAP, LK_RESET, LK_OPEN, LK_READ, LK_BEGIN, LK_WRITE, LK_COMMIT };
 enum { LKR_HELLO = 65, LKR_ACK, LKR_STATE, LKR_VALS, LKR_CHUNK };
+enum { LK_DIAG = 40, LKR_DIAG = 70 };            /* (AISLING_SMK_DIAG builds only) */
 enum { LK_OK, LK_BAD, LK_REFUSED, LK_SUM, LK_BUSY, LK_NONE };
 /* areas: the project as it plays; pieces 1..8's slots (LK_A_SLOT + i); the bytes saved in flash */
 enum { LK_A_PROJ, LK_A_SLOT, LK_A_FLASH = LK_A_SLOT + NPIECES };
@@ -533,6 +534,21 @@ static int link_frame(const uint8_t *p, uint32_t n, uint32_t now)   /* the bytes
     }
     if (n < 5u)
         return 1;
+#if AISLING_SMK_DIAG                             /* the SMK-37's stage 3: the matrix and the pins as they read */
+    if (cmd == LK_DIAG) {
+        uint8_t f[LK_FRAME], raw[SMK_NCOL];
+        uint32_t reg[SMK_DIAG_NREG], i, k;
+        smk_diag(raw, reg);
+        n = lk_head(f, LKR_DIAG, p[4]);
+        for (i = 0; i < SMK_NCOL; i++)
+            put14(f + n, raw[i]), n += 2u;
+        for (i = 0; i < SMK_DIAG_NREG; i++)
+            for (k = 0; k < 5u; k++)
+                f[n++] = (uint8_t)(reg[i] >> (7u * k) & 0x7Fu);
+        lk_send(f, n);
+        return 1;
+    }
+#endif
     if (cmd == LK_READ) {                        /* reads only: each time it's asked */
         uint8_t f[LK_FRAME];
         uint32_t m, off;

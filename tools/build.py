@@ -62,7 +62,7 @@ PRODUCT = "FM-1_353000000"          # package identity; release builds are FM-1_
 # the FM-1's: its commands stay as they were). The keys are fm1pkg_make's board names.
 BOARDS = {
     "fm1": dict(model="FM-1", out=OUT, flags=[], slot=APP_SLOT, ram_spare=0, stem="aisling", pin_guard=False),
-    "smk37": dict(model="SMK-37 Elite", out=OUT / "smk37", flags=["-DAISLING_BOARD_SMK37=1", "-Ifirmware/hal/smk37"],
+    "smk37": dict(model="SMK-37 Elite", out=OUT / "smk37", flags=["-DAISLING_BOARD_SMK37=1", "-DAISLING_SMK_DIAG=1", "-Ifirmware/hal/smk37"],
                   slot=fm1pkg_make.BOARDS["smk37"]["app_slot"], ram_spare=2048, stem="aisling-smk37-elite",
                   pin_guard=True),
 }

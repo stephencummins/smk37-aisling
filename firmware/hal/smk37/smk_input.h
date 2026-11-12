@@ -188,6 +188,21 @@ static uint32_t smk__rows(void)
              (h >> SMK_ROW7 & 1u) << 7) & 0xFFu;
 }
 
+/* stage 3's readout (the USB link's LK_DIAG): the last frame's rows by column, then OUT IN DIR DIE PU PD of
+ * ports A B C H as they are now. Reads only. */
+#define SMK_DIAG_NREG 24u
+static void smk_diag(uint8_t raw[SMK_NCOL], uint32_t reg[SMK_DIAG_NREG])
+{
+    static const uint8_t ports[] = {FM1_PA, FM1_PB, FM1_PC, FM1_PH};
+    static const uint8_t regs[] = {FM1_OUT, FM1_IN, FM1_DIR, FM1_DIE, FM1_PU, FM1_PD};
+    uint32_t i, k;
+    for (i = 0; i < SMK_NCOL; i++)
+        raw[i] = fm1_in.raw[i];
+    for (i = 0; i < sizeof ports; i++)
+        for (k = 0; k < sizeof regs; k++)
+            reg[i * sizeof regs + k] = SMK_GPIO(ports[i], regs[k]);
+}
+
 static void fm1_input_init(void)
 {
     uint32_t i;
