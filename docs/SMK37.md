@@ -132,7 +132,7 @@ AISLING writes three parts of it and never writes the rest:
 
 The velocity calibration matters most: it was made for each Elite in the factory, and without a backup of that unit it
 can't be put back. AISLING's saved pieces sit over the start of the stock presets, so a full backup taken before the
-first install is what restores those.
+first install is what restores those: `tools/fm1_rescue.py --write --presets BACKUP.bin` (section 11).
 
 The map is in `firmware/hal/smk37/smk_flash_map.h`. Its `_Static_assert`s keep every window the firmware writes off the
 protected ranges; at run time the flash driver refuses a write that would touch one; and `tests/smk_flash_test.c`
@@ -220,6 +220,10 @@ Not yet. The tools are ready for it:
 - `tools/fm1_rescue.py` takes M-VAVE's own SMK-37 Elite V016 package (it knows it by its checksum). Before it writes,
   it checks the flash chip's ID and that the backup holds the velocity calibration. Then it writes only the app area,
   0x4000–0x9CFFF.
+- With `--presets BACKUP.bin` it also puts the four preset sectors AISLING uses, 0xC2000–0xC5FFF, back from a backup
+  it saved before the first install. It takes only that unit's own backup: the backup's bootloader area and velocity
+  calibration must equal the flash's. Without `--presets` the stock firmware starts with AISLING's data in the first
+  of its presets.
 
 The plan, on an Elite: first a backup of the whole flash, read twice and compared; then the first install, with the way
 back proven before anything else.
@@ -239,7 +243,8 @@ Each is one place in the code:
 - **The debounce,** 4 scans of 1.6 ms, and how long a knob rests before it counts as a click, 28 scans.
 - **The update record:** whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00). If
   not, an update keeps its record in RAM only (`FELUCCA_OTA_RAMONLY`), and a cable pulled mid-update can't resume.
-- **The stock loader's USB name,** `OTA_LDR_NAME` in `firmware/src/ota.c`, a guess: "ota-SMK-37 Elite_016".
+- **The stock loader's USB name,** `OTA_LDR_NAME` in `firmware/src/ota.c`: "ota-SMK-37 Elite_016". Stock's own update
+  record, read in a backup of an Elite on V016, has that name; AISLING hasn't yet started that loader with it.
 - **The flash chip's ID:** read on an Elite on V016, it is 856014, the part of the first FM-1s. EB6014 was read on an
   SMK-37 Pro. Both are on the list; any other part runs from RAM and saves nothing until it has been read and added.
 

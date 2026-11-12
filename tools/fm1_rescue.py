@@ -37,6 +37,11 @@ on an SMK-37 Pro), its backup must hold the
 velocity calibration's "trimdat" at 0xC1224 (and an FM-1's must not), and only [0x4000, 0x9D000) is
 written: never the head, the calibration (0xC0000-0xC1FFF) or the resources and key above 0xF4000.
 
+The Elite's presets: AISLING keeps its saved pieces in four sectors of the stock presets (0xC2000-0xC5FFF),
+and stock's app alone does not bring those back. --presets BACKUP.bin, with --write, also puts those four
+sectors back from a backup this script saved before AISLING was installed. The backup must be this unit's
+own: its head and its velocity calibration (0xC1000-0xC1FFF, different on every unit) must equal the flash's.
+
 Two devices: in update mode an FM-1 and an SMK-37 are the same USB device. With more than one present the
 script stops, lists where each is plugged in, and wants --location (macOS's location ID, which belongs to
 the socket and not to the device: the same cable in another socket has another).
@@ -73,9 +78,12 @@ TRIM_AT, TRIM_MARK = 0xC1224, b"trimdat\0"
 # the ranges never written ([lo, hi); the SMK's are smk_flash_map.h's SMK_HEAD, SMK_CAL and SMK_TOP), and
 # whether its backup must hold the calibration
 BOARDS = {
-    "fm1": dict(label="FM-1", flash_ids=FLASH_IDS, never=((0, WRITE_MIN),), trim=False),
+    "fm1": dict(label="FM-1", flash_ids=FLASH_IDS, never=((0, WRITE_MIN),), trim=False, store=None, own=None),
+    # store: AISLING's store in the stock presets (smk_flash_map.h's FL_DATA), which --presets puts back;
+    # own: what every unit has for itself, by which a backup is known to be this unit's
     "smk37": dict(label="SMK-37 Elite", flash_ids=(0x856014, 0xEB6014),
-                  never=((0, WRITE_MIN), (0xC0000, 0xC2000), (0xF4000, FLASH_SIZE)), trim=True),
+                  never=((0, WRITE_MIN), (0xC0000, 0xC2000), (0xF4000, FLASH_SIZE)), trim=True,
+                  store=(0xC2000, 0xC6000), own=(0xC1000, 0xC2000)),
 }
 
 # ROM UBOOT1.00
@@ -276,12 +284,17 @@ class Uboot:
 
 
 # ------------------------------------------------------------------- flow ---
-def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None, board="fm1"):
+def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None, board="fm1", presets=None):
     """Everything in one session: the FM-1 leaves UBOOT (and crashes again) as soon as it is let go.
     stock: [(name, flash image)], all for `board`; the one written is the one whose protected head is
-    the device's own."""
+    the device's own. presets: an earlier backup of this unit (the whole flash), whose stock presets go
+    back where AISLING's store was."""
     b = BOARDS[board]
     label, never = b["label"], b["never"]
+    if presets is not None and not b["store"]:
+        raise Refuse(f"--presets is for the SMK-37 Elite: AISLING leaves the {label}'s stock data alone")
+    if presets is not None and len(presets) != FLASH_SIZE:
+        raise Refuse(f"the presets backup is not a whole flash ({len(presets)} bytes, not {FLASH_SIZE})")
     vendor, product = dev.inquiry()
     say(f"  device: {vendor} {product}")
     if vendor != "WL82":
@@ -317,6 +330,18 @@ def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None, board
         raise Refuse(f"{name}'s app reaches a range that is never written; not writing")
     diff = [a for a in range(0, end, SECTOR) if image[a:a + SECTOR] != now[a:a + SECTOR]]
     say(f"  the flash head is {name}'s; {len(diff)} of {end // SECTOR} firmware sectors differ from {name}")
+    sdiff = []
+    if presets is not None:
+        (slo, shi), (olo, ohi) = b["store"], b["own"]
+        if presets[:WRITE_MIN] != now[:WRITE_MIN] or presets[olo:ohi] != now[olo:ohi] or \
+                presets[TRIM_AT:TRIM_AT + len(TRIM_MARK)] != TRIM_MARK:
+            raise Refuse(f"the presets backup is not this {label}'s own (its head or its calibration at "
+                         f"{olo:#x} differs from the flash's): not writing")
+        if end > slo or any(lo < shi and hi > slo for lo, hi in never):
+            raise Refuse("the presets are in a range that is never written; not writing")
+        sdiff = [a for a in range(slo, shi, SECTOR) if presets[a:a + SECTOR] != now[a:a + SECTOR]]
+        say(f"  the presets backup is this {label}'s; {len(sdiff)} of {(shi - slo) // SECTOR} preset sectors "
+            f"({slo:#x}-{shi - 1:#x}) differ from it")
     if not write and confirm is not None:
         write = keep_alive(dev, confirm, label)
     if not write:
@@ -334,8 +359,21 @@ def rescue(dev, stock, loader, write, backup_dir, say=print, confirm=None, board
                     raise Fail(f"{e}; the {label} is still in update mode: run the script again")
         say(f"\r  writing {i + 1}/{len(diff)}", end="")
     say("")
+    expect = bytearray(image + now[end:])
+    for i, a in enumerate(sdiff):                            # after the app: the presets are stock's to read
+        for attempt in range(3):
+            try:
+                dev.write_sector(a, presets[a:a + SECTOR], b["store"][1], never)
+                break
+            except Fail as e:
+                if attempt == 2:
+                    raise Fail(f"{e}; the {label} is still in update mode: run the script again")
+        say(f"\r  presets {i + 1}/{len(sdiff)}", end="")
+    if presets is not None:
+        expect[b["store"][0]:b["store"][1]] = presets[b["store"][0]:b["store"][1]]
+        say("")
+    expect = bytes(expect)
     say("  final read ...")
-    expect = image + now[end:]
     final = dev.read(0, FLASH_SIZE)
     if final != expect:
         bad = [a for a in range(0, FLASH_SIZE, SECTOR) if final[a:a + SECTOR] != expect[a:a + SECTOR]]
@@ -499,6 +537,9 @@ def main():
                          "or M-VAVE's SMK-37 Elite_016.fwsc")
     ap.add_argument("--write", action="store_true", help="write stock (without it: check and back up only)")
     ap.add_argument("--ask", action="store_true", help="after the check and the backup, ask before writing")
+    ap.add_argument("--presets", metavar="BACKUP.bin",
+                    help="SMK-37 Elite: also put the stock presets (0xC2000-0xC5FFF, where AISLING keeps its "
+                         "saved pieces) back from this unit's own earlier backup")
     ap.add_argument("--loader", help="a local wl82loader.bin instead of downloading it")
     ap.add_argument("--wait", type=float, default=120, help="seconds to wait for the device (default 120)")
     ap.add_argument("--tries", type=int, default=5, help="attempts if it drops out mid-way (default 5)")
@@ -510,6 +551,10 @@ def main():
     try:
         stock, board = load_stock(args.package)
         label = BOARDS[board]["label"]
+        presets = None
+        if args.presets:
+            with open(args.presets, "rb") as f:
+                presets = f.read()
         loader = get_loader(args.loader)
         if os.geteuid() != 0:
             raise Fail("run it with sudo: macOS has to give the device up")
@@ -524,7 +569,7 @@ def main():
             try:
                 rescue(Uboot(bot), stock, loader, args.write, backup_dir,
                        say=lambda *a, **k: print(*a, **k, flush=True),
-                       confirm=ask if args.ask else None, board=board)
+                       confirm=ask if args.ask else None, board=board, presets=presets)
                 return 0
             except (Fail, usb.core.USBError) as e:
                 print(f"\n  attempt {attempt}: {e}")

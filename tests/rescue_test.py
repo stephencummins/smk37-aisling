@@ -88,13 +88,14 @@ def flash_with(head_of, app_seed, tail_seed):
     return f
 
 
-def run(flash, stock, write=True, confirm=None, flash_id=0x856014, board="fm1"):
+def run(flash, stock, write=True, confirm=None, flash_id=0x856014, board="fm1", presets=None):
     bot = FakeBot(flash, flash_id)
     said = []
     with tempfile.TemporaryDirectory() as d:
         try:
             r = R.rescue(R.Uboot(bot), stock, b"loader", write, d,
-                         say=lambda *a, **k: said.append(" ".join(map(str, a))), confirm=confirm, board=board)
+                         say=lambda *a, **k: said.append(" ".join(map(str, a))), confirm=confirm, board=board,
+                         presets=presets)
         except R.Fail as e:
             r = e
         backups = list(Path(d).glob("*-backup-*.bin"))
@@ -291,6 +292,38 @@ def packages():
             R.STOCK.update(saved)
 
 
+def presets():
+    """the way back from AISLING on an SMK-37 Elite: stock's app, and the stock presets from the unit's backup"""
+    lo, hi = R.BOARDS["smk37"]["store"]
+    stockunit = smk_flash()
+    stockunit[R.WRITE_MIN:0x9D000] = E16[R.WRITE_MIN:]
+    old = bytes(stockunit)                                    # the backup taken before AISLING
+    now = smk_flash()                                         # AISLING's app ...
+    now[lo:hi] = image("aisling-store", hi - lo)              # ... and its store in the presets
+    now[0x9D000:0xC0000] = image("vm-since", 0x23000)         # the settings area has moved on since
+    before = bytes(now)
+    r, bot, backup, said = run(now, ELITE, board="smk37", presets=old)
+    ok(r is True and bot.ran and bot.flash[:0x9D000] == E16 and bot.flash[lo:hi] == old[lo:hi],
+       "--presets: Elite_016's app and the backup's presets written, restarted")
+    ok(bot.flash[0x9D000:lo] == before[0x9D000:lo] and bot.flash[hi:] == before[hi:] and backup == before,
+       "  nothing else changed (settings area, calibration, the rest of the presets), backed up first")
+    ok(all(a < 0x9D000 or lo <= a < hi for a in bot.erased) and sum(lo <= a < hi for a in bot.erased) == 4,
+       "  erased: the app area and four preset sectors only")
+    r, bot, backup, said = run(bytearray(before), ELITE, write=False, board="smk37", presets=old)
+    ok(r is False and not bot.erased and "4 of 4 preset sectors" in said, "  without --write: counted, nothing written")
+    other = bytearray(old)
+    other[0xC1100] ^= 1                                       # another unit's calibration
+    r, bot, backup, _ = run(bytearray(before), ELITE, board="smk37", presets=bytes(other))
+    ok(isinstance(r, R.Refuse) and "not this SMK-37 Elite's own" in str(r) and not bot.erased,
+       "  another unit's backup (its calibration differs): refused, nothing written")
+    r, bot, backup, _ = run(bytearray(before), ELITE, board="smk37", presets=old[:-1])
+    ok(isinstance(r, R.Refuse) and not bot.erased, "  a backup that is not a whole flash: refused")
+    r, bot, backup, _ = run(flash_with(V15, "AISLING", "data"), STOCK, presets=bytes(R.FLASH_SIZE))
+    ok(isinstance(r, R.Refuse) and "for the SMK-37 Elite" in str(r) and not bot.erased, "  --presets on an FM-1: refused")
+    r, bot, backup, _ = run(bytearray(old), ELITE, board="smk37", presets=old)
+    ok(r is True and not bot.erased, "  a unit already as its backup: nothing to write")
+
+
 class FakeUsbDev:
     def __init__(self, bus, ports):
         self.bus, self.port_numbers = bus, ports
@@ -349,6 +382,7 @@ refusals()
 flash_chips()
 smk37()
 packages()
+presets()
 locations()
 real_packages()
 print("rescue: " + ("all ok" if not failed else f"{failed} FAILED"))
