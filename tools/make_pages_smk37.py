@@ -281,6 +281,7 @@ __HEAD_COMMON__<title>AISLING on the SMK-37 Elite · the controls</title>
 <meta name="description" content="Which of the SMK-37 Elite's buttons, knobs and keys does each of the FM-1's jobs in AISLING, its pads and faders, and what it doesn't use yet.">
 <style>
 __STYLE__.wrap { overflow-x: auto; }
+img.panel { display: block; width: 100%; min-width: 1100px; height: auto; }
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; vertical-align: top; padding: 5px 10px 5px 0; border-top: 1px solid var(--brand-rule); }
 thead th { font-weight: 400; font-size: 12.5px; color: var(--brand-muted); border-top: 0; }
@@ -319,6 +320,10 @@ ul.plain li::marker { color: var(--brand-green); }
 Elite in November 2026. The FM-1
 version's <a href="__FM1__manual/">manual</a> and <a href="__FM1__cheat/">cheat sheet</a> say more about each job; where
 they or the screen name a button, it is the FM-1's name, in the second column here.</p>
+</div>
+<div class="pane wrap">
+<a href="../img/smk37-panel.svg" title="The diagram at full size"><img class="panel" src="../img/smk37-panel.svg" width="1900" height="924" alt="The SMK-37 Elite's panel, each control labelled with what it does in AISLING: the eight knobs, the sixteen pads in their four colours, the four faders, the buttons and the 37 keys. The same is in the tables below."></a>
+<p class="small">The diagram opens at full size.</p>
 </div>
 <div class="pane wrap">
 __TABLE__
@@ -432,6 +437,7 @@ def main(out):
     (out / "docs").mkdir()
     shots(out)
     shutil.copy(SRC / "docs" / "card.png", out / "img" / "card.png")
+    shutil.copy(SRC / "docs" / "img" / "smk37-panel.svg", out / "img" / "smk37-panel.svg")   # tools/gen_smk37_figure.py
     common = dict(HEAD_COMMON=HEAD_COMMON, STYLE=STYLE, BY=BY, FM1=FM1, REPO=REPO, SITE=SITE)
     (out / "index.html").write_text(stamp(page(LANDING, **common), "", None, NAV, SITE), encoding="utf-8")
     (out / "controls" / "index.html").write_text(
