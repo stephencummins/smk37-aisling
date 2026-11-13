@@ -27,22 +27,37 @@ SRC = Path(__file__).resolve().parents[1]
 OUT = SRC / "docs" / "img"
 FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif"
 
-# a skin: the body, the trays, the edges; the words on the body (ink, muted, dim) and on a tray; a knob, its edge and
-# its mark; a fader's slot; a button and its word; a fader's cap; the accent; a wheel; a pad unlit; the black keys,
-# those that sound and those that do not, and the words on them; the white keys that do not sound
-VARS = ("body", "tray", "edge", "ink", "muted", "dim", "trayink", "knob", "knobedge", "mark", "well", "btn", "btnink",
-        "cap", "accent", "wheel", "pad", "kb", "kboff", "kbink", "kwoff")
+# a skin (the Elite's colours, from the maker's photographs): the body, the trays, the edges; the words on the body
+# (ink, muted, dim) and on a tray; a knob, its edge and its mark; a fader's slot; a button and its word; a fader's
+# cap; the accent; a wheel; a pad unlit; the black keys, those that sound and those that do not, and the words on
+# them; the white keys the same way (the black Elite's are black too)
+def skin(**over):
+    base = dict(body="#1b1d21", tray="#26292f", edge="#3d4149", ink="#f1efe6", muted="#b4b1a4", dim="#8a8d94",
+                trayink="#f1efe6", knob="#0e0f11", knobedge="#565b65", mark="#f1efe6", well="#0e0f11", btn="#33373f",
+                btnink="#f1efe6", cap="#33373f", accent="#3fce86", wheel="#0e0f11", pad="#1b1d21", kb="#0e0f11",
+                kboff="#3a3d44", kbink="#f1efe6", kw="#f1efe6", kwoff="#7d8087", kwink="#1b1d21", kwoffink="#2b2d32")
+    assert not set(over) - set(base)
+    return {**base, **over}
+
+
+LIGHT = dict(ink="#111214", muted="#222427", dim="#3c3e42", trayink="#111214", knob="#1b1d21", knobedge="#4a4d54",
+             well="#1b1d21", btn="#1b1d21", cap="#1b1d21", wheel="#1b1d21", pad="#f4f1ea")
 SKINS = {
-    "black": ("Black", ("#1b1d21", "#26292f", "#3d4149", "#f1efe6", "#b4b1a4", "#8a8d94", "#f1efe6", "#0e0f11",
-                        "#565b65", "#f1efe6", "#0e0f11", "#33373f", "#f1efe6", "#33373f", "#3fce86", "#0e0f11",
-                        "#1b1d21", "#0e0f11", "#3a3d44", "#f1efe6", "#7d8087")),
-    "grey": ("Grey and orange", ("#8d9198", "#7c8087", "#676b72", "#111214", "#222427", "#3c3e42", "#111214",
-                                 "#ee6a1f", "#b34a0c", "#1b1d21", "#1b1d21", "#ee6a1f", "#1b1d21", "#ee6a1f",
-                                 "#5a1d00", "#ee6a1f", "#f1ede2", "#ee6a1f", "#c99a7c", "#1b1d21", "#c4c3be")),
-    "white": ("White", ("#efebe1", "#dedacd", "#b9b5a8", "#1b1d21", "#4a4c50", "#74767a", "#1b1d21", "#1b1d21",
-                        "#565b65", "#f1efe6", "#cfcbbe", "#c9c5b8", "#1b1d21", "#f1efe6", "#0f7a49", "#cfcbbe",
-                        "#efebe1", "#0e0f11", "#3a3d44", "#f1efe6", "#7d8087")),
+    "black": ("Black", skin(kw="#4c5059", kwoff="#25272c", kwink="#f1efe6", kwoffink="#8a8d94", kb="#08090a",
+                            kboff="#131417")),
+    "grey": ("Grey and orange", skin(**{**LIGHT, **dict(
+        body="#8d9198", tray="#7c8087", edge="#676b72", knob="#ee6a1f", knobedge="#b34a0c", mark="#1b1d21",
+        btn="#ee6a1f", btnink="#1b1d21", cap="#ee6a1f", accent="#5a1d00", wheel="#ee6a1f", kb="#ee6a1f",
+        kboff="#c99a7c", kbink="#1b1d21", kwoff="#c4c3be")})),
+    "white": ("White", skin(**LIGHT, body="#ecebe8", tray="#dcdbd7", edge="#b4b3ae", accent="#0f7a49",
+                            kwoff="#a9aaad", kboff="#55585e")),
+    "pink": ("Pink", skin(**LIGHT, body="#f2b9c6", tray="#e6a3b3", edge="#c98496", accent="#7a1436",
+                          kwoff="#b9a4aa", kboff="#5a4a50")),
+    "red": ("Red", skin(body="#d63a34", tray="#bd2d28", edge="#96211d", ink="#ffffff", muted="#ffe9e6",
+                        dim="#f7c9c4", trayink="#ffffff", knobedge="#4a4d54", btn="#1b1d21", cap="#1b1d21",
+                        accent="#ffe9a8", kwoff="#b08f8d", kboff="#5a3a39")),
 }
+VARS = tuple(skin())
 GROUPS = (("Rhythm", "#FF5A10"), ("Echo", "#00D2AA"), ("Space", "#A050FF"), ("Colour", "#FFBE00"))
 PADS = (("Stutter", "Half time", "Gate", "Roll", "Repeat", "Macalla", "Tape stop", "Reverse"),
         ("Reverb", "Shimmer", "Freeze", "Wash", "Flange", "Phaser", "Drive", "Crush"))
@@ -186,7 +201,7 @@ def keybed():
 
 
 def style():
-    v = lambda vals: "".join(f"--{k}:{c};" for k, c in zip(VARS, vals))
+    v = lambda vals: "".join(f"--{k}:{vals[k]};" for k in VARS)
     skins = "".join(f'svg.skp[data-skin="{k}"]{{{v(vals)}}}' for k, (_, vals) in SKINS.items() if k != "black")
     rules = (f"text{{font-family:{FONT}}}.body{{fill:var(--body);stroke:var(--edge)}}.tray{{fill:var(--tray)}}"
              ".knob{fill:var(--knob);stroke:var(--knobedge)}.mark{stroke:var(--mark)}"
@@ -198,9 +213,9 @@ def style():
              ".what{font-size:16px;fill:var(--muted)}.what.tray{font-size:14px;fill:var(--trayink)}"
              ".what.small{font-size:14px}.what.green{fill:var(--accent)}.what.dim{fill:var(--dim)}"
              ".pad{font-weight:600;font-size:15px;fill:var(--ink)}"
-             ".key{font-weight:600;font-size:17px;fill:#1b1d21}.key.off{fill:#2b2d32}"
+             ".key{font-weight:600;font-size:17px;fill:var(--kwink)}.key.off{fill:var(--kwoffink)}"
              ".fx{font-weight:600;font-size:15px;fill:var(--kbink)}.wheel{fill:var(--wheel);stroke:var(--edge)}"
-             ".padbase{fill:var(--pad)}.kb{fill:var(--kb)}.kboff{fill:var(--kboff)}.kwoff{fill:var(--kwoff)}.kw{fill:#f1efe6}")
+             ".padbase{fill:var(--pad)}.kb{fill:var(--kb)}.kboff{fill:var(--kboff)}.kwoff{fill:var(--kwoff)}.kw{fill:var(--kw)}")
     scoped = "".join("svg.skp " + r + "}" for r in rules.split("}") if r)
     return f"<style>svg.skp{{{v(SKINS['black'][1])}}}{skins}{scoped}</style>"
 
