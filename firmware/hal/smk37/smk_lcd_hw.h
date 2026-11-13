@@ -21,8 +21,8 @@
  *   fm1_lcd_deselect()         CS high
  *
  * NOT YET CHECKED ON THE DEVICE (stage 3): the clock (main.c's LCD_BAUD 4, 12 MHz, the stock's and the guide's; the
- * FM-1 runs BAUD 0). Stage 4: the pads' RGB LEDs share SPI1 on group B (PC10), so SPI1 will change groups between
- * the screen and the LEDs.
+ * FM-1 runs BAUD 0). The pads' RGB LEDs share SPI1 on group B (PC10): smk_rgb.h changes the group for a frame of
+ * theirs and puts it back, between the screen's transfers.
  *
  * Host tests replace the hardware access: SMK_GPIO(port, reg), SMK_REG(address) (smk_reg.h). */
 #pragma once

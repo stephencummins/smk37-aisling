@@ -22,12 +22,13 @@ def ok(cond, what):
     failed += not cond
 
 
-MAIN_NEED = ("smk_pins.h", "smk_input.h", "smk_lcd_hw.h", "smk_adc.h")
+MAIN_NEED = ("smk_pins.h", "smk_input.h", "smk_lcd_hw.h", "smk_adc.h", "smk_rgb.h")
 CLEAN = """build/smk37/main.o: firmware/src/main.c firmware/hal/board_caps.h \\
   firmware/hal/fm1_time.h firmware/hal/smk37/smk_input.h \\
   firmware/hal/smk37/smk_reg.h firmware/hal/fm1_gpio.h \\
   firmware/hal/smk37/smk_pins.h firmware/hal/fm1_audio.h \\
   firmware/hal/smk37/smk_adc.h firmware/hal/smk37/smk_lcd_hw.h \\
+  firmware/hal/smk37/smk_rgb.h \\
   firmware/src/libc.c firmware/src/lcd.c firmware/src/usb.c
 """
 
@@ -41,7 +42,7 @@ with tempfile.TemporaryDirectory() as t:
 
     (t / "x.d").write_text(CLEAN)
     names = [Path(f).name for f in B.deps(t / "x.d")]
-    ok(len(names) == 13 and names[0] == "main.c" and names[-1] == "usb.c" and "main.o" not in names,
+    ok(len(names) == 14 and names[0] == "main.c" and names[-1] == "usb.c" and "main.o" not in names,
        "deps: every file after the target, across continuation lines")
     ok(guard(CLEAN) == [], "a clean SMK list passes")
     for h in B.FM1_PIN_HEADERS:

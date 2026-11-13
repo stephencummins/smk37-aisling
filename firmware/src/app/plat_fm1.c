@@ -35,6 +35,22 @@ static void led_pos_init(void) {}
 static uint8_t extra_lit;
 void plat_extra_leds(uint32_t lit) { extra_lit = (uint8_t)(lit & 15u); }
 uint32_t plat_extra(void) { return fm1_in.extra; }
+/* the pads' lights: a frame goes out when a colour changed (and the first time), between the screen's transfers */
+static uint32_t pad_rgb[SMK_RGB_N];
+static uint8_t pad_rgb_sent;
+void plat_pad_leds(const uint32_t *rgb)
+{
+    uint32_t i, diff = !pad_rgb_sent;
+    for (i = 0; i < SMK_RGB_N; i++)
+        diff |= pad_rgb[i] ^ rgb[i];
+    if (!diff)
+        return;
+    lcd_sync();                                  /* (the frame's buffer is the lights' own; the screen's SPI idle) */
+    for (i = 0; i < SMK_RGB_N; i++)
+        smk_rgb_set(i, pad_rgb[i] = rgb[i]);
+    smk_rgb_send(LCD_BAUD);
+    pad_rgb_sent = 1;
+}
 uint32_t plat_pads(void) { return smk_an.pads; }
 void plat_pads_rest(void)
 {

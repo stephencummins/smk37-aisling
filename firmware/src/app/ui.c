@@ -1748,7 +1748,7 @@ static void nudge_tick(void)                     /* Evolve's nudges: on a phrase
  *   < tapped             every latch let go, and every pad (their resting levels learned again: one stuck is freed)
  *   a pad down, KNOB 1-4 turned   a throw: Filter, Wet, Energy, Duck (the master actions) move, and go back to where
  *                        they were when the last pad is up
- *   FADER BANK           the faders: the mix (Drone, Sequence, Lead, Sequence 2; dark) or the master actions (Filter,
+ *   FADER BANK           the faders: the mix (Drone, Sequence, Sequence 2, Lead; dark) or the master actions (Filter,
  *                        Wet, Energy, Duck; lit). A fader does nothing until it is moved, so a piece's own mix holds */
 static const uint8_t PAD_KEY[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
 #define FADER_STEP 8                             /* of 1023: under it a fader has not moved */
@@ -1770,6 +1770,28 @@ static int pad_throw(int i, int32_t e)           /* KNOB 1-4 (i 0..3) turned by 
     ui.act_t = ui.turn_t = plat_ms();
     return 1;
 }
+#if CAP_RGB
+/* the pads' lights (the user, 2026-11-13: "can the pads be lit up when pressed?"): each pad glows in its group's
+ * colour (PERFORM's four: rhythm orange, echo sea green, space heather, colour gorse yellow), bright while it is
+ * held, and beats between the two while latched. Dark asleep (sleep_fall). The levels are low: sixteen of them
+ * full on would draw more than the battery should give */
+#define PAD_BEAT 256u                            /* ms: a latched pad's light, each half of its beat */
+static const uint32_t PAD_RGB[4] = {0xFF5A10u, 0x00D2AAu, 0xA050FFu, 0xFFBE00u};
+static uint32_t pad_shade(uint32_t rgb, uint32_t n)      /* n of 64 */
+{
+    return ((rgb >> 16 & 255u) * n >> 6) << 16 | ((rgb >> 8 & 255u) * n >> 6) << 8 | ((rgb & 255u) * n >> 6);
+}
+static void pad_lights(int dark)
+{
+    uint32_t rgb[16], i;
+    const uint32_t beat = plat_ms() / PAD_BEAT & 1u;
+    for (i = 0; i < 16u; i++) {
+        const uint32_t b = 1u << PAD_KEY[i], c = PAD_RGB[PKEY[PAD_KEY[i]].g & 3u];
+        rgb[i] = dark ? 0u : pad_shade(c, pd.held & b ? 24u : pd.latch & b ? (beat ? 24u : 8u) : 3u);
+    }
+    plat_pad_leds(rgb);
+}
+#endif
 static void pads_input(void)
 {
     const uint32_t pads = plat_pads(), extra = plat_extra();
@@ -1778,7 +1800,7 @@ static void pads_input(void)
         pd.bank ^= 1u;
         for (i = 0; i < CAP_FADERS; i++)         /* (where each is: it takes its new job when it is next moved) */
             pd.fad[i] = (int16_t)plat_fader((int)i);
-        say("FADERS", pd.bank ? "Filter, Wet, Energy, Duck" : "Drone, Sequence, Lead, Sequence 2");
+        say("FADERS", pd.bank ? "Filter, Wet, Energy, Duck" : "Drone, Sequence, Sequence 2, Lead");
     }
     if (xhit & X_LEFT) {
         latch = 0;
@@ -1848,6 +1870,9 @@ static void pads_input(void)
         ui.act_t = ui.turn_t = plat_ms();
     }
     plat_extra_leds((pd.bank ? X_FADER_BANK : 0u) | (pd.latch ? X_RIGHT : 0u));
+#if CAP_RGB
+    pad_lights(0);
+#endif
 }
 #endif
 
@@ -3923,6 +3948,9 @@ static void sleep_fall(void)                     /* the music stopped as PLAY st
     }
     plat_glow(0);
     plat_leds(0, 0);
+#if CAP_RGB
+    pad_lights(1);
+#endif
     link_lit_b = link_lit_k = 0;
     lcd_fill(0, 0, 240, 240, 0);                 /* (black, and black again when it wakes, until the frame draws) */
     plat_screen(0);                              /* (the panel's own sleep: not the backlight, plat_fm1.c) */
@@ -3937,6 +3965,9 @@ static void sleep_wake(void)
     memset(ui.sig, 0, sizeof ui.sig);            /* every band drawn again */
     lcd_fill(0, 0, 240, 240, K_BG);              /* (drawn before the panel wakes: no old picture flashes up) */
     plat_screen(1);
+#if CAP_RGB
+    pad_lights(0);
+#endif
     if (sl.was_playing && !en_playing) {         /* (as PLAY starts it) */
         sp_tp.playing = 1;
         sp_tp.play_t = now;

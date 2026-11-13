@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* hal/smk37/smk_pins.h, the SMK-37 Elite's one pin table, and the three drivers that set their pins up from it
- * (smk_input.h, smk_lcd_hw.h, smk_adc.h), on fake GPIO registers:
+ * (smk_input.h, smk_lcd_hw.h, smk_adc.h) and the pads' lights (smk_rgb.h), on fake GPIO registers:
  *   - the table is the guide's pins (genkigenki's fm1-to-smk37 guide, 01-hardware.md), typed again here, not taken
  *     from the header: each pin once, with its owner and mode;
  *   - each driver's init, run alone from all-zero and from all-one registers, writes its own pins in the table and
@@ -10,7 +10,7 @@
  *   - afterwards each pin is in its table mode (an input pulled up; analog; an output high or low, no pulls);
  *   - an output's level and pulls are set before it drives (so CS never drives low), and the rows are inputs before
  *     any 595 pin drives;
- *   - the pins nothing may touch (PB1 the charger's status, PC7 MIDI OUT, PA8 PC9 PC10 the pads) and the codec's
+ *   - the pins nothing may touch (PB1 the charger's status, PC7 MIDI OUT) and the codec's
  *     (PC0 PC1 PC2 PC6, fm1_audio.h's) are never written, are not in the table, and are the header's lists.
  * -DCONTROL rotates the fake's ports (A's registers answer for B, B's for C, C's for H, H's for A), as if the pins
  * were wired elsewhere: it must fail. */
@@ -30,6 +30,7 @@ static uint32_t fake_com;
 #include "smk37/smk_input.h"
 #include "smk37/smk_lcd_hw.h"
 #include "smk37/smk_adc.h"
+#include "smk37/smk_rgb.h"
 
 enum { NPORT = 8, NREG = 8, NLOG = 1024 };
 enum { PA = 0, PB = 1, PC = 2, PH = 7 };     /* the port numbers, typed (fm1_gpio.h: 0x50000 + port * 0x40) */
@@ -46,11 +47,11 @@ static const struct { const char *name; uint8_t owner, port, bit, mode; } WANT[]
     {"PB5 screen D/C", SMK_OWN_LCD, PB, 5, SMK_OUT_LO},  {"PB6 screen CLK", SMK_OWN_LCD, PB, 6, SMK_OUT_LO},
     {"PB7 screen DO", SMK_OWN_LCD, PB, 7, SMK_OUT_LO},   {"PC8 screen CS", SMK_OWN_LCD, PC, 8, SMK_OUT_HI},
     {"PA10 mux C", SMK_OWN_ADC, PA, 10, SMK_ANALOG},     {"PA8 mux A", SMK_OWN_ADC, PA, 8, SMK_ANALOG},
-    {"PC9 mux B", SMK_OWN_ADC, PC, 9, SMK_ANALOG},
+    {"PC9 mux B", SMK_OWN_ADC, PC, 9, SMK_ANALOG},       {"PC10 pad LEDs", SMK_OWN_RGB, PC, 10, SMK_OUT_LO},
 };
 #define NWANT (sizeof WANT / sizeof WANT[0])
 static const struct { const char *name; uint8_t port, bit, shared; } NEVER[] = {
-    {"PB1 charger status", PB, 1, 0}, {"PC7 MIDI OUT", PC, 7, 0}, {"PC10 pad LEDs", PC, 10, 0},
+    {"PB1 charger status", PB, 1, 0}, {"PC7 MIDI OUT", PC, 7, 0},
     {"PC0 codec", PC, 0, 1},          {"PC1 codec", PC, 1, 1}, {"PC2 codec", PC, 2, 1}, {"PC6 codec", PC, 6, 1},
 };
 #define NNEVER (sizeof NEVER / sizeof NEVER[0])
@@ -156,8 +157,10 @@ static void run(uint32_t owner, uint32_t start, uint32_t *touched, int *touch_ok
         fm1_input_init();
     else if (owner == SMK_OWN_LCD)
         fm1_lcd_hw_init();
-    else
+    else if (owner == SMK_OWN_ADC)
         smk_adc_init();
+    else
+        smk_rgb_init();
     commit();
     if (overflow)
         *touch_ok = 0;
@@ -206,7 +209,7 @@ static void run(uint32_t owner, uint32_t start, uint32_t *touched, int *touch_ok
 
 int main(void)
 {
-    static const char *OWNER[] = {"input (rows, 595s)", "screen", "ADC"};
+    static const char *OWNER[] = {"input (rows, 595s)", "screen", "ADC", "pad lights"};
     uint32_t i, j, o;
     int same = SMK_NPIN == NWANT, once = 1, lists = 1, disjoint = 1;
 
@@ -222,7 +225,7 @@ int main(void)
             if (SMK_PIN_TABLE[j].port == SMK_PIN_TABLE[i].port && SMK_PIN_TABLE[j].bit == SMK_PIN_TABLE[i].bit)
                 once = 0;
     }
-    check("the table is the guide's 17 pins, owners and modes", same);
+    check("the table is the guide's 20 pins, owners and modes", same);
     check("no pin in the table twice", once);
     for (i = 0; i < NNEVER; i++) {
         const uint8_t(*l)[2] = NEVER[i].shared ? SMK_PINS_SHARED : SMK_PINS_UNUSED;
@@ -236,8 +239,8 @@ int main(void)
                 disjoint = 0;
     }
     lists &= sizeof SMK_PINS_UNUSED / 2 + sizeof SMK_PINS_SHARED / 2 == NNEVER;
-    check("the header lists the 5 unused pins and the codec's 4", lists);
-    check("none of those 9 is in the table", disjoint);
+    check("the header lists the 2 unused pins and the codec's 4", lists);
+    check("none of those 6 is in the table", disjoint);
 
     for (o = 0; o < SMK_NOWN; o++) {
         uint32_t touched[NPORT] = {0}, s, k;
@@ -258,7 +261,7 @@ int main(void)
         snprintf(what, sizeof what, "%s init: levels before drive%s", OWNER[o],
                  o == SMK_OWN_INPUT ? ", the rows inputs before a 595 pin drives" : "");
         check(what, order_ok);
-        snprintf(what, sizeof what, "%s init: never PB1 PC7 PC10, nor the codec's PC0 PC1 PC2 PC6", OWNER[o]);
+        snprintf(what, sizeof what, "%s init: never PB1 PC7, nor the codec's PC0 PC1 PC2 PC6", OWNER[o]);
         check(what, never_ok);
     }
     printf(fails ? "smk_pins: %d FAILED\n" : "smk_pins: ok\n", fails);

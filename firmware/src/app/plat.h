@@ -43,6 +43,7 @@ int32_t plat_wheel(int i);             /* 0 the pitch wheel, 1 the mod wheel, 0.
 enum { X_KNOB_BANK = 1, X_FADER_BANK = 2, X_LEFT = 4, X_RIGHT = 8 };
 uint32_t plat_extra(void);             /* KNOB BANK, FADER BANK, < and > held: X_* */
 void plat_extra_leds(uint32_t lit);    /* and their lights: X_* (before plat_leds) */
+void plat_pad_leds(const uint32_t *rgb);   /* (CAP_RGB) the pads' lights, a colour a pad (0xRRGGBB, 0 dark), 16 */
 
 /* USB MIDI, 4-byte USB-MIDI event packets (cable 0) */
 int plat_midi_in(uint32_t *pkt);       /* 1 = got one (called from the audio ISR) */

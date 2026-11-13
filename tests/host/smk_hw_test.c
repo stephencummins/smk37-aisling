@@ -24,6 +24,7 @@ static uint32_t *fake_reg(uint32_t a);
 #define SMK_REG(a) (*fake_reg(a))
 #include "smk37/smk_lcd_hw.h"
 #include "smk37/smk_adc.h"
+#include "smk37/smk_rgb.h"
 
 /* the pins as the guide gives them, typed here, not taken from the header under test */
 #define T_DC (1u << 5)      /* PB5 */
@@ -77,11 +78,17 @@ static uint32_t adc_value(uint32_t ch)
     }
     return 0x100u + ch * 37u;
 }
+static uint32_t dma_iomap, dma_baud, dma_cs, dma_n;     /* as they were when a DMA's count was last reached for */
 static uint32_t *fake_reg(uint32_t a)
 {
     uint32_t i;
     for (i = 0; i < NREGS && regs[i].a != a; i++)
         ;
+    if (i == R_SPI_CNT) {
+        dma_iomap = regs[R_IOMAP].v, dma_baud = regs[R_SPI_BAUD].v;
+        dma_cs = gpio[FM1_PC][FM1_OUT / 4] & T_CS;
+        dma_n++;
+    }
     if (i == NREGS) {
         fprintf(stderr, "stray register access: %#x\n", (unsigned)a);
         exit(2);
@@ -218,6 +225,67 @@ static void test_lcd(void)
     check("wait: never done = one timeout counted", fm1_lcd_timeouts == 1);
     fm1_lcd_baud(0);
     check("baud", regs[R_SPI_BAUD].v == 0);
+}
+
+/* the pads' lights (smk_rgb.h): PC10 alone, low; a pad's colour as 24 bytes, green red blue, the high bit first, at
+ * its place along the chain (the guide's order, typed here); a frame: SPI1 on group B at BAUD 8 while it goes, the
+ * whole frame from RAM, then group A again and the screen's baud; CS never touched, nor any pin */
+static void test_rgb(void)
+{
+    static const uint32_t rgb_pins[][3] = {
+        {FM1_PC, FM1_DIE, 1u << 10}, {FM1_PC, FM1_PU, 1u << 10}, {FM1_PC, FM1_PD, 1u << 10},
+        {FM1_PC, FM1_OUT, 1u << 10}, {FM1_PC, FM1_DIR, 1u << 10},
+    };
+    static const uint8_t T_SLOT[16] = {0, 15, 14, 13, 12, 11, 10, 9, 1, 2, 3, 4, 5, 6, 7, 8};
+    uint32_t w[NPORT][NREG], z, ok_vals = 1, dark = 1, enc = 1, others = 1, send_ok = 1, pins_ok = 1, i, p;
+    memset(w, 0, sizeof w);
+    for (z = 0; z < 2u; z++) {
+        fill(z ? 0xFFFFFFFFu : 0u);
+        memset(smk_rgb_frame, 0x55, sizeof smk_rgb_frame);
+        smk_rgb_init();
+        changed(w);
+        ok_vals &= (gpio[FM1_PC][FM1_DIE / 4] & (1u << 10)) && !(gpio[FM1_PC][FM1_DIR / 4] & (1u << 10)) &&
+                   !(gpio[FM1_PC][FM1_OUT / 4] & (1u << 10)) &&
+                   !((gpio[FM1_PC][FM1_PU / 4] | gpio[FM1_PC][FM1_PD / 4]) & (1u << 10));
+    }
+    check("lights init writes PC10 (DIE PU PD OUT DIR) and nothing else: never PC9", only(w, rgb_pins, 5, 1));
+    check("PC10 an output, low, no pulls", ok_vals);
+    check("the frame: 250 + 16 x 24 bytes", sizeof smk_rgb_frame == 634u);
+    for (i = 0; i < sizeof smk_rgb_frame; i++)
+        dark &= smk_rgb_frame[i] == (i < 250u ? 0u : 0xC0u);
+    check("after init: 250 bytes of 0, then every LED black (0xC0s)", dark);
+    for (p = 0; p < 16u; p++) {
+        static const uint8_t want[24] = {     /* 0x80C001: green 0xC0, red 0x80, blue 0x01 */
+            0xF0, 0xF0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xF0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0,
+            0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xF0};
+        smk_rgb_init();
+        smk_rgb_set(p, 0x80C001u);
+        enc &= !memcmp(smk_rgb_frame + 250u + T_SLOT[p] * 24u, want, 24);
+        for (i = 0; i < sizeof smk_rgb_frame; i++)
+            if (i < 250u + T_SLOT[p] * 24u || i >= 250u + T_SLOT[p] * 24u + 24u)
+                others &= smk_rgb_frame[i] == (i < 250u ? 0u : 0xC0u);
+    }
+    check("a pad's colour: 24 bytes, green red blue, high bit first, 0xF0 a one, at its place in the chain", enc);
+    check("  and no other byte of the frame", others);
+    memset(w, 0, sizeof w);
+    for (z = 0; z < 2u; z++) {
+        const uint32_t init = z ? 0xFFFFFFFFu : 0u;
+        fill(init);
+        regs[R_SPI_CON].v = 0x8021u;                    /* done at once */
+        fm1_lcd_timeouts = 0;
+        dma_n = 0;
+        smk_rgb_send(4);
+        changed(w);
+        send_ok &= dma_n == 1 && dma_iomap == (init | 0x10u) && dma_baud == 8u &&
+                   regs[R_SPI_ADR].v == (uint32_t)(uintptr_t)smk_rgb_frame && regs[R_SPI_CNT].v == 634u &&
+                   regs[R_IOMAP].v == (init & ~0x10u) && regs[R_SPI_BAUD].v == 4u &&
+                   (regs[R_SPI_CON].v & 0x4000u) && fm1_lcd_timeouts == 0;
+        for (p = 0; p < NPORT; p++)
+            for (i = 0; i < NREG; i++)
+                pins_ok &= !w[p][i];
+    }
+    check("a frame: one DMA of the whole frame, on group B at BAUD 8; then group A, the screen's baud", send_ok);
+    check("  and no pin written (CS stays as the screen left it)", pins_ok);
 }
 
 static void test_adc(void)
@@ -389,6 +457,7 @@ int main(void)
 {
     test_lcd();
     test_adc();
+    test_rgb();
     test_scan();
     printf(fails ? "smk_hw: %d FAILED\n" : "smk_hw: ok\n", fails);
     return fails != 0;

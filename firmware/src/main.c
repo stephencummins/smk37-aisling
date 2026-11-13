@@ -19,6 +19,7 @@
 #if AISLING_BOARD_SMK37
 #include "smk37/smk_adc.h"        /* the battery, on an analog mux (the SMK's MASTER is an encoder) */
 #include "smk37/smk_lcd_hw.h"     /* fm1_lcd_hw.h's interface on the SMK's pins */
+#include "smk37/smk_rgb.h"        /* the pads' lights, on the screen's SPI1 */
 #ifndef LCD_BAUD
 #define LCD_BAUD 4u               /* 12 MHz, the stock's, until it is tried faster on the device */
 #endif

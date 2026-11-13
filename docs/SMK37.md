@@ -1,9 +1,9 @@
 # AISLING on the SMK-37 Elite
 
-**Status.** AISLING builds for the M-VAVE SMK-37 Elite and passes its tests on a computer, but it has not yet run on
-an Elite. There is nothing to install: no package will be offered until one has been installed, played and taken off
-again on an Elite, with the way back to M-VAVE's firmware proven. This page says what the code does and what its tests
-check; section 12 lists what only the hardware can settle.
+**Status.** AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over
+M-VAVE's V016 firmware, played, taken off again with M-VAVE's own package, and installed again: the keys, buttons,
+knobs, pads, faders, lights, screen and sound were each checked by hand. Section 12 says what was checked and what is
+still open. It is one unit's evidence, so take the backup in section 11 before a first install.
 
 The Elite has the FM-1's chip and its audio path, so AISLING's whole app runs on it as it is: the same engine, the same
 eight pieces, the same pages and screen, saved the same way. What differs is the panel: 37 keys, more buttons, knobs
@@ -25,14 +25,14 @@ AISLING does is in the FM-1 version's [manual](https://aisling.stephen8n.com/man
 2. The controls
 3. Volume
 4. The keys
-5. Not used yet
+5. The pads and the faders
 6. The flash
 7. The pins
 8. Building
 9. Testing
 10. The simulator
 11. Installing, and going back
-12. Open until it runs on an Elite
+12. Settled on an Elite, and still open
 13. The files
 14. Credits
 
@@ -45,10 +45,10 @@ AISLING does is in the FM-1 version's [manual](https://aisling.stephen8n.com/man
 | Keys | 27, lit | 37, unlit; AISLING plays the middle 27, F3 to G5 |
 | MASTER | a pot | K1, a knob that turns without end: half volume at each power-on |
 | Knobs | 7 more | K2 to K8, the same 7 jobs |
-| Buttons | 14 | 14 doing the FM-1's jobs, 4 more that do nothing yet |
-| Pads | none | 16, not used yet (section 5) |
-| Faders | none | 4, not used yet |
-| Wheels | none | pitch and mod, not used yet |
+| Buttons | 14 | 14 doing the FM-1's jobs; FADER BANK, < and > work the pads and faders; KNOB BANK does nothing yet |
+| Pads | none | 16: an effect each while held (section 5) |
+| Faders | none | 4: the mix, or with FADER BANK the master actions |
+| Wheels | none | pitch and mod, read but not used yet |
 | MIDI in | USB and the TRS jack | USB only |
 | Screen | 240×240 | the same picture, wired differently; the backlight always on |
 | Calibration | the panel's | none: the Elite's buttons have fixed codes |
@@ -72,13 +72,14 @@ names; this is what they mean on the Elite:
 | SEQ REC | REC |
 | ARP, FX, SEQ | ARP, FX, SEQ |
 | OCTAVE− and OCTAVE+ | OCT− and OCT+ |
-| KNOB BANK, FADER BANK, <, > | nothing yet |
+| FADER BANK, <, > | the pads and faders (section 5) |
+| KNOB BANK | nothing yet |
 | K1 | MASTER |
 | K2, K3, K4 | SELECT, ALGORITHM, PRESETS |
 | K5 to K8 | K1 to K4 |
 
 Two buttons held together work as on the FM-1, by their Elite names: OCTAVE− with OCTAVE+ for five seconds, for
-instance, is the update mode. The screen's hints still name the FM-1's buttons: TAP REC on the effects page means SEQ
+instance, is the update mode. PARA has no light: the FM-1's EDIT has none either. The screen's hints still name the FM-1's buttons: TAP REC on the effects page means SEQ
 REC.
 
 The site's [controls page](https://stephencummins.github.io/smk37-aisling/controls/) has what each one does.
@@ -100,18 +101,31 @@ A key sounds near the bottom of its travel and stops when it is nearly back up. 
 the FM-1.
 The Elite's keys have no lights, so the FM-1's lit key for the note the Lead sounds has no place to show.
 
-## 5. Not used yet
+## 5. The pads and the faders
 
-These wait until AISLING has run on an Elite. The plan for each:
+**The 16 pads** are PERFORM's sixteen effects, on any page, each on while its pad is down, and several together:
 
-- **The 16 pads:** the effects grid, an effect each while held, lit in its colour.
-- **The 4 faders:** the mix (the Drone, the Sequence, Sequence 2 and the Lead, left to right), each taking over
-  only once it is moved.
-- **The pitch wheel:** bends the Lead, up to two semitones each way.
-- **The mod wheel:** opens the filters by degrees, toward where Rise takes them.
-- **The outer white keys** (C3, D3, E3 and A5, B5, C6): the Lead's scale, further down and up.
+| | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Top row | Stutter | Half time | Gate | Roll | Repeat | Macalla | Tape stop | Reverse |
+| Bottom row | Reverb | Shimmer | Freeze | Wash | Flange | Phaser | Drive | Crush |
 
-KNOB BANK, FADER BANK, < and >, the outer black keys and the pedal have no job yet. TRS MIDI out stays off.
+- **Latch:** hold > and hit a pad, and its effect stays on; the same again lets it go. > is lit while any is latched.
+- **Let go of everything:** tap <. It also learns the pads' resting levels again, which frees one that has stuck.
+- **A throw:** with a pad down, turn K5, K6, K7 or K8 for Filter, Wet, Energy or Duck. They go back to where they were
+  when the last pad is up.
+
+- **Their lights** (built and tested in the simulator; not yet tried on an Elite): each pad glows in its group's
+  colour, orange for the rhythm effects (Stutter to Roll), sea green for the echoes (Repeat to Reverse), heather for
+  the space (Reverb to Wash) and yellow for the colour (Flange to Crush). A pad is bright while it is held and beats
+  while it is latched. They are dark while the instrument sleeps.
+
+**The 4 faders** are the mix, left to right: the Drone, the Sequence, Sequence 2 and the Lead. FADER BANK (lit) makes
+them the master actions instead: Filter, Wet, Energy and Duck. A fader does nothing until it is moved, so a piece's own
+mix holds, and the screen names what it sets. The Atmosphere is on no fader: it is on the MIX page.
+
+**Not used yet:** the pitch and mod wheels and the pedal (read, with no job), KNOB
+BANK, the outer keys (C3 to E3 and G♯5 to C6), TRS MIDI out and Bluetooth.
 
 ## 6. The flash
 
@@ -145,8 +159,10 @@ The Elite wires the same chip's pins to other things: PH8, the FM-1's TRS MIDI i
 matrix, for instance, so the Elite has no MIDI in on its jack. The FM-1's drivers would set pins up wrongly here, so:
 
 - The Elite build never touches PB1 (the charger's status line: held low for eight seconds, it resets the chip), PC7
-  (TRS MIDI out) or PC10 (the pads' lights, for later). PA8, PC9 and PA10, the pads', faders' and wheels' three
-  analog lines, are inputs only.
+  (TRS MIDI out). PA8, PC9 and PA10, the pads', faders' and wheels' three analog lines, are inputs only.
+- The pads' lights are sixteen colour LEDs on one data line, PC10, fed from the screen's SPI port switched to its
+  other set of pins for the 0.8 ms a frame takes, between the screen's own transfers. That set's clock pin is PC9,
+  the bottom row of pads' analog line; it stays an input, so the clock never reaches it.
 - Every pin it does set up is in one table, `firmware/hal/smk37/smk_pins.h`. Each driver sets up its own rows from it,
   inputs first, and an output's level before its direction.
 - The build fails if any of the FM-1's hardware headers (`fm1_input.h`, `fm1_adc.h`, `fm1_lcd_hw.h`, `fm1_uart.h`) is
@@ -215,41 +231,61 @@ build/host/amb_host_smk37 build/pages_smk37.amb build/pages_smk37
 
 ## 11. Installing, and going back
 
-Not yet. The tools are ready for it:
+Done on one Elite with `tools/fm1_install.py`, in both directions; the web installer (`web/fm1ota.js`) uses the same
+protocol but has not yet been tried on an Elite.
 
-- `tools/fm1_install.py` and the web installer (`web/fm1ota.js`) find an Elite by its USB name, read the package's
-  layout from its header, and refuse a package made for the other model: an FM-1 package on an Elite, or the reverse.
-- The Elite's stock update loader is the FM-1's official one, so AISLING's way back to M-VAVE's firmware is the FM-1's.
-- `tools/fm1_rescue.py` takes M-VAVE's own SMK-37 Elite V016 package (it knows it by its checksum). Before it writes,
-  it checks the flash chip's ID and that the backup holds the velocity calibration. Then it writes only the app area,
-  0x4000–0x9CFFF.
-- With `--presets BACKUP.bin` it also puts the four preset sectors AISLING uses, 0xC2000–0xC5FFF, back from a backup
-  it saved before the first install. It takes only that unit's own backup: the backup's bootloader area and velocity
-  calibration must equal the flash's. Without `--presets` the stock firmware starts with AISLING's data in the first
-  of its presets.
+**First, a backup of the whole flash.** It holds that unit's velocity calibration and its stock presets, and nothing
+else can bring those back:
 
-The plan, on an Elite: first a backup of the whole flash, read twice and compared; then the first install, with the way
-back proven before anything else.
+```
+python3 tools/fm1_install.py build/smk37/aisling-smk37-elite-1.3.1-dryloader.fwsc --uboot --port "SMK-37 Elite"
+sudo python3 tools/fm1_rescue.py --location LOCATION "SMK-37 Elite_016.fwsc"
+```
 
-> Building AISLING for the Elite yourself and installing it is at your own risk, and not yet wise: each question in
-> section 12 can leave the keys, knobs or lights not working, and the way back is untried on an Elite.
+The first starts a loader that writes nothing and leaves the chip in its own update mode; the second, with no
+`--write`, reads the flash to a file. Switch the Elite off and on afterwards. Keep the file private: it is that unit's.
 
-## 12. Open until it runs on an Elite
+**Installing:** `python3 tools/fm1_install.py aisling-smk37-elite-1.3.1.fwsc --port "SMK-37 Elite"`. On M-VAVE's
+firmware the Elite has three MIDI ports and the installer uses the one ending "-Private"; under AISLING it has one,
+"DUB-1 SMK-37 Elite". The installers refuse a package made for the other model.
 
-Each is one place in the code:
+**Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again, makes its
+sounds, and its controls work. Its first presets hold AISLING's saved pieces, though: a fader showed a stale value
+until it was moved. `tools/fm1_rescue.py --write --presets BACKUP.bin` puts the four preset sectors AISLING uses
+(0xC2000–0xC5FFF) back from the unit's own backup; it checks the flash chip's ID and that the backup's bootloader area
+and velocity calibration equal the flash's, and writes only the app area and those sectors. That route has not been
+needed yet, so it is untried on an Elite.
 
-- **The order the shift registers take their bits** (`smk__sr_bit` in `smk_input.h`). The four 74HC595s that scan the
-  matrix take a 32-bit word, and which end goes first isn't known. Wrong, and a key reads as another, or as nothing.
-- **Which way a knob turns up** (`SMK_ENC_FLIP`).
-- **The button lights' two commons:** their register (`SMK_LED_COM`, 0x16A0C) and its other bits, and which light is
-  which.
-- **The debounce,** 4 scans of 1.6 ms, and how long a knob rests before it counts as a click, 28 scans.
-- **The update record:** whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00). If
-  not, an update keeps its record in RAM only (`FELUCCA_OTA_RAMONLY`), and a cable pulled mid-update can't resume.
-- **The stock loader's USB name,** `OTA_LDR_NAME` in `firmware/src/ota.c`: "ota-SMK-37 Elite_016". Stock's own update
-  record, read in a backup of an Elite on V016, has that name; AISLING hasn't yet started that loader with it.
-- **The flash chip's ID:** read on an Elite on V016, it is 856014, the part of the first FM-1s. EB6014 was read on an
-  SMK-37 Pro. Both are on the list; any other part runs from RAM and saves nothing until it has been read and added.
+M-VAVE's own SMK37 OPEN firmware changes three sectors AISLING never writes (the Bluetooth record at 0xC0000, the end
+of the resources at 0xFD000, and 0xFE000). AISLING installed and ran over V016 afterwards all the same.
+
+> Installing AISLING on your Elite is at your own risk. It has run on one unit.
+
+## 12. Settled on an Elite, and still open
+
+Settled, on one Elite on V016 (November 2026):
+
+- **The matrix.** The shift registers' bit order is the guide's. The rows read belong to the column after the one the
+  guide gives, so `fm1_input_tick` files them there (`smk_input.h`); with the guide's column every button and knob read
+  as its neighbour.
+- **The knobs** turn the right way, all eight, and K1 is the volume.
+- **The buttons and their lights**, each by its name. The keys: F3 to G5 sound.
+- **The pads and faders:** the pads' order and effects, latch, < and a throw; the faders left to right, at rest 0 and
+  at the top 1023.
+- **The stock loader's USB name,** "ota-SMK-37 Elite_016": AISLING started it, and M-VAVE's package went back on.
+- **The flash chip's ID,** 856014. EB6014 was read on an SMK-37 Pro; both are on the list, and any other part runs
+  from RAM and saves nothing until it has been read and added.
+- **The protected ranges.** After two installs and a return to stock, the bootloader area, the velocity calibration
+  and the key at 0xFF000 equalled the backup taken before the first.
+
+Still open:
+
+- **The update record:** whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00), so
+  that a cable pulled mid-update resumes. No update has been interrupted on purpose.
+- **The battery:** its reading on battery power, and the percentage's span (`BATT_PCT_LO`, a guess).
+- **A long run:** an hour without a dropout. The analog scan missed 14 conversions once in about 11,700, and none
+  since.
+- **The web installer** on an Elite, and the presets' restore (section 11).
 
 ## 13. The files
 
@@ -261,7 +297,8 @@ Each is one place in the code:
 | `firmware/hal/smk37/smk_flash_map.h` | the Elite's flash, and the ranges never written |
 | `firmware/hal/smk37/smk_input.h` | the keys, buttons, knobs and button lights, behind `fm1_input.h`'s interface |
 | `firmware/hal/smk37/smk_lcd_hw.h` | the screen's wiring |
-| `firmware/hal/smk37/smk_adc.h` | the analog multiplexers: the battery, and later the pads, faders and wheels |
+| `firmware/hal/smk37/smk_adc.h` | the analog multiplexers: the battery, the pads, the faders and the wheels |
+| `firmware/hal/smk37/smk_rgb.h` | the pads' lights |
 | `firmware/hal/smk37/smk_pins.h` | every pin the Elite build sets up, in one table |
 | `firmware/hal/smk37/smk_reg.h` | the register access, so the tests can fake it |
 | `tools/build.py` | the build, per board (`--board`) |

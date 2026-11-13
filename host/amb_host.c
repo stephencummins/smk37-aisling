@@ -116,6 +116,8 @@ int32_t plat_fader(int i) { return sim_fader[i & 3]; }
 int32_t plat_wheel(int i) { return sim_wheel[i & 1]; }
 uint32_t plat_extra(void) { return held_extra; }
 void plat_extra_leds(uint32_t lit) { sim_extra_lit = lit; }
+static uint32_t sim_pad_rgb[16];
+void plat_pad_leds(const uint32_t *rgb) { memcpy(sim_pad_rgb, rgb, sizeof sim_pad_rgb); }
 uint32_t plat_master_raw(void) { return master_k10; }
 /* MASTER is K1, an encoder, as main_fm1.c has it: at power-on the knob position nearest MASTER_START from below,
  * and the level MASTER_START itself until the first turn; a turn moves the position and the level follows it */
@@ -718,6 +720,18 @@ static int expect(const char *what, const char *val)
         got = (int)sim_pad_rests;
     else if (!strcmp(what, "xlit"))               /* KNOB BANK 1, FADER BANK 2, < 4, > 8: lit */
         got = (int)sim_extra_lit;
+    else if (!strncmp(what, "padbeat", 7) && what[7] && atoi(what + 7) >= 0 && atoi(what + 7) < 16) {
+        uint32_t t, first = 0;                    /* padbeatN: over the next 1.2 s, 1 + the times pad N's light changed */
+        got = 1;
+        for (t = 0; t < 60u; t++) {
+            if (t && sim_pad_rgb[atoi(what + 7)] != first)
+                got++;
+            first = sim_pad_rgb[atoi(what + 7)];
+            run_ms(20);
+        }
+    }
+    else if (!strncmp(what, "padrgb", 6) && what[6] && atoi(what + 6) >= 0 && atoi(what + 6) < 16)
+        got = (int)sim_pad_rgb[atoi(what + 6)];   /* padrgbN: pad N's light, 0xRRGGBB as a number */
     else if (!strcmp(what, "fbank"))
         got = pd.bank;
     else if (!strncmp(what, "mac", 3) && what[3] >= '0' && what[3] < '0' + EN_NMAC && !what[4])

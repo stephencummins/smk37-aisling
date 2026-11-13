@@ -462,7 +462,7 @@ def main():
     if not hal_err:
         notes.append("register access: hal/ only (src/, loader/ clean)")
     if BOARD["pin_guard"]:
-        pin_err = pin_guard([(OUT / "main.d", "main.c", ("smk_pins.h", "smk_input.h", "smk_lcd_hw.h", "smk_adc.h")),
+        pin_err = pin_guard([(OUT / "main.d", "main.c", ("smk_pins.h", "smk_input.h", "smk_lcd_hw.h", "smk_adc.h", "smk_rgb.h")),
                              (LDR / "loader.d", "loader.c", ()),
                              *((OUT / "o2" / (u.replace("/", "_")[:-2] + ".d"), Path(u).name, ()) for u in O2_UNITS)])
         errors += pin_err

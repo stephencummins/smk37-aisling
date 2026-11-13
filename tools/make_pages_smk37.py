@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """The SMK-37 Elite's site: AISLING on the M-VAVE SMK-37 Elite, in the FM-1 site's dress (web/brand, tools/site_brand.py
 with this site's own nav), for the gh-pages branch of stephencummins/smk37-aisling (tools/publish_pages_smk37.sh). It
-offers nothing to install and nothing to download until AISLING has run on an Elite (the port's stage 3).
+says where the port stands; it offers no download until a release is made for the Elite.
 
   sh host/build_host.sh && python3 tools/make_pages_smk37.py build/pages_smk37
 
@@ -117,7 +117,10 @@ def controls_table():
         row(names[fm1], fm1, readme(key, part))
     oct_ = f"{names['OCT-'].replace('-', '−')} / {names['OCT+']}"
     row(oct_, "OCT− / OCT+", readme("OCT− / OCT+"))
-    row("KNOB BANK, FADER BANK, &lt;, &gt;", "", "Nothing yet.")
+    row("FADER BANK", "", "The faders: the mix, or (lit) Filter, Wet, Energy and Duck.")
+    row("&gt;", "", "Held, with a pad: latches that pad's effect. Lit while any is latched.")
+    row("&lt;", "", "Lets every pad and latch go.")
+    row("KNOB BANK", "", "Nothing yet.")
     out.append('</tbody>\n<tbody>\n<tr class="sub"><th scope="rowgroup" colspan="3">The knobs</th></tr>\n')
     row(names["MASTER"], "MASTER",
         "The volume. The Elite's knobs turn without end, so this one starts at half (−6&nbsp;dB) each time it is "
@@ -158,9 +161,9 @@ LANDING = """<!doctype html>
 <html lang="en">
 <head>
 __HEAD_COMMON__<title>AISLING · Irish ambient for the SMK-37 Elite</title>
-<meta name="description" content="AISLING, the generative Irish ambient instrument for the M-VAVE FM-1, ported to the M-VAVE SMK-37 Elite: the same engine and pieces on a 37-key keyboard. A work in progress: not yet run on an Elite, so nothing to install yet.">
+<meta name="description" content="AISLING, the generative Irish ambient instrument for the M-VAVE FM-1, ported to the M-VAVE SMK-37 Elite: the same engine and pieces on a 37-key keyboard. It runs on an Elite; a download follows.">
 <meta property="og:title" content="AISLING · Irish ambient for the SMK-37 Elite">
-<meta property="og:description" content="The FM-1's AISLING, ported to the M-VAVE SMK-37 Elite. A work in progress: not yet run on an Elite.">
+<meta property="og:description" content="The FM-1's AISLING, ported to the M-VAVE SMK-37 Elite. It runs on an Elite; a download follows.">
 <meta property="og:url" content="__SITE__">
 <style>
 __STYLE__.what { display: flex; gap: 16px; align-items: flex-start; }
@@ -202,13 +205,13 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <main class="bench">
 <div class="strip">
 <h1 class="lab"><b>aisling</b> · Irish ambient for the M-VAVE SMK-37 Elite</h1>
-<p class="lab">a work in progress · __BY__</p>
+<p class="lab">__BY__</p>
 </div>
 <div class="pane notice" role="note">
-<p><strong>Not ready to install.</strong> AISLING builds for the Elite and passes its tests on a computer, but it has
-not yet run on an SMK-37 Elite, so there is nothing here to install or download. That comes once it has been installed,
-played and taken off again on one, with the way back to M-VAVE's firmware proven.</p>
-<p>It will be for the <b>SMK-37 Elite</b> only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
+<p><strong>It runs on an Elite.</strong> In November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
+off again with M-VAVE's own firmware, and installed again. There is no download here yet: that comes with its release.
+The <a href="docs/">docs</a> say what was checked and what is still open.</p>
+<p>It is for the <b>SMK-37 Elite</b> only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
 </div>
 <div class="two hero">
 <div class="pane what">
@@ -217,7 +220,7 @@ played and taken off again on one, with the way back to M-VAVE's firmware proven
 the west of Ireland: a harp's ostinato over a held drone, a second harp drifting against it, a flute far back in the
 reverb, with surf, wind or rain behind. The SMK-37 Elite has the FM-1's chip, so it can run the same code: the same
 engine, the same eight pieces, saved the same way, on a 37-key keyboard. Its buttons and knobs take the FM-1's jobs,
-and its middle 27 keys are the FM-1's.</p>
+its middle 27 keys are the FM-1's, its pads play the effects and its faders set the mix.</p>
 </div>
 <div class="pane shots">
   <img src="img/screen-launch.png" width="240" height="240" alt="The launch screen: a green triskele, AISLING, by CU_STE, www.stephen8n.com">
@@ -227,8 +230,8 @@ and its middle 27 keys are the FM-1's.</p>
 </div>
 </div>
 <nav class="ways" aria-label="AISLING on the Elite">
-  <a class="go" href="controls/"><strong>The controls</strong><span>Which of the Elite's buttons, knobs and keys does each of the FM-1's jobs, and what it doesn't use yet.</span></a>
-  <a href="docs/"><strong>The docs</strong><span>How the port works: the Elite's flash and pins, building and testing it, and what only an Elite can settle.</span></a>
+  <a class="go" href="controls/"><strong>The controls</strong><span>Which of the Elite's buttons, knobs and keys does each of the FM-1's jobs, its pads and faders, and what it doesn't use yet.</span></a>
+  <a href="docs/"><strong>The docs</strong><span>How the port works: the Elite's flash and pins, building and testing it, installing and going back, and what is still open.</span></a>
   <a href="__FM1__emu/"><strong>Try it in the browser</strong><span>The FM-1 version's emulator: the same code, on the FM-1's panel, with sound. No Elite needed.</span></a>
   <a href="__REPO__"><strong>Source</strong><span>GitHub, GPL-3.0: one tree that builds AISLING for the FM-1 and for the Elite.</span></a>
 </nav>
@@ -239,15 +242,17 @@ and its middle 27 keys are the FM-1's.</p>
   tree, and the FM-1's own build is unchanged to the byte. The Elite's simulator plays all 34 of the FM-1's test
   scenarios with byte-identical results, and its own: MASTER on a knob, the 37 keys, the battery. The installer and the
   rescue tool know the Elite's package, and never write the parts of its memory that are the Elite's own.</li>
-  <li data-state="next"><b class="lead">A backup.</b> A whole copy of an Elite's memory, read twice and compared,
-  before anything is written to it.</li>
-  <li data-state="to do"><b class="lead">The first install.</b> Every button, knob and key checked on the Elite, a
-  piece saved and read back, and the way back to M-VAVE's firmware proven.</li>
-  <li data-state="to do"><b class="lead">The Elite's extras.</b> The pads play the effects grid, the faders set the
-  mix, the pitch wheel bends the Lead, the mod wheel opens the filters, and the outer white keys extend the Lead's
-  scale.</li>
-  <li data-state="to do"><b class="lead">The manual, and a download.</b> The Elite's own section in the manual, and
-  the package on this page.</li>
+  <li class="done" data-state="done"><b class="lead">A backup.</b> A whole copy of an Elite's memory, read twice and
+  compared, before anything was written to it.</li>
+  <li class="done" data-state="done"><b class="lead">The first install.</b> Every button, knob and key checked on the
+  Elite, and the way back to M-VAVE's firmware proven: off, and on again.</li>
+  <li class="done" data-state="done"><b class="lead">The pads and faders.</b> The pads play the sixteen effects, and
+  the faders set the mix.</li>
+  <li data-state="next"><b class="lead">The last checks.</b> An hour's run, the battery's reading, the web installer
+  on an Elite.</li>
+  <li data-state="to do"><b class="lead">A download.</b> The package on this page.</li>
+  <li data-state="to do"><b class="lead">Later.</b> The pitch wheel bends the Lead, the mod wheel opens the filters,
+  the outer white keys extend the Lead's scale. The pads' lights are built and wait to be tried on an Elite.</li>
 </ol>
 </section>
 <div class="pane">
@@ -273,7 +278,7 @@ CONTROLS = """<!doctype html>
 <html lang="en">
 <head>
 __HEAD_COMMON__<title>AISLING on the SMK-37 Elite · the controls</title>
-<meta name="description" content="Which of the SMK-37 Elite's buttons, knobs and keys does each of the FM-1's jobs in AISLING, and what the Elite doesn't use yet.">
+<meta name="description" content="Which of the SMK-37 Elite's buttons, knobs and keys does each of the FM-1's jobs in AISLING, its pads and faders, and what it doesn't use yet.">
 <style>
 __STYLE__.wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; }
@@ -307,10 +312,11 @@ ul.plain li::marker { color: var(--brand-green); }
 <main class="bench">
 <div class="strip">
 <h1 class="lab"><b>aisling</b> · the controls on the SMK-37 Elite</h1>
-<p class="lab">a work in progress · __BY__</p>
+<p class="lab">__BY__</p>
 </div>
 <div class="pane notice" role="note">
-<p><strong>Not yet tried on an Elite.</strong> This is the map AISLING's code uses, tested in its simulator. The FM-1
+<p><strong>Checked on an Elite.</strong> Each button, knob, key, pad and fader here was tried by hand on an SMK-37
+Elite in November 2026. The FM-1
 version's <a href="__FM1__manual/">manual</a> and <a href="__FM1__cheat/">cheat sheet</a> say more about each job; where
 they or the screen name a button, it is the FM-1's name, in the second column here.</p>
 </div>
@@ -319,17 +325,21 @@ __TABLE__
 </div>
 <div class="two">
 <section class="pane">
-<h2 class="bh">Not used yet</h2>
-<p>These wait until AISLING has run on an Elite. The plan for each:</p>
+<h2 class="bh">The pads and the faders</h2>
 <ul class="plain">
-  <li><b>The 16 pads:</b> the effects grid, an effect each while held, lit in its colour.</li>
-  <li><b>The 4 faders:</b> the mix: the Drone, the Sequence, the Lead and Sequence 2, as on the MIX page, each taking
-  over only once it is moved.</li>
-  <li><b>The pitch wheel:</b> bends the Lead, up to two semitones each way.</li>
-  <li><b>The mod wheel:</b> opens the filters by degrees, toward where Rise takes them.</li>
-  <li><b>The outer white keys</b> (C3, D3, E3 and A5, B5, C6): the Lead's scale, further down and up.</li>
+  <li><b>The 16 pads:</b> PERFORM's effects, on any page, each on while its pad is down. Top row: Stutter, Half time,
+  Gate, Roll, Repeat, Macalla, Tape stop, Reverse. Bottom row: Reverb, Shimmer, Freeze, Wash, Flange, Phaser, Drive,
+  Crush.</li>
+  <li><b>&gt; held, a pad hit:</b> that effect stays on; the same again lets it go. &gt; is lit while any is
+  latched.</li>
+  <li><b>&lt; tapped:</b> every pad and latch let go.</li>
+  <li><b>A pad down, K5 to K8 turned:</b> a throw of Filter, Wet, Energy or Duck, which go back when the last pad is
+  up.</li>
+  <li><b>The 4 faders:</b> the mix, left to right: the Drone, the Sequence, Sequence 2 and the Lead. With FADER BANK
+  lit: Filter, Wet, Energy and Duck. A fader does nothing until it is moved.</li>
 </ul>
-<p>KNOB BANK, FADER BANK, &lt; and &gt;, the outer black keys and the pedal have no job yet.</p>
+<p><b>Not used yet:</b> the pitch and mod wheels, the pedal, KNOB BANK, the outer keys and
+Bluetooth.</p>
 </section>
 <section class="pane">
 <h2 class="bh">What the Elite doesn't have</h2>
@@ -350,7 +360,7 @@ DOCS = """<!doctype html>
 <html lang="en">
 <head>
 __HEAD_COMMON__<title>AISLING on the SMK-37 Elite · the docs</title>
-<meta name="description" content="How AISLING runs on the M-VAVE SMK-37 Elite: the controls, the flash, the pins, building, testing, and what is still open until it runs on one.">
+<meta name="description" content="How AISLING runs on the M-VAVE SMK-37 Elite: the controls, the flash, the pins, building, testing, installing and going back, and what is still open.">
 <style>__CSS__/* this page's own: on a phone, a test's or a file's name may break, so its table fits */
 @media (max-width: 47.99rem) { .prose td:first-child, .prose td:first-child code { white-space: normal; } }
 </style>

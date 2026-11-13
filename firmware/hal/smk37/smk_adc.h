@@ -19,7 +19,7 @@
  * up after two readings under rest + 12 (the guide's numbers). smk_pads_rest() learns every pad's rest again and
  * lets them all go: the way out if one ever sticks. A fader or wheel: the median of three, smoothed, +-1 held.
  * The pins are inputs only (PA8, PC9, PA10, analog): nothing here drives a pin. The pads' LEDs (PC10; SPI1 group
- * B, whose clock would come out on PC9, mux B's output) are not driven: PC10 is never touched.
+ * B, whose clock would come out on PC9, mux B's output) are smk_rgb.h's: PC9 stays this header's analog input.
  * PB1 (the charger's status) is no ADC input here and is never touched.
  *
  *   smk_adc_init()      PA8, PC9, PA10 analog inputs, no pulls

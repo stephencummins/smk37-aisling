@@ -7,7 +7,6 @@
  * Never touched by the SMK build, so not in the table (SMK_PINS_UNUSED lists them for the tests):
  *   PB1    the charger's status (held low 8 s it resets the chip)
  *   PC7    the TRS MIDI OUT (UART1 TX): AISLING sends no TRS MIDI
- *   PC10   the pads' RGB LEDs, SPI1 group B's data (whose clock would come out on PC9, mux B's output)
  * Set up elsewhere, as on the FM-1 (SMK_PINS_SHARED): PC0 PC1 PC2 PC6, the codec's control lines (hal/fm1_audio.h;
  * the guide: the audio path is the FM-1's). The flash's and USB's pins are IOMAP functions (fm1_flash.h, fm1_usb.h),
  * not GPIO.
@@ -21,7 +20,7 @@
 #include <stdint.h>
 #include "smk_reg.h"
 
-enum { SMK_OWN_INPUT, SMK_OWN_LCD, SMK_OWN_ADC, SMK_NOWN };
+enum { SMK_OWN_INPUT, SMK_OWN_LCD, SMK_OWN_ADC, SMK_OWN_RGB, SMK_NOWN };
 enum { SMK_IN_PU, SMK_ANALOG, SMK_OUT_HI, SMK_OUT_LO, SMK_NMODE };    /* smk_pins_setup's order */
 
 /* the pins' bit numbers, as the drivers name them */
@@ -44,6 +43,7 @@ enum { SMK_IN_PU, SMK_ANALOG, SMK_OUT_HI, SMK_OUT_LO, SMK_NMODE };    /* smk_pin
 #define SMK_ADC_MUXC_BIT 10u    /* PA10 mux C: faders, wheels, pedal, battery (ADC ch2) */
 #define SMK_ADC_MUXA_BIT 8u     /* PA8  mux A: the pads' top row (ADC ch1) */
 #define SMK_ADC_MUXB_BIT 9u     /* PC9  mux B: the pads' bottom row (ADC ch8) */
+#define SMK_RGB_DO_BIT 10u      /* PC10 the pads' RGB LEDs: SPI1 group B's data out while a frame goes (smk_rgb.h) */
 
 typedef struct { uint8_t owner, port, bit, mode; } smk_pin_t;
 static const smk_pin_t SMK_PIN_TABLE[] = {
@@ -66,11 +66,12 @@ static const smk_pin_t SMK_PIN_TABLE[] = {
     {SMK_OWN_ADC, FM1_PA, SMK_ADC_MUXC_BIT, SMK_ANALOG},
     {SMK_OWN_ADC, FM1_PA, SMK_ADC_MUXA_BIT, SMK_ANALOG},
     {SMK_OWN_ADC, FM1_PC, SMK_ADC_MUXB_BIT, SMK_ANALOG},
+    {SMK_OWN_RGB, FM1_PC, SMK_RGB_DO_BIT, SMK_OUT_LO},
 };
 #define SMK_NPIN (sizeof SMK_PIN_TABLE / sizeof SMK_PIN_TABLE[0])
 
 /* the pins nothing here touches, and the codec's (fm1_audio.h's), as {port, bit} */
-static const uint8_t SMK_PINS_UNUSED[][2] = {{FM1_PB, 1}, {FM1_PC, 7}, {FM1_PC, 10}};
+static const uint8_t SMK_PINS_UNUSED[][2] = {{FM1_PB, 1}, {FM1_PC, 7}};
 static const uint8_t SMK_PINS_SHARED[][2] = {{FM1_PC, 0}, {FM1_PC, 1}, {FM1_PC, 2}, {FM1_PC, 6}};
 
 /* one owner's pins of one mode on one port, as a mask */

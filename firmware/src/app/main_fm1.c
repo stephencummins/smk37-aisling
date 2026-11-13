@@ -315,6 +315,7 @@ static void fm1_main(void)
     fm1_input_init();
 #if AISLING_BOARD_SMK37
     smk_adc_init();
+    smk_rgb_init();
 #else
     fm1_adc_init();
 #endif
