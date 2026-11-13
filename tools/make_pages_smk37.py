@@ -5,6 +5,9 @@ with this site's own nav), for the gh-pages branch of stephencummins/smk37-aisli
 says where the port stands; it offers no download until a release is made for the Elite.
 
   sh host/build_host.sh && python3 tools/make_pages_smk37.py build/pages_smk37
+  python3 tools/make_pages_smk37.py --marks build/pages_smk37_marks
+                      the same three pages with their two marks left in and no brand files, for the FM-1 site to
+                      take in as its smk37/ (tools/make_pages.py --smk37 DIR stamps them with its own bar)
 
   index.html          where the port stands, what it is, its screens
   controls/           the Elite's controls and the FM-1 job each does: the README's "## In short" under the Elite's names
@@ -464,8 +467,9 @@ def shots(out):
         shutil.copy(work / name, out / "img" / name)
 
 
-def main(out):
+def main(out, marks=False):
     out = Path(out)
+    st = (lambda p, root, current: p) if marks else (lambda p, root, current: stamp(p, root, current, NAV, SITE))
     if out.exists():
         shutil.rmtree(out)
     (out / "img").mkdir(parents=True)
@@ -475,12 +479,15 @@ def main(out):
     shutil.copy(SRC / "docs" / "card.png", out / "img" / "card.png")
     shutil.copy(SRC / "docs" / "img" / "smk37-panel.svg", out / "img" / "smk37-panel.svg")   # tools/gen_smk37_figure.py
     common = dict(HEAD_COMMON=HEAD_COMMON, STYLE=STYLE, BY=BY, FM1=FM1, REPO=REPO, SITE=SITE)
-    (out / "index.html").write_text(stamp(page(LANDING, **common), "", None, NAV, SITE), encoding="utf-8")
+    (out / "index.html").write_text(st(page(LANDING, **common), "", None), encoding="utf-8")
     (out / "controls" / "index.html").write_text(
-        stamp(page(CONTROLS, TABLE=controls_table(), PANEL=panel_svg(), SKINS=skin_buttons(), **common), "../", "controls", NAV, SITE), encoding="utf-8")
+        st(page(CONTROLS, TABLE=controls_table(), PANEL=panel_svg(), SKINS=skin_buttons(), **common), "../", "controls"), encoding="utf-8")
     (out / "docs" / "index.html").write_text(
-        stamp(page(DOCS, HEAD_COMMON=HEAD_COMMON, CSS=manual_html.CSS, BODY=docs_body()), "../", "docs", NAV, SITE),
+        st(page(DOCS, HEAD_COMMON=HEAD_COMMON, CSS=manual_html.CSS, BODY=docs_body()), "../", "docs"),
         encoding="utf-8")
+    if marks:
+        print(f"pages with their marks: {out}: index.html, controls/, docs/, img/")
+        return
     shutil.copytree(SRC / "web" / "brand", out, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns("_headers", "_redirects"))
     (out / ".nojekyll").write_text("")
@@ -488,6 +495,7 @@ def main(out):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    args = [a for a in sys.argv[1:] if a != "--marks"]
+    if len(args) != 1:
         sys.exit(__doc__)
-    main(sys.argv[1])
+    main(args[0], "--marks" in sys.argv[1:])
