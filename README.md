@@ -1,6 +1,6 @@
 # AISLING for the M-VAVE SMK-37 Elite
 
-<img src="docs/card.png" width="240" height="240" alt="AISLING: a gold 8-bit harp on green">
+<img src="docs/card-smk37.png" width="240" height="240" alt="AISLING on the SMK-37: a gold 8-bit harp on green, with 37">
 
 **[Download 1.3.1](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
 **[Installing](docs/SMK37.md#11-installing-and-going-back)** ·

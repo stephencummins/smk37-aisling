@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """The SMK-37 Elite's site: AISLING on the M-VAVE SMK-37 Elite, in the FM-1 site's dress (web/brand, tools/site_brand.py
 with this site's own nav), for the gh-pages branch of stephencummins/smk37-aisling (tools/publish_pages_smk37.sh). It
-says where the port stands; it offers no download until a release is made for the Elite.
+says where the port stands, and where its release is.
 
   sh host/build_host.sh && python3 tools/make_pages_smk37.py build/pages_smk37
   python3 tools/make_pages_smk37.py --marks build/pages_smk37_marks
@@ -14,7 +14,7 @@ says where the port stands; it offers no download until a release is made for th
                       (firmware/hal/smk37/smk_input.h), with what the Elite lacks and what it doesn't use yet
   docs/               docs/SMK37.md, drawn as the FM-1 site draws its manual (tools/manual_html.py)
   img/                the screens, rendered here by the Elite's simulator (build/host/amb_host_smk37) from the manual's
-                      own scenario (tests/listen/docshots.amb, renamed by tests/smk37_scenario.py); docs/card.png
+                      own scenario (tests/listen/docshots.amb, renamed by tests/smk37_scenario.py); docs/card-smk37.png, the harp with 37
   the rest            web/brand: the harp, site.css, wall.js, the fonts (not Cloudflare's _headers and _redirects)
 
 Stops if the README's table, or the header's names, no longer say what this expects."""
@@ -211,7 +211,7 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <p class="lab">__BY__</p>
 </div>
 <div class="pane notice" role="note">
-<p><strong>It runs on an Elite.</strong> In November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
+<p><strong>1.3.1, released.</strong> In November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
 off again with M-VAVE's own firmware, and installed again. The package is in its
 <a href="__REPO__/releases/latest">release</a>; it installs from a computer for now, as the
 <a href="docs/#s11">docs</a> say, and they say what was checked and what is still open.</p>
@@ -219,7 +219,7 @@ off again with M-VAVE's own firmware, and installed again. The package is in its
 </div>
 <div class="two hero">
 <div class="pane what">
-<img class="card" src="img/card.png" width="240" height="240" alt="A gold 8-bit harp on green">
+<img class="card" src="img/card-smk37.png" width="240" height="240" alt="A gold 8-bit harp on green, with 37 beside it">
 <p class="lede"><a href="__FM1__">AISLING</a> is a generative instrument for the M-VAVE FM-1, after the harpers and
 the west of Ireland: a harp's ostinato over a held drone, a second harp drifting against it, a flute far back in the
 reverb, with surf, wind or rain behind. The SMK-37 Elite has the FM-1's chip, so it can run the same code: the same
@@ -478,7 +478,7 @@ def main(out, marks=False):
     (out / "controls").mkdir()
     (out / "docs").mkdir()
     shots(out)
-    shutil.copy(SRC / "docs" / "card.png", out / "img" / "card.png")
+    shutil.copy(SRC / "docs" / "card-smk37.png", out / "img" / "card-smk37.png")
     shutil.copy(SRC / "docs" / "img" / "smk37-panel.svg", out / "img" / "smk37-panel.svg")   # tools/gen_smk37_figure.py
     common = dict(HEAD_COMMON=HEAD_COMMON, STYLE=STYLE, BY=BY, FM1=FM1, REPO=REPO, SITE=SITE)
     (out / "index.html").write_text(st(page(LANDING, **common), "", None), encoding="utf-8")

@@ -2,7 +2,7 @@
   "what": "AISLING on the SMK-37 Elite: a generative Irish ambient instrument. Harps in a jig's threes and a flute over a drone, with surf, wind and rain; eight pieces play themselves for ever. Play the flute on its keys, its pads for sixteen effects, its faders for the mix. Elite only.",
   "author": "CU_STE",
   "kinds": ["synth"],
-  "image": "docs/card.png",
+  "image": "docs/card-smk37.png",
   "color": "#1EA462",
   "sounds": "own: the visualiser's demo recording is AISLING itself playing Skellig, rendered from its own code; the firmware uses no samples",
   "smk37": {
