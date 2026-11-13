@@ -13,9 +13,10 @@ under the FM-1's interfaces. Without it the same tree builds the FM-1's firmware
 It is for the **SMK-37 Elite** only, its layout read from M-VAVE's V016 firmware for it: not the SMK-37 Pro, and not
 the MKE-P37.
 
-The site for the Elite is [stephencummins.github.io/smk37-aisling](https://stephencummins.github.io/smk37-aisling/),
-with the [controls](https://stephencummins.github.io/smk37-aisling/controls/) on a page of their own. Everything
-AISLING does is in the FM-1 version's [manual](https://aisling.stephen8n.com/manual/).
+The site for the Elite is [aisling.stephen8n.com/smk37](https://aisling.stephen8n.com/smk37/), with the
+[controls](https://aisling.stephen8n.com/smk37/controls/) on a page of their own. The package is in the
+[releases](https://github.com/stephencummins/smk37-aisling/releases/latest). Everything AISLING does is in the FM-1
+version's [manual](https://aisling.stephen8n.com/manual/).
 
 ---
 

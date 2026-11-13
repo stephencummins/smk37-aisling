@@ -1,10 +1,11 @@
 {
-  "what": "A generative Irish ambient instrument: harps in a jig's threes and a flute over a drone, with surf, wind and rain. Eight pieces play themselves for ever; play along on its keys, a keyboard or a DAW. Its visualiser paints it as an Irish landscape, and its site shows how to build that into a touch screen for the FM-1 and lists the gear that works with it.",
+  "what": "AISLING on the SMK-37 Elite: a generative Irish ambient instrument. Harps in a jig's threes and a flute over a drone, with surf, wind and rain; eight pieces play themselves for ever. Play the flute on its keys, its pads for sixteen effects, its faders for the mix. Elite only.",
   "author": "CU_STE",
   "kinds": ["synth"],
-  "play": "https://stephencummins.github.io/fm1-aisling/emu/",
-  "editor": "https://stephencummins.github.io/fm1-aisling/editor/",
-  "cheat": "https://stephencummins.github.io/fm1-aisling/cheat/",
   "image": "docs/card.png",
-  "color": "#1EA462"
+  "color": "#1EA462",
+  "smk37": {
+    "install": "https://aisling.stephen8n.com/smk37/docs/#s11",
+    "guide": "https://github.com/stephencummins/smk37-aisling/blob/main/docs/SMK37.md"
+  }
 }

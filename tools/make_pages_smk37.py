@@ -212,8 +212,9 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 </div>
 <div class="pane notice" role="note">
 <p><strong>It runs on an Elite.</strong> In November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
-off again with M-VAVE's own firmware, and installed again. There is no download here yet: that comes with its release.
-The <a href="docs/">docs</a> say what was checked and what is still open.</p>
+off again with M-VAVE's own firmware, and installed again. The package is in its
+<a href="__REPO__/releases/latest">release</a>; it installs from a computer for now, as the
+<a href="docs/#s11">docs</a> say, and they say what was checked and what is still open.</p>
 <p>It is for the <b>SMK-37 Elite</b> only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
 </div>
 <div class="two hero">
@@ -253,9 +254,10 @@ its middle 27 keys are the FM-1's, its pads play the effects and its faders set 
   the faders set the mix.</li>
   <li class="done" data-state="done"><b class="lead">An hour's run.</b> An hour playing on an Elite with no
   dropouts.</li>
+  <li class="done" data-state="done"><b class="lead">A release.</b> 1.3.1's package on GitHub, installed from a
+  computer.</li>
   <li data-state="next"><b class="lead">The web installer.</b> AISLING put on an Elite from Chrome or Edge, as on the
   FM-1.</li>
-  <li data-state="to do"><b class="lead">A download.</b> The package on this page.</li>
   <li data-state="to do"><b class="lead">Later.</b> The pitch wheel bends the Lead, the mod wheel opens the filters,
   the outer white keys extend the Lead's scale.</li>
 </ol>

@@ -1,6 +1,57 @@
-# AISLING for the M-VAVE FM-1
+# AISLING for the M-VAVE SMK-37 Elite
 
 <img src="docs/card.png" width="240" height="240" alt="AISLING: a gold 8-bit harp on green">
+
+**[Download 1.3.1](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
+**[Installing](docs/SMK37.md#11-installing-and-going-back)** ·
+**[Controls](https://aisling.stephen8n.com/smk37/controls/)** ·
+**[Docs](https://aisling.stephen8n.com/smk37/docs/)** ·
+**[Website](https://aisling.stephen8n.com/smk37/)** ·
+**[AISLING for the FM-1](https://github.com/stephencummins/fm1-aisling)**
+
+By CU_STE · [www.stephen8n.com](https://www.stephen8n.com)
+
+## What?
+
+[AISLING](https://github.com/stephencummins/fm1-aisling) is a generative Irish ambient instrument made for the M-VAVE
+FM-1: harps in a jig's threes over a held drone, a flute far back in the reverb, with surf, wind or rain behind. Eight
+pieces play themselves from the moment it's switched on, and never end. The SMK-37 Elite has the FM-1's chip, so this
+is the same code on a 37-key keyboard: the same engine, pieces, pages and screen, saved the same way. Its buttons and
+knobs take the FM-1's jobs, its middle 27 keys (F3 to G5) are the FM-1's, its 16 pads are PERFORM's effects while
+held, and its 4 faders set the mix.
+
+It is for the **SMK-37 Elite** only: not the SMK-37 Pro, and not the MKE-P37.
+
+**Status: 1.3.1.** It has run on one Elite, in November 2026: installed over M-VAVE's V016, played, taken off again
+with M-VAVE's own package, installed again, and played for an hour with no dropouts. Every button, knob, key, pad,
+fader and light was checked by hand. [docs/SMK37.md](docs/SMK37.md#12-settled-on-an-elite-and-still-open) says what
+was checked and what is still open.
+
+## Installing on the Elite
+
+AISLING's web installer hasn't been tried on an Elite yet, so install from a computer, with Python 3 and `mido`
+(BUILDING.md), the Elite on USB.
+
+1. **First, a backup of the whole flash** ([section 11](docs/SMK37.md#11-installing-and-going-back)). It holds that
+   unit's velocity calibration and its stock presets, and nothing else can bring those back.
+2. `python3 tools/fm1_install.py aisling-smk37-elite-1.3.1.fwsc --port "SMK-37 Elite"`, with the package from the
+   [release](https://github.com/stephencummins/smk37-aisling/releases/latest). Its identity is
+   `SMK-37 Elite_353010301`; the installers refuse a package made for the other model.
+
+**Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again.
+
+**Saved pieces.** AISLING saves over the first of V016's presets (0xC2000–0xC5FFF) and doesn't read V016's presets or
+another firmware's saves. Going back to V016 doesn't put those presets back; the unit's own backup does
+(`tools/fm1_rescue.py --write --presets BACKUP.bin`, not yet tried on an Elite). AISLING uses no samples.
+
+> Installing AISLING on your Elite is at your own risk. It has run on one unit.
+
+---
+
+The rest of this page is AISLING's own README, written for the FM-1. The same source builds both, and everything it
+says about AISLING itself holds on the Elite; [docs/SMK37.md](docs/SMK37.md) has what differs.
+
+# AISLING for the M-VAVE FM-1
 
 **[Install](https://aisling.stephen8n.com/install/)** (Chrome or Edge on a computer, the FM-1 on USB;
 Android and Chromebooks not tried yet) · **[Try it in the browser](https://aisling.stephen8n.com/emu/)** ·
@@ -11,7 +62,7 @@ Android and Chromebooks not tried yet) · **[Try it in the browser](https://aisl
 
 By CU_STE · [www.stephen8n.com](https://www.stephen8n.com)
 
-The same source also builds for the M-VAVE SMK-37 Elite, not yet tried on one: see [docs/SMK37.md](docs/SMK37.md).
+The same source also builds for the M-VAVE SMK-37 Elite, and runs on one: see [docs/SMK37.md](docs/SMK37.md).
 
 ## What?
 
