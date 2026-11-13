@@ -281,7 +281,11 @@ __HEAD_COMMON__<title>AISLING on the SMK-37 Elite · the controls</title>
 <meta name="description" content="Which of the SMK-37 Elite's buttons, knobs and keys does each of the FM-1's jobs in AISLING, its pads and faders, and what it doesn't use yet.">
 <style>
 __STYLE__.wrap { overflow-x: auto; }
-img.panel { display: block; width: 100%; min-width: 1100px; height: auto; }
+svg.skp { display: block; width: 100%; min-width: 1100px; height: auto; }
+.skins { margin: 0 0 10px; }
+.skins button { font: inherit; margin-left: 6px; padding: 2px 10px; border: 1px solid var(--brand-rule); border-radius: 4px;
+                background: transparent; color: inherit; cursor: pointer; }
+.skins button[aria-pressed="true"] { border-color: var(--brand-green); box-shadow: inset 0 0 0 1px var(--brand-green); }
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; vertical-align: top; padding: 5px 10px 5px 0; border-top: 1px solid var(--brand-rule); }
 thead th { font-weight: 400; font-size: 12.5px; color: var(--brand-muted); border-top: 0; }
@@ -322,8 +326,27 @@ version's <a href="__FM1__manual/">manual</a> and <a href="__FM1__cheat/">cheat 
 they or the screen name a button, it is the FM-1's name, in the second column here.</p>
 </div>
 <div class="pane wrap">
-<a href="../img/smk37-panel.svg" title="The diagram at full size"><img class="panel" src="../img/smk37-panel.svg" width="1900" height="924" alt="The SMK-37 Elite's panel, each control labelled with what it does in AISLING: the eight knobs, the sixteen pads in their four colours, the four faders, the buttons and the 37 keys. The same is in the tables below."></a>
-<p class="small">The diagram opens at full size.</p>
+<p class="skins" id="skins" hidden>Your Elite's colours: __SKINS__</p>
+__PANEL__
+<p class="small"><a href="../img/smk37-panel.svg">The diagram alone</a>, at full size.</p>
+<script>
+(function () {
+  var svg = document.querySelector("svg.skp"), bar = document.getElementById("skins"), key = "aisling-smk37-skin";
+  function set(k) {
+    svg.setAttribute("data-skin", k);
+    bar.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.value === k ? "true" : "false"); });
+  }
+  var k = "black";
+  try { k = localStorage.getItem(key) || k; } catch (e) {}
+  bar.hidden = false;
+  set(bar.querySelector('button[value="' + k + '"]') ? k : "black");
+  bar.addEventListener("click", function (e) {
+    if (e.target.tagName !== "BUTTON") return;
+    set(e.target.value);
+    try { localStorage.setItem(key, e.target.value); } catch (x) {}
+  });
+})();
+</script>
 </div>
 <div class="pane wrap">
 __TABLE__
@@ -403,6 +426,17 @@ def docs_body():
     return body.replace("https://github.com/stephencummins/fm1-aisling/blob/main/", REPO + "/blob/main/")
 
 
+def panel_svg():
+    """The panel's drawing, inline, so the page's buttons can change its colours (tools/gen_smk37_figure.py)."""
+    return (SRC / "docs" / "img" / "smk37-panel.svg").read_text(encoding="utf-8")
+
+
+def skin_buttons():
+    import gen_smk37_figure
+    return "".join(f'<button type="button" value="{k}" aria-pressed="false">{name}</button>'
+                   for k, (name, _) in gen_smk37_figure.SKINS.items())
+
+
 def page(template, **marks):
     for k, v in marks.items():
         template = template.replace(f"__{k}__", v)
@@ -441,7 +475,7 @@ def main(out):
     common = dict(HEAD_COMMON=HEAD_COMMON, STYLE=STYLE, BY=BY, FM1=FM1, REPO=REPO, SITE=SITE)
     (out / "index.html").write_text(stamp(page(LANDING, **common), "", None, NAV, SITE), encoding="utf-8")
     (out / "controls" / "index.html").write_text(
-        stamp(page(CONTROLS, TABLE=controls_table(), **common), "../", "controls", NAV, SITE), encoding="utf-8")
+        stamp(page(CONTROLS, TABLE=controls_table(), PANEL=panel_svg(), SKINS=skin_buttons(), **common), "../", "controls", NAV, SITE), encoding="utf-8")
     (out / "docs" / "index.html").write_text(
         stamp(page(DOCS, HEAD_COMMON=HEAD_COMMON, CSS=manual_html.CSS, BODY=docs_body()), "../", "docs", NAV, SITE),
         encoding="utf-8")

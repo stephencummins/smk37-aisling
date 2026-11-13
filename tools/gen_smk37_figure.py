@@ -11,7 +11,11 @@
 As tools/gen_manual_figures.py draws the FM-1's. Where the controls sit follows the Elite: the two wheels at the
 left, the screen with six small buttons under it, eight knobs over two rows of eight pads, four faders over two rows
 of six buttons, and the 37 keys, C3 to C6, below (checked against the panel drawing in genkigenki's fm1-to-smk37
-guide; the drawing here is our own). The pads are in the colours their lights take (ui.c's PAD_RGB)."""
+guide; the drawing here is our own). The pads are in the colours their lights take (ui.c's PAD_RGB).
+
+The Elite is sold in more than one colour, so the drawing's colours are CSS variables on the svg element, with SKINS
+their sets: data-skin="grey" on the svg (the controls page's buttons set it, tools/make_pages_smk37.py) redraws it.
+Every rule is under svg.skp, so the drawing can sit inline in a page."""
 import base64
 import io
 import sys
@@ -23,9 +27,19 @@ SRC = Path(__file__).resolve().parents[1]
 OUT = SRC / "docs" / "img"
 FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif"
 
-BODY, TRAY, EDGE = "#1b1d21", "#26292f", "#3d4149"
-INK, MUTED, GREEN = "#f1efe6", "#b4b1a4", "#3fce86"
-KNOB, KNOB_EDGE, BTN = "#0e0f11", "#565b65", "#33373f"
+# a skin: the body, the trays, the edges; the words on the body (ink, muted, dim) and on a tray; a knob, its edge and
+# its mark; the wells (the wheels, a fader's slot); a button and its word; a fader's cap; the accent
+VARS = ("body", "tray", "edge", "ink", "muted", "dim", "trayink", "knob", "knobedge", "mark", "well", "btn", "btnink",
+        "cap", "accent")
+SKINS = {
+    "black": ("Black", ("#1b1d21", "#26292f", "#3d4149", "#f1efe6", "#b4b1a4", "#8a8d94", "#f1efe6", "#0e0f11",
+                        "#565b65", "#f1efe6", "#0e0f11", "#33373f", "#f1efe6", "#33373f", "#3fce86")),
+    "grey": ("Grey and orange", ("#a3a5a8", "#8f9195", "#75777b", "#141517", "#2a2c2f", "#4b4d51", "#141517",
+                                 "#f27a1a", "#a84f08", "#1b1d21", "#55575b", "#2c2e32", "#f1efe6", "#f27a1a",
+                                 "#7a2c00")),
+    "white": ("White", ("#efebe1", "#dedacd", "#b9b5a8", "#1b1d21", "#4a4c50", "#74767a", "#1b1d21", "#1b1d21",
+                        "#565b65", "#f1efe6", "#cfcbbe", "#c9c5b8", "#1b1d21", "#f1efe6", "#0f7a49")),
+}
 KEY_W, KEY_W_OFF, KEY_B, KEY_B_OFF = "#f1efe6", "#7d8087", "#0e0f11", "#3a3d44"
 GROUPS = (("Rhythm", "#FF5A10"), ("Echo", "#00D2AA"), ("Space", "#A050FF"), ("Colour", "#FFBE00"))
 PADS = (("Stutter", "Half time", "Gate", "Roll", "Repeat", "Macalla", "Tape stop", "Reverse"),
@@ -54,8 +68,8 @@ def lines(x, y, t, cls, anchor="middle", lead=19):
 
 
 def knob(x, y, r, label, does=None):
-    return (f'<circle cx="{x}" cy="{y}" r="{r}" fill="{KNOB}" stroke="{KNOB_EDGE}" stroke-width="2.5"/>'
-            f'<line x1="{x}" y1="{y - r + 5}" x2="{x}" y2="{y - r + 16}" stroke="{INK}" stroke-width="3" stroke-linecap="round"/>'
+    return (f'<circle cx="{x}" cy="{y}" r="{r}" class="knob" stroke-width="2.5"/>'
+            f'<line x1="{x}" y1="{y - r + 5}" x2="{x}" y2="{y - r + 16}" class="mark" stroke-width="3" stroke-linecap="round"/>'
             + text(x, y - r - 11, label, "lbl") + (lines(x, y + r + 23, does, "what") if does else ""))
 
 
@@ -63,15 +77,15 @@ def button(x, y, w, h, label):
     parts = label.split("|")
     t = (text(x + w / 2, y + h / 2 + 5, parts[0], "btn") if len(parts) == 1 else
          text(x + w / 2, y + h / 2 - 2, parts[0], "btn") + text(x + w / 2, y + h / 2 + 13, parts[1], "btn"))
-    return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="7" fill="{BTN}" stroke="{EDGE}" stroke-width="1.5"/>{t}'
+    return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="7" class="b" stroke-width="1.5"/>{t}'
 
 
 def wheels():
     s = []
     for i, name in enumerate(("PITCH", "MOD")):
         x = 44 + i * 64
-        s.append(f'<rect x="{x}" y="70" width="48" height="190" rx="12" fill="{KNOB}" stroke="{KNOB_EDGE}" stroke-width="2"/>')
-        s += [f'<line x1="{x + 10}" y1="{y}" x2="{x + 38}" y2="{y}" stroke="{EDGE}" stroke-width="2"/>'
+        s.append(f'<rect x="{x}" y="70" width="48" height="190" rx="12" class="well" stroke-width="2"/>')
+        s += [f'<line x1="{x + 10}" y1="{y}" x2="{x + 38}" y2="{y}" class="tick" stroke-width="2"/>'
               for y in range(96, 250, 23)]
         s.append(text(x + 24, 284, name, "lbl small"))
     s.append(text(100, 308, "Not used yet", "what"))
@@ -81,7 +95,7 @@ def wheels():
 def screen(png):
     left = [("KNOB|BANK", "Nothing yet"), ("&lt;", "All pads let go"), ("OCT−", "Octave down")]
     right = [("FADER|BANK", "Faders' bank"), ("&gt;", "With a pad: latch"), ("OCT+", "Octave up")]
-    s = [f'<rect x="268" y="34" width="216" height="216" rx="14" fill="#08090a" stroke="{EDGE}" stroke-width="2"/>',
+    s = [f'<rect x="268" y="34" width="216" height="216" rx="14" class="glass" stroke-width="2"/>',
          f'<image x="286" y="52" width="180" height="180" href="{png_data_uri(png)}" style="image-rendering:pixelated"/>']
     for i in range(3):
         y = 268 + i * 44
@@ -95,7 +109,7 @@ def knobs_pads():
     does = ("Volume", "Level|(a layer's page)", "Voice", "Piece")
     s = [knob(x0 + i * pitch, 80, 23, f"K{i + 1}", does[i] if i < 4 else None) for i in range(8)]
     a, b = x0 + 4 * pitch - 30, x0 + 7 * pitch + 30
-    s.append(f'<path d="M{a} 116 v8 H{b} v-8" fill="none" stroke="{MUTED}" stroke-width="1.5"/>'
+    s.append(f'<path d="M{a} 116 v8 H{b} v-8" class="rule" stroke-width="1.5"/>'
              + text((a + b) / 2, 145, "The four values on the screen", "what"))
     for r in range(2):
         for i in range(8):
@@ -121,15 +135,15 @@ def faders_buttons():
     for i in range(4):
         x = x0 + 42 + i * 128
         s.append(text(x, 46, f"F{i + 1}", "lbl")
-                 + f'<rect x="{x - 4}" y="58" width="8" height="118" rx="4" fill="{KNOB}" stroke="{EDGE}" stroke-width="1.5"/>'
-                 + f'<rect x="{x - 27}" y="104" width="54" height="22" rx="5" fill="{BTN}" stroke="{KNOB_EDGE}" stroke-width="2"/>'
+                 + f'<rect x="{x - 4}" y="58" width="8" height="118" rx="4" class="well" stroke-width="1.5"/>'
+                 + f'<rect x="{x - 27}" y="104" width="54" height="22" rx="5" class="cap" stroke-width="2"/>'
                  + text(x, 198, mix[i], "what") + text(x, 220, bank[i], "what green"))
-    s.append(text(x0 + 3 * 82 + 35, 244, "The mix; in green, with FADER BANK lit", "what small"))
+    s.append(text(x0 + 3 * 82 + 35, 244, "The mix; under it, with FADER BANK lit", "what small"))
     top = [("ARP", "Sequence"), ("NOTE|REPEAT", "Lead"), ("SCALE", "Perform|held: Lock"), ("CHORD", "Drone"),
            ("GLOBE", "Setup, Arc|held: save"), ("BT", "Atmosphere|held: save")]
     bot = [("PATCH", "Aisling,|Key"), ("PARA", "Chords|held: next"), ("FX", "Space"), ("SEQ", "Sequence 2"),
            ("SEQ|PLAY", "Play /|rest"), ("SEQ|REC", "Hold|held: effects")]
-    s.append(f'<rect x="{x0 - 16}" y="258" width="{6 * 82 + 20}" height="226" rx="14" fill="{TRAY}"/>')
+    s.append(f'<rect x="{x0 - 16}" y="258" width="{6 * 82 + 20}" height="226" rx="14" class="tray"/>')
     for r, row in enumerate((top, bot)):
         for i, (name, does) in enumerate(row):
             x, y = x0 + i * 82, 272 + r * 106
@@ -141,7 +155,7 @@ def keybed():
     x0, y0, w, h = 40, 548, W - 80, 300
     n = 22
     pitch = w / n
-    s = [f'<rect x="{x0 - 8}" y="{y0 - 8}" width="{w + 16}" height="{h + 16}" rx="10" fill="{TRAY}"/>']
+    s = [f'<rect x="{x0 - 8}" y="{y0 - 8}" width="{w + 16}" height="{h + 16}" rx="10" class="tray"/>']
     for i in range(n):
         on = FIRST <= i <= LAST
         x = x0 + i * pitch
@@ -159,7 +173,7 @@ def keybed():
             s.append(f'<text transform="translate({x + 6:.1f} {y0 + bh - 14}) rotate(-90)" class="fx">{BLACK_FX[k]}</text>')
             k += 1
     a, b = x0 + FIRST * pitch, x0 + (LAST + 1) * pitch
-    s.append(f'<path d="M{a + 2:.1f} {y0 - 14} v-10 H{b - 2:.1f} v10" fill="none" stroke="{GREEN}" stroke-width="2"/>')
+    s.append(f'<path d="M{a + 2:.1f} {y0 - 14} v-10 H{b - 2:.1f} v10" class="acc" stroke-width="2"/>')
     s.append(text((a + b) / 2, y0 - 34, "F3 to G5 play. White keys: the Lead, in the piece's scale. Black keys: an effect each while held.", "what"))
     s.append(text(x0 + FIRST * pitch / 2, y0 - 34, "Silent for now", "what dim"))
     s.append(text(b + (x0 + w - b) / 2, y0 - 34, "Silent for now", "what dim"))
@@ -168,18 +182,29 @@ def keybed():
     return "".join(s)
 
 
-STYLE = (f"<style>text{{font-family:{FONT}}}.lbl{{font-weight:600;font-size:18px;fill:{INK};letter-spacing:.06em}}"
-         f".lbl.small{{font-size:15px}}.btn{{font-weight:600;font-size:13px;fill:{INK};letter-spacing:.04em}}"
-         f".what{{font-size:16px;fill:{MUTED}}}.what.tray{{font-size:14px;fill:{INK}}}.what.small{{font-size:14px}}.what.green{{fill:{GREEN}}}"
-         f".what.dim{{fill:#8a8d94}}.pad{{font-weight:600;font-size:15px;fill:{INK}}}"
-         f".key{{font-weight:600;font-size:17px;fill:#1b1d21}}.key.off{{fill:#2b2d32}}"
-         f".fx{{font-weight:600;font-size:15px;fill:{INK}}}</style>")
+def style():
+    v = lambda vals: "".join(f"--{k}:{c};" for k, c in zip(VARS, vals))
+    skins = "".join(f'svg.skp[data-skin="{k}"]{{{v(vals)}}}' for k, (_, vals) in SKINS.items() if k != "black")
+    rules = (f"text{{font-family:{FONT}}}.body{{fill:var(--body);stroke:var(--edge)}}.tray{{fill:var(--tray)}}"
+             ".knob{fill:var(--knob);stroke:var(--knobedge)}.mark{stroke:var(--mark)}"
+             ".well{fill:var(--well);stroke:var(--edge)}.tick{stroke:var(--edge)}.glass{fill:#08090a;stroke:var(--edge)}"
+             ".b{fill:var(--btn);stroke:var(--edge)}.cap{fill:var(--cap);stroke:var(--knobedge)}"
+             ".rule{fill:none;stroke:var(--muted)}.acc{fill:none;stroke:var(--accent)}"
+             ".lbl{font-weight:600;font-size:18px;fill:var(--ink);letter-spacing:.06em}.lbl.small{font-size:15px}"
+             ".btn{font-weight:600;font-size:13px;fill:var(--btnink);letter-spacing:.04em}"
+             ".what{font-size:16px;fill:var(--muted)}.what.tray{font-size:14px;fill:var(--trayink)}"
+             ".what.small{font-size:14px}.what.green{fill:var(--accent)}.what.dim{fill:var(--dim)}"
+             ".pad{font-weight:600;font-size:15px;fill:var(--ink)}"
+             ".key{font-weight:600;font-size:17px;fill:#1b1d21}.key.off{fill:#2b2d32}"
+             ".fx{font-weight:600;font-size:15px;fill:#f1efe6}")
+    scoped = "".join("svg.skp " + r + "}" for r in rules.split("}") if r)
+    return f"<style>svg.skp{{{v(SKINS['black'][1])}}}{skins}{scoped}</style>"
 
 
 def panel(screen_png):
-    return "".join([f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" role="img" '
+    return "".join([f'<svg xmlns="http://www.w3.org/2000/svg" class="skp" viewBox="0 0 {W} {H}" role="img" '
                     f'aria-label="The SMK-37 Elite\'s panel running AISLING, each control labelled with what it does">',
-                    STYLE, f'<rect x="4" y="4" width="{W - 8}" height="{H - 8}" rx="30" fill="{BODY}" stroke="{EDGE}" stroke-width="2"/>',
+                    style(), f'<rect x="4" y="4" width="{W - 8}" height="{H - 8}" rx="30" class="body" stroke-width="2"/>',
                     wheels(), screen(screen_png), knobs_pads(), faders_buttons(), keybed(), "</svg>"])
 
 
