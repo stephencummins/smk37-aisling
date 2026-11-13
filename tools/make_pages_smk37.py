@@ -252,7 +252,7 @@ its middle 27 keys are the FM-1's, its pads play the effects and its faders set 
   on an Elite.</li>
   <li data-state="to do"><b class="lead">A download.</b> The package on this page.</li>
   <li data-state="to do"><b class="lead">Later.</b> The pitch wheel bends the Lead, the mod wheel opens the filters,
-  the outer white keys extend the Lead's scale. The pads' lights are built and wait to be tried on an Elite.</li>
+  the outer white keys extend the Lead's scale.</li>
 </ol>
 </section>
 <div class="pane">
@@ -330,6 +330,8 @@ __TABLE__
   <li><b>The 16 pads:</b> PERFORM's effects, on any page, each on while its pad is down. Top row: Stutter, Half time,
   Gate, Roll, Repeat, Macalla, Tape stop, Reverse. Bottom row: Reverb, Shimmer, Freeze, Wash, Flange, Phaser, Drive,
   Crush.</li>
+  <li><b>The pads' lights:</b> each glows in its group's colour: orange for the rhythm effects, sea green for the
+  echoes, heather for the space, yellow for the colour. Bright while held, beating while latched, dark asleep.</li>
   <li><b>&gt; held, a pad hit:</b> that effect stays on; the same again lets it go. &gt; is lit while any is
   latched.</li>
   <li><b>&lt; tapped:</b> every pad and latch let go.</li>

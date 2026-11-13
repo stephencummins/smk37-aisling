@@ -18,8 +18,8 @@
  *   smk_rgb_send(lcd_baud)     the frame out, then SPI1 back on group A at the screen's baud. THE CALLER: no screen
  *                              transfer running and CS high (lcd.c's lcd_sync), from the main loop only
  *
- * NOT YET CHECKED ON THE DEVICE: the lights' order along the chain (SMK_RGB_SLOT, the guide's), the colours' order,
- * and that the bottom row's pads read as before while a frame goes out.
+ * Checked on an Elite (2026-11-13): the lights' order along the chain (SMK_RGB_SLOT, the guide's) and the colours'
+ * order; the bottom row's pads read while frames went out.
  *
  * Host tests replace the hardware access: SMK_GPIO(port, reg), SMK_REG(address) (smk_reg.h). */
 #pragma once

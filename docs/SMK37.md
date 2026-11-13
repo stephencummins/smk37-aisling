@@ -115,7 +115,7 @@ The Elite's keys have no lights, so the FM-1's lit key for the note the Lead sou
 - **A throw:** with a pad down, turn K5, K6, K7 or K8 for Filter, Wet, Energy or Duck. They go back to where they were
   when the last pad is up.
 
-- **Their lights** (built and tested in the simulator; not yet tried on an Elite): each pad glows in its group's
+- **Their lights:** each pad glows in its group's
   colour, orange for the rhythm effects (Stutter to Roll), sea green for the echoes (Repeat to Reverse), heather for
   the space (Reverb to Wash) and yellow for the colour (Flange to Crush). A pad is bright while it is held and beats
   while it is latched. They are dark while the instrument sleeps.
