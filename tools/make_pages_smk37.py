@@ -248,8 +248,10 @@ its middle 27 keys are the FM-1's, its pads play the effects and its faders set 
   Elite, and the way back to M-VAVE's firmware proven: off, and on again.</li>
   <li class="done" data-state="done"><b class="lead">The pads and faders.</b> The pads play the sixteen effects, and
   the faders set the mix.</li>
-  <li data-state="next"><b class="lead">The last checks.</b> An hour's run and the web installer
-  on an Elite.</li>
+  <li class="done" data-state="done"><b class="lead">An hour's run.</b> An hour playing on an Elite with no
+  dropouts.</li>
+  <li data-state="next"><b class="lead">The web installer.</b> AISLING put on an Elite from Chrome or Edge, as on the
+  FM-1.</li>
   <li data-state="to do"><b class="lead">A download.</b> The package on this page.</li>
   <li data-state="to do"><b class="lead">Later.</b> The pitch wheel bends the Lead, the mod wheel opens the filters,
   the outer white keys extend the Lead's scale.</li>

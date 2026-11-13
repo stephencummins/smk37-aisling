@@ -282,6 +282,8 @@ Settled, on one Elite on V016 (November 2026):
 - **The pads' lights:** their order, their colours, bright while held, beating while latched.
 - **The protected ranges.** After two installs and a return to stock, the bootloader area, the velocity calibration
   and the key at 0xFF000 equalled the backup taken before the first.
+- **A long run.** An hour playing (13 November 2026, 18:39 to 19:40, read every five minutes over USB): no dropouts,
+  no missed conversions in the analog scan; the heaviest audio block took 96% of its time.
 
 Still open:
 
@@ -289,8 +291,6 @@ Still open:
   that a cable pulled mid-update resumes. No update has been interrupted on purpose.
 - **The battery's percentage:** its span (`BATT_PCT_LO`) is a guess; it read 76 on a battery not known to be full or
   part used.
-- **A long run:** an hour without a dropout. The analog scan missed 14 conversions once in about 11,700, and none
-  since.
 - **The web installer** on an Elite, and the presets' restore (section 11).
 
 ## 13. The files
