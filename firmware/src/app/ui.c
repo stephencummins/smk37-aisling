@@ -1773,7 +1773,8 @@ static int pad_throw(int i, int32_t e)           /* KNOB 1-4 (i 0..3) turned by 
 #if CAP_RGB
 /* the pads' lights (the user, 2026-11-13: "can the pads be lit up when pressed?"): each pad glows in its group's
  * colour (PERFORM's four: rhythm orange, echo sea green, space heather, colour gorse yellow), bright while it is
- * held, and beats between the two while latched. Dark asleep (sleep_fall). The levels are low: sixteen of them
+ * held, and beats while latched. Dark asleep (sleep_fall). (The user, on the Elite: "the default a bit brighter so
+ * I can see the colours": the glow an eighth, was a twentieth.) The levels are low: sixteen of them
  * full on would draw more than the battery should give */
 #define PAD_BEAT 256u                            /* ms: a latched pad's light, each half of its beat */
 static const uint32_t PAD_RGB[4] = {0xFF5A10u, 0x00D2AAu, 0xA050FFu, 0xFFBE00u};
@@ -1787,7 +1788,7 @@ static void pad_lights(int dark)
     const uint32_t beat = plat_ms() / PAD_BEAT & 1u;
     for (i = 0; i < 16u; i++) {
         const uint32_t b = 1u << PAD_KEY[i], c = PAD_RGB[PKEY[PAD_KEY[i]].g & 3u];
-        rgb[i] = dark ? 0u : pad_shade(c, pd.held & b ? 24u : pd.latch & b ? (beat ? 24u : 8u) : 3u);
+        rgb[i] = dark ? 0u : pad_shade(c, pd.held & b ? 40u : pd.latch & b ? (beat ? 40u : 16u) : 8u);
     }
     plat_pad_leds(rgb);
 }

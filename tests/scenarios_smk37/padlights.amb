@@ -3,41 +3,41 @@
 # padrgbN: pad N's light as 0xRRGGBB, a number
 wait 300
 # at rest, a glow: pad 0 Stutter (rhythm), pad 5 Macalla (echo), pad 8 Reverb and pad 10 Freeze (space), pad 15 Crush (colour)
-expect padrgb0 721920
-expect padrgb3 721920
-expect padrgb5 2311
-expect padrgb7 2311
-expect padrgb8 459531
-expect padrgb10 459531
-expect padrgb12 722944
-expect padrgb15 722944
+expect padrgb0 2034434
+expect padrgb3 2034434
+expect padrgb5 6677
+expect padrgb7 6677
+expect padrgb8 1313311
+expect padrgb10 1313311
+expect padrgb12 2037504
+expect padrgb15 2037504
 # held: bright; the others as they were; up: the glow again
 pad 0 down
-expect padrgb0 6234374
-expect padrgb1 721920
-expect padrgb8 459531
+expect padrgb0 10434570
+expect padrgb1 2034434
+expect padrgb8 1313311
 pad 0 up
-expect padrgb0 721920
+expect padrgb0 2034434
 pad 10 down
-expect padrgb10 3939935
+expect padrgb10 6566559
 pad 10 up
-expect padrgb10 459531
+expect padrgb10 1313311
 # latched: over the glow, at either end of its beat, and both ends are seen; held as well: bright
 press >
 tappad 10
 release >
 expect padlatch 262144
-expect padrgb10 >459531
+expect padrgb10 >1313311
 expect padbeat10 >2
 pad 10 down
-expect padrgb10 3939935
+expect padrgb10 6566559
 wait 600
-expect padrgb10 3939935
+expect padrgb10 6566559
 pad 10 up
 tap <
 expect padlatch 0
 wait 100
-expect padrgb10 459531
+expect padrgb10 1313311
 # asleep: dark, every one; awake: the glow again
 tap GLOBE
 wait 300
@@ -56,5 +56,5 @@ wait 100
 release FX
 wait 100
 expect asleep 0
-expect padrgb0 721920
-expect padrgb15 722944
+expect padrgb0 2034434
+expect padrgb15 2037504
