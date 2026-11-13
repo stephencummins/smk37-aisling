@@ -105,7 +105,7 @@ The Elite's keys have no lights, so the FM-1's lit key for the note the Lead sou
 These wait until AISLING has run on an Elite. The plan for each:
 
 - **The 16 pads:** the effects grid, an effect each while held, lit in its colour.
-- **The 4 faders:** the mix (the Drone, the Sequence, the Lead and Sequence 2, as on the MIX page), each taking over
+- **The 4 faders:** the mix (the Drone, the Sequence, Sequence 2 and the Lead, left to right), each taking over
   only once it is moved.
 - **The pitch wheel:** bends the Lead, up to two semitones each way.
 - **The mod wheel:** opens the filters by degrees, toward where Rise takes them.

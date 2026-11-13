@@ -95,9 +95,9 @@ fader 0 1023
 expect level0 100
 fader 0 0
 expect level0 0
-fader 2 519
+fader 3 519
 expect level2 51
-fader 2 521
+fader 3 521
 expect level2 51
 # FADER BANK: the master actions, lit; a fader takes its new job when next moved; the middle is 0
 tap FADER_BANK

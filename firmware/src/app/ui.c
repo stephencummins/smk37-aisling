@@ -1814,7 +1814,9 @@ static void pads_input(void)
     }
     for (i = 0; i < CAP_FADERS; i++) {
         const int32_t f = plat_fader((int)i);
-        const int k = pd.bank ? K_FILTER + (int)i : LAYER_LEVEL[i];
+        /* (the user, 2026-11-13: the Lead on the fourth) Drone, Sequence, Sequence 2, Lead */
+        static const uint8_t FAD_LAYER[CAP_FADERS] = {0, 1, 3, 2};
+        const int k = pd.bank ? K_FILTER + (int)i : LAYER_LEVEL[FAD_LAYER[i]];
         int lo, hi, v, d;
         char t[12];
         if (f < 0)
