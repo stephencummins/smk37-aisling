@@ -317,11 +317,14 @@ static void smk__frame(void)
 }
 
 /* one column per call, from the timer ISR: read the rows of the column latched last tick, latch the next.
+ * MEASURED on an Elite (2026-11-13, smk_diag.py): the guide's codes name a contact one column on from the word
+ * that drives it (its own scan counts a step ahead: "with a different order they shift by one column"). Every
+ * key, button and knob tried read one column down, column 0's at 15. So the rows are filed under the next column.
  * At column 0 the other LED group takes over: both commons off while its lines go out, then its own on. */
 static void fm1_input_tick(void)
 {
     uint32_t p = smk__col, n = p + 1u == SMK_NCOL ? 0u : p + 1u, div = fm1_led_dim_div, lit;
-    fm1_in.raw[p] = (uint8_t)smk__rows();
+    fm1_in.raw[n] = (uint8_t)smk__rows();          /* the guide's code is one column on (below) */
     if (n == 0u) {
         smk__grp ^= 1u;
         SMK_LED_COM = SMK_COM_OFF;

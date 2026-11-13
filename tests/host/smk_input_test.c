@@ -59,7 +59,8 @@ static int word_col(uint32_t w)              /* the column driven, -1: none */
 static void inputs(void)                     /* the row pins for the column driven: pulled up, low = closed */
 {
     static const uint8_t PIN_A[5] = {2, 5, 6, 7, 9}, PIN_H[3] = {6, 8, 9};
-    uint32_t r = col_now < 0 ? 0u : mat[col_now], i;
+    /* measured on an Elite: the word for column c drives the contacts the guide codes as column c + 1 */
+    uint32_t r = col_now < 0 ? 0u : mat[(col_now + 1) & 15], i;
     uint32_t a = (nlat & 1u) ? 0xFFFFFFFFu : 0u, h = (nlat & 1u) ? 0u : 0xFFFFFFFFu;  /* other bits: noise */
     for (i = 0; i < 5; i++)
         a = (r >> i) & 1u ? a & ~(1u << PIN_A[i]) : a | 1u << PIN_A[i];
