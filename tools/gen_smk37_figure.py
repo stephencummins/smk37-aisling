@@ -28,19 +28,21 @@ OUT = SRC / "docs" / "img"
 FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif"
 
 # a skin: the body, the trays, the edges; the words on the body (ink, muted, dim) and on a tray; a knob, its edge and
-# its mark; the wells (the wheels, a fader's slot); a button and its word; a fader's cap; the accent
+# its mark; a fader's slot; a button and its word; a fader's cap; the accent; a wheel; a pad unlit; the black keys,
+# those that sound and those that do not, and the words on them; the white keys that do not sound
 VARS = ("body", "tray", "edge", "ink", "muted", "dim", "trayink", "knob", "knobedge", "mark", "well", "btn", "btnink",
-        "cap", "accent")
+        "cap", "accent", "wheel", "pad", "kb", "kboff", "kbink", "kwoff")
 SKINS = {
     "black": ("Black", ("#1b1d21", "#26292f", "#3d4149", "#f1efe6", "#b4b1a4", "#8a8d94", "#f1efe6", "#0e0f11",
-                        "#565b65", "#f1efe6", "#0e0f11", "#33373f", "#f1efe6", "#33373f", "#3fce86")),
-    "grey": ("Grey and orange", ("#a3a5a8", "#8f9195", "#75777b", "#141517", "#2a2c2f", "#4b4d51", "#141517",
-                                 "#f27a1a", "#a84f08", "#1b1d21", "#55575b", "#2c2e32", "#f1efe6", "#f27a1a",
-                                 "#7a2c00")),
+                        "#565b65", "#f1efe6", "#0e0f11", "#33373f", "#f1efe6", "#33373f", "#3fce86", "#0e0f11",
+                        "#1b1d21", "#0e0f11", "#3a3d44", "#f1efe6", "#7d8087")),
+    "grey": ("Grey and orange", ("#8d9198", "#7c8087", "#676b72", "#111214", "#222427", "#3c3e42", "#111214",
+                                 "#ee6a1f", "#b34a0c", "#1b1d21", "#1b1d21", "#ee6a1f", "#1b1d21", "#ee6a1f",
+                                 "#5a1d00", "#ee6a1f", "#f1ede2", "#ee6a1f", "#c99a7c", "#1b1d21", "#c4c3be")),
     "white": ("White", ("#efebe1", "#dedacd", "#b9b5a8", "#1b1d21", "#4a4c50", "#74767a", "#1b1d21", "#1b1d21",
-                        "#565b65", "#f1efe6", "#cfcbbe", "#c9c5b8", "#1b1d21", "#f1efe6", "#0f7a49")),
+                        "#565b65", "#f1efe6", "#cfcbbe", "#c9c5b8", "#1b1d21", "#f1efe6", "#0f7a49", "#cfcbbe",
+                        "#efebe1", "#0e0f11", "#3a3d44", "#f1efe6", "#7d8087")),
 }
-KEY_W, KEY_W_OFF, KEY_B, KEY_B_OFF = "#f1efe6", "#7d8087", "#0e0f11", "#3a3d44"
 GROUPS = (("Rhythm", "#FF5A10"), ("Echo", "#00D2AA"), ("Space", "#A050FF"), ("Colour", "#FFBE00"))
 PADS = (("Stutter", "Half time", "Gate", "Roll", "Repeat", "Macalla", "Tape stop", "Reverse"),
         ("Reverb", "Shimmer", "Freeze", "Wash", "Flange", "Phaser", "Drive", "Crush"))
@@ -84,7 +86,7 @@ def wheels():
     s = []
     for i, name in enumerate(("PITCH", "MOD")):
         x = 44 + i * 64
-        s.append(f'<rect x="{x}" y="70" width="48" height="190" rx="12" class="well" stroke-width="2"/>')
+        s.append(f'<rect x="{x}" y="70" width="48" height="190" rx="12" class="wheel" stroke-width="2"/>')
         s += [f'<line x1="{x + 10}" y1="{y}" x2="{x + 38}" y2="{y}" class="tick" stroke-width="2"/>'
               for y in range(96, 250, 23)]
         s.append(text(x + 24, 284, name, "lbl small"))
@@ -115,7 +117,8 @@ def knobs_pads():
         for i in range(8):
             c = GROUPS[r * 2 + i // 4][1]
             x, y = x0 + i * pitch - 41, 172 + r * 76
-            s.append(f'<rect x="{x}" y="{y}" width="82" height="66" rx="9" fill="{c}" fill-opacity=".3" stroke="{c}" stroke-width="2.5"/>'
+            s.append(f'<rect x="{x}" y="{y}" width="82" height="66" rx="9" class="padbase"/>'
+                     f'<rect x="{x}" y="{y}" width="82" height="66" rx="9" fill="{c}" fill-opacity=".3" stroke="{c}" stroke-width="2.5"/>'
                      + text(x + 41, y + 39, PADS[r][i], "pad"))
     y = 362
     for g, (name, c) in enumerate(GROUPS):
@@ -159,7 +162,7 @@ def keybed():
     for i in range(n):
         on = FIRST <= i <= LAST
         x = x0 + i * pitch
-        s.append(f'<rect x="{x + 1.5:.1f}" y="{y0}" width="{pitch - 3:.1f}" height="{h}" rx="5" fill="{KEY_W if on else KEY_W_OFF}"/>')
+        s.append(f'<rect x="{x + 1.5:.1f}" y="{y0}" width="{pitch - 3:.1f}" height="{h}" rx="5" class="{("kwoff", "kw")[on]}"/>')
         note = WHITE[i % 7] + (str(3 + i // 7) if WHITE[i % 7] == "C" or i in (FIRST, LAST) else "")
         s.append(text(x + pitch / 2, y0 + h - 16, note, "key" if on else "key off"))
     k = 0
@@ -168,7 +171,7 @@ def keybed():
             continue
         on = FIRST <= i < LAST
         x, bw, bh = x0 + (i + 1) * pitch, 48, 186
-        s.append(f'<rect x="{x - bw / 2:.1f}" y="{y0}" width="{bw}" height="{bh}" rx="4" fill="{KEY_B if on else KEY_B_OFF}"/>')
+        s.append(f'<rect x="{x - bw / 2:.1f}" y="{y0}" width="{bw}" height="{bh}" rx="4" class="{("kboff", "kb")[on]}"/>')
         if on:
             s.append(f'<text transform="translate({x + 6:.1f} {y0 + bh - 14}) rotate(-90)" class="fx">{BLACK_FX[k]}</text>')
             k += 1
@@ -196,7 +199,8 @@ def style():
              ".what.small{font-size:14px}.what.green{fill:var(--accent)}.what.dim{fill:var(--dim)}"
              ".pad{font-weight:600;font-size:15px;fill:var(--ink)}"
              ".key{font-weight:600;font-size:17px;fill:#1b1d21}.key.off{fill:#2b2d32}"
-             ".fx{font-weight:600;font-size:15px;fill:#f1efe6}")
+             ".fx{font-weight:600;font-size:15px;fill:var(--kbink)}.wheel{fill:var(--wheel);stroke:var(--edge)}"
+             ".padbase{fill:var(--pad)}.kb{fill:var(--kb)}.kboff{fill:var(--kboff)}.kwoff{fill:var(--kwoff)}.kw{fill:#f1efe6}")
     scoped = "".join("svg.skp " + r + "}" for r in rules.split("}") if r)
     return f"<style>svg.skp{{{v(SKINS['black'][1])}}}{skins}{scoped}</style>"
 
