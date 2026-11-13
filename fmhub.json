@@ -4,6 +4,7 @@
   "kinds": ["synth"],
   "image": "docs/card.png",
   "color": "#1EA462",
+  "sounds": "own: the visualiser's demo recording is AISLING itself playing Skellig, rendered from its own code; the firmware uses no samples",
   "smk37": {
     "install": "https://aisling.stephen8n.com/smk37/docs/#s11",
     "guide": "https://github.com/stephencummins/smk37-aisling/blob/main/docs/SMK37.md"
