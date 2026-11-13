@@ -1843,7 +1843,7 @@ static void pads_input(void)
             say(knob_name(k), t);
         } else {
             itoa_u((uint32_t)proj.par[k], t);
-            say(LAYER_NAME[i], t);
+            say(LAYER_NAME[FAD_LAYER[i]], t);
         }
         ui.act_t = ui.turn_t = plat_ms();
     }
