@@ -248,7 +248,7 @@ its middle 27 keys are the FM-1's, its pads play the effects and its faders set 
   Elite, and the way back to M-VAVE's firmware proven: off, and on again.</li>
   <li class="done" data-state="done"><b class="lead">The pads and faders.</b> The pads play the sixteen effects, and
   the faders set the mix.</li>
-  <li data-state="next"><b class="lead">The last checks.</b> An hour's run, the battery's reading, the web installer
+  <li data-state="next"><b class="lead">The last checks.</b> An hour's run and the web installer
   on an Elite.</li>
   <li data-state="to do"><b class="lead">A download.</b> The package on this page.</li>
   <li data-state="to do"><b class="lead">Later.</b> The pitch wheel bends the Lead, the mod wheel opens the filters,
@@ -338,7 +338,8 @@ __TABLE__
   <li><b>A pad down, K5 to K8 turned:</b> a throw of Filter, Wet, Energy or Duck, which go back when the last pad is
   up.</li>
   <li><b>The 4 faders:</b> the mix, left to right: the Drone, the Sequence, Sequence 2 and the Lead. With FADER BANK
-  lit: Filter, Wet, Energy and Duck. A fader does nothing until it is moved.</li>
+  lit: Filter, Wet, Energy and Duck. A fader does nothing until it is moved. The mix is saved with the piece; Filter,
+  Wet, Energy and Duck are not.</li>
 </ul>
 <p><b>Not used yet:</b> the pitch and mod wheels, the pedal, KNOB BANK, the outer keys and
 Bluetooth.</p>

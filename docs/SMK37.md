@@ -122,7 +122,9 @@ The Elite's keys have no lights, so the FM-1's lit key for the note the Lead sou
 
 **The 4 faders** are the mix, left to right: the Drone, the Sequence, Sequence 2 and the Lead. FADER BANK (lit) makes
 them the master actions instead: Filter, Wet, Energy and Duck. A fader does nothing until it is moved, so a piece's own
-mix holds, and the screen names what it sets. The Atmosphere is on no fader: it is on the MIX page.
+mix holds, and the screen names what it sets. The Atmosphere is on no fader: it is on the MIX page. The mix is saved
+with the piece. Filter, Wet, Energy and Duck are not, on either bank or knob: they start in the middle each time the
+instrument is switched on.
 
 **Not used yet:** the pitch and mod wheels and the pedal (read, with no job), KNOB
 BANK, the outer keys (C3 to E3 and G♯5 to C6), TRS MIDI out and Bluetooth.
@@ -275,6 +277,9 @@ Settled, on one Elite on V016 (November 2026):
 - **The stock loader's USB name,** "ota-SMK-37 Elite_016": AISLING started it, and M-VAVE's package went back on.
 - **The flash chip's ID,** 856014. EB6014 was read on an SMK-37 Pro; both are on the list, and any other part runs
   from RAM and saves nothing until it has been read and added.
+- **Saving, and running on the battery.** A piece saved with BT held came back after a power-off, started from the
+  battery with no cable; the icon showed three bars and Setup 76.
+- **The pads' lights:** their order, their colours, bright while held, beating while latched.
 - **The protected ranges.** After two installs and a return to stock, the bootloader area, the velocity calibration
   and the key at 0xFF000 equalled the backup taken before the first.
 
@@ -282,7 +287,8 @@ Still open:
 
 - **The update record:** whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00), so
   that a cable pulled mid-update resumes. No update has been interrupted on purpose.
-- **The battery:** its reading on battery power, and the percentage's span (`BATT_PCT_LO`, a guess).
+- **The battery's percentage:** its span (`BATT_PCT_LO`) is a guess; it read 76 on a battery not known to be full or
+  part used.
 - **A long run:** an hour without a dropout. The analog scan missed 14 conversions once in about 11,700, and none
   since.
 - **The web installer** on an Elite, and the presets' restore (section 11).
