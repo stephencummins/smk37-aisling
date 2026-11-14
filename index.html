@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AISLING · Irish ambient for the SMK-37 Elite</title>
+<meta name="description" content="AISLING, the generative Irish ambient instrument for the M-VAVE FM-1, ported to the M-VAVE SMK-37 Elite: the same engine and pieces on a 37-key keyboard. It runs on an Elite; a download follows.">
+<meta property="og:title" content="AISLING · Irish ambient for the SMK-37 Elite">
+<meta property="og:description" content="The FM-1's AISLING, ported to the M-VAVE SMK-37 Elite. It runs on an Elite; a download follows.">
+<meta property="og:url" content="https://stephencummins.github.io/smk37-aisling/">
+<style>
+/* This site's own, on the FM-1 site's bench (web/brand/site.css) */
+.notice { border-left: 4px solid var(--brand-rust); background: var(--brand-strip); }
+.notice p { margin: 0 0 8px; }
+.notice p:last-child { margin-bottom: 0; }
+.notice strong { font: 600 16px/1.3 var(--brand-display); letter-spacing: .02em; color: var(--brand-rust); }
+.pane p { margin: 0 0 10px; }
+.pane p:last-child { margin-bottom: 0; }
+.pane p b, td b, td i { font-weight: 400; font-style: normal; color: var(--brand-green); }
+.bh { margin: 0 0 10px; }
+p.small { color: var(--brand-muted); font-size: 12.5px; }
+.what { display: flex; gap: 16px; align-items: flex-start; }
+.card { flex: none; width: 96px; height: 96px; image-rendering: pixelated; border: 1px solid var(--brand-rule); }
+.lede { margin: 0; font-size: 14.5px; }
+.shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-content: start; }
+.shots img { display: block; box-sizing: border-box; width: 100%; height: auto; image-rendering: pixelated; border: 1px solid var(--brand-rule); }
+.shots p { grid-column: 1 / -1; margin: 0; }
+.ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--brand-rule); }
+.ways a { display: block; padding: 12px 16px 14px; background: var(--brand-ground); color: var(--brand-ink); text-decoration: none; }
+.ways a:hover { background: var(--brand-strip); color: var(--brand-ink); }
+.ways a:focus-visible { outline-offset: -3px; }
+.ways strong { display: block; margin-bottom: 4px; font: 600 16px/1.3 var(--brand-display); letter-spacing: .02em; }
+.ways span { display: block; font-size: 12.5px; color: var(--brand-muted); }
+.ways a.go, .ways a.go span { background: var(--brand-green); color: var(--brand-ground); }
+.ways a.go:hover, .ways a.go:hover span { background: #0f5332; }
+.ways a.go:focus-visible { outline-color: var(--brand-ground); }
+ol.stages { list-style: none; padding: 0; margin: 0; counter-reset: stage; }
+ol.stages li { position: relative; padding: 0 0 10px 92px; counter-increment: stage; }
+ol.stages li:last-child { padding-bottom: 0; }
+ol.stages li::before { content: counter(stage) " · " attr(data-state); position: absolute; left: 0; top: 1px; width: 80px;
+                       font: 400 12px/1.5 var(--brand-mono); color: var(--brand-muted); }
+ol.stages li.done::before { color: var(--brand-green); }
+ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
+@media (max-width: 59.99rem) {
+  .two.hero { grid-template-columns: minmax(0, 1fr); }
+  .two.hero > * + * { border-left: 0; border-top: 1px solid var(--brand-rule); }
+}
+@media (max-width: 47.99rem) { .ways { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 26rem) {
+  .what { display: block; } .card { float: left; margin: 0 12px 4px 0; width: 72px; height: 72px; }
+  ol.stages li { padding-left: 0; } ol.stages li::before { position: static; display: block; width: auto; }
+}
+</style>
+<link rel="canonical" href="https://stephencummins.github.io/smk37-aisling/">
+<meta name="theme-color" content="#f3ead7">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/BarlowSemiCondensed-SemiBold.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/IBMPlexMono-Regular.woff2">
+<link rel="stylesheet" href="site.css">
+<script src="wall.js" defer></script>
+</head>
+<body>
+<div class="wall" data-art="home" aria-hidden="true"></div>
+<div class="sitebar"><div class="sitebar-in">
+<a class="sitebar-home" href="./" title="AISLING: the home page" aria-current="page"><img class="sitebar-mark" src="mark.png" width="30" height="30" alt=""><span class="sitebar-name">AISLING</span><span class="sitebar-by">by CU_STE</span></a>
+<nav class="sitebar-nav" aria-label="AISLING's pages"><a href="controls/" title="The Elite's buttons, knobs and keys, and the FM-1 job each does">controls</a><a href="docs/" title="How the port works: the flash, the pins, building, testing, and what's still open">docs</a><a href="https://aisling.stephen8n.com/" title="AISLING on the FM-1: install it, the manual, the emulator, the visualiser">fm-1 version</a><a href="https://github.com/stephencummins/smk37-aisling" title="The code, on GitHub: one tree for the FM-1 and the Elite">source</a><a href="https://www.stephen8n.com" title="Stephen Cummins's other things">stephen8n</a></nav>
+</div></div>
+<main class="bench">
+<div class="strip">
+<h1 class="lab"><b>aisling</b> · Irish ambient for the M-VAVE SMK-37 Elite</h1>
+<p class="lab">by CU_STE · <a href="https://www.stephen8n.com">www.stephen8n.com</a></p>
+</div>
+<div class="pane notice" role="note">
+<p><strong>1.3.1, released.</strong> In November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
+off again with M-VAVE's own firmware, and installed again. The package is in its
+<a href="https://github.com/stephencummins/smk37-aisling/releases/latest">release</a>; it installs from a computer for now, as the
+<a href="docs/#s11">docs</a> say, and they say what was checked and what is still open.</p>
+<p>It is for the <b>SMK-37 Elite</b> only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
+</div>
+<div class="two hero">
+<div class="pane what">
+<img class="card" src="img/card-smk37.png" width="240" height="240" alt="A gold 8-bit harp on green, with 37 beside it">
+<p class="lede"><a href="https://aisling.stephen8n.com/">AISLING</a> is a generative instrument for the M-VAVE FM-1, after the harpers and
+the west of Ireland: a harp's ostinato over a held drone, a second harp drifting against it, a flute far back in the
+reverb, with surf, wind or rain behind. The SMK-37 Elite has the FM-1's chip, so it can run the same code: the same
+engine, the same eight pieces, saved the same way, on a 37-key keyboard. Its buttons and knobs take the FM-1's jobs,
+its middle 27 keys are the FM-1's, its pads play the effects and its faders set the mix.</p>
+</div>
+<div class="pane shots">
+  <img src="img/screen-launch.png" width="240" height="240" alt="The launch screen: a green triskele, AISLING, by CU_STE, www.stephen8n.com">
+  <img src="img/screen-main.png" width="240" height="240" alt="The main screen: the chord's name among orbiting dots, the five layers' meters, the two harps' lanes">
+  <img src="img/screen-perform.png" width="240" height="240" alt="PERFORM: Filter, Wet, Energy and Sweep on the knobs">
+  <p class="small">The Elite's screens, from its simulator: the same, pixel for pixel, as the FM-1's.</p>
+</div>
+</div>
+<nav class="ways" aria-label="AISLING on the Elite">
+  <a class="go" href="controls/"><strong>The controls</strong><span>Which of the Elite's buttons, knobs and keys does each of the FM-1's jobs, its pads and faders, and what it doesn't use yet.</span></a>
+  <a href="docs/"><strong>The docs</strong><span>How the port works: the Elite's flash and pins, building and testing it, installing and going back, and what is still open.</span></a>
+  <a href="https://aisling.stephen8n.com/emu/"><strong>Try it in the browser</strong><span>The FM-1 version's emulator: the same code, on the FM-1's panel, with sound. No Elite needed.</span></a>
+  <a href="https://github.com/stephencummins/smk37-aisling"><strong>Source</strong><span>GitHub, GPL-3.0: one tree that builds AISLING for the FM-1 and for the Elite.</span></a>
+</nav>
+<section class="pane" aria-labelledby="stagesh">
+<h2 class="bh" id="stagesh">Where it stands</h2>
+<ol class="stages">
+  <li class="done" data-state="done"><b class="lead">On a computer.</b> AISLING builds for the Elite from the FM-1's
+  tree, and the FM-1's own build is unchanged to the byte. The Elite's simulator plays all 34 of the FM-1's test
+  scenarios with byte-identical results, and its own: MASTER on a knob, the 37 keys, the battery. The installer and the
+  rescue tool know the Elite's package, and never write the parts of its memory that are the Elite's own.</li>
+  <li class="done" data-state="done"><b class="lead">A backup.</b> A whole copy of an Elite's memory, read twice and
+  compared, before anything was written to it.</li>
+  <li class="done" data-state="done"><b class="lead">The first install.</b> Every button, knob and key checked on the
+  Elite, and the way back to M-VAVE's firmware proven: off, and on again.</li>
+  <li class="done" data-state="done"><b class="lead">The pads and faders.</b> The pads play the sixteen effects, and
+  the faders set the mix.</li>
+  <li class="done" data-state="done"><b class="lead">An hour's run.</b> An hour playing on an Elite with no
+  dropouts.</li>
+  <li class="done" data-state="done"><b class="lead">A release.</b> 1.3.1's package on GitHub, installed from a
+  computer.</li>
+  <li data-state="next"><b class="lead">The web installer.</b> AISLING put on an Elite from Chrome or Edge, as on the
+  FM-1.</li>
+  <li data-state="to do"><b class="lead">Later.</b> The pitch wheel bends the Lead, the mod wheel opens the filters,
+  the outer white keys extend the Lead's scale.</li>
+</ol>
+</section>
+<div class="pane">
+<p class="small">AISLING is by CU_STE (<a href="https://www.stephen8n.com">www.stephen8n.com</a>). Its board layer
+for the Elite follows M. Geisler's (genkigenki) SMK-37 ports, on the <code>smk37</code> branches of
+<a href="https://github.com/genkigenki/fm1-amb/tree/smk37">fm1-amb</a> and
+<a href="https://github.com/genkigenki/fm1-fomni/tree/smk37">fm1-fomni</a>, written again for AISLING; the hardware's
+facts are from M. Geisler's guide, <a href="https://github.com/genkigenki/fm1-to-smk37">FM-1 to SMK-37 Pro</a>
+(CC BY-NC 4.0), cited, not copied. AISLING itself is a fork of
+<a href="https://github.com/FartyPants/fm1-nachtfahrt">NACHTFAHRT</a> by FartyPants, based on
+<a href="https://github.com/sbegueria/fm1-dub">DUB-1</a> by sbegueria, itself based on
+<a href="https://github.com/charlesvestal/fm1-amb">AMB-1</a> by Charles Vestal; the platform is Felucca by Leo Kuroshita
+(Hügelton Instruments). GPL-3.0; <a href="https://github.com/stephencummins/smk37-aisling/blob/main/LICENSING.md">LICENSING.md</a> has the rest.
+M-VAVE, FM-1 and SMK-37 are trademarks of their owners. AISLING is not affiliated with M-VAVE, Hügelton Instruments or
+the authors of the ports it follows. Its faces are Barlow Semi Condensed and IBM Plex Mono (SIL OFL 1.1).</p>
+</div>
+</main>
+</body>
+</html>

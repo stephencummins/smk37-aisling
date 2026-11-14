@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AISLING on the SMK-37 Elite · the docs</title>
+<meta name="description" content="How AISLING runs on the M-VAVE SMK-37 Elite: the controls, the flash, the pins, building, testing, installing and going back, and what is still open.">
+<style>
+/* The manual's own, on the site's bench (web/brand/site.css): the contents down the side, the text beside them */
+html { scroll-padding-top: 4rem; }
+.prose { font-size: 14px; line-height: 1.65; }
+.prose > :first-child { margin-top: 0; }
+.prose h2, .prose h3 { font-family: var(--brand-display); font-weight: 600; text-wrap: balance; line-height: 1.25; color: var(--brand-ink); }
+.prose h2 { font-size: 19px; letter-spacing: .02em; margin: 2.4rem 0 .7rem; padding-top: .8rem; border-top: 1px solid var(--brand-rule); }
+.prose h2 .num { color: var(--brand-green); margin-right: .25em; font-variant-numeric: tabular-nums; }
+.prose h3 { font-size: 16px; letter-spacing: .01em; margin: 1.7rem 0 .4rem; }
+.prose p, .prose li { max-width: 78ch; }
+.prose p { margin: 0 0 .9rem; }
+.prose ul, .prose ol { padding-left: 1.3rem; margin: 0 0 .9rem; }
+.prose li { margin: .55rem 0; }
+.prose li::marker { color: var(--brand-green); }
+.skip { position: absolute; left: 16px; top: -100px; background: var(--brand-ground); border: 1px solid var(--brand-ink); padding: 6px 12px; z-index: 30; }
+.skip:focus { top: 8px; }
+.prose code, .prose pre { font-family: inherit; font-size: .93em; }
+.prose code { background: var(--brand-strip); padding: .05em .3em; border: 1px solid var(--brand-rule); }
+.prose pre { background: var(--brand-strip); border: 1px solid var(--brand-rule); padding: 12px 14px; overflow-x: auto; line-height: 1.45; margin: 0 0 1.1rem; }
+.prose pre code { background: none; padding: 0; border: 0; font-size: inherit; }
+.prose pre:focus-visible, .prose summary:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 2px; }
+.prose hr { display: none; }
+.table { overflow-x: auto; margin: 0 0 1.2rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: .4rem .7rem .4rem 0; border-bottom: 1px solid var(--brand-rule); }
+.prose th { font-weight: 400; font-size: 12.5px; color: var(--brand-muted); border-bottom-color: var(--brand-muted); }
+.prose td:first-child { white-space: nowrap; }
+.prose .lede { font-size: 14.5px; margin-bottom: 1.2rem; }
+.status, .callout { background: var(--brand-strip); border: 1px solid var(--brand-rule); padding: 10px 14px; margin: 0 0 1.1rem; max-width: 78ch; }
+.callout { border-left: 3px solid var(--brand-green); }
+.status p, .callout p { margin: 0; }
+.prose details { border: 1px solid var(--brand-rule); background: var(--brand-strip); padding: 0 14px; margin: 0 0 1.1rem; }
+.prose details > summary { cursor: pointer; padding: 9px 0; }
+.prose details[open] > summary { margin-bottom: .4rem; }
+.prose details > :last-child { margin-bottom: 1rem; }
+.swatch { display: inline-block; width: .7em; height: .7em; margin-right: .4em; vertical-align: .02em; box-shadow: 0 0 0 1px var(--brand-ink); }
+.figs { display: flex; flex-wrap: wrap; gap: 16px; margin: .4rem 0 1.4rem; }
+.prose figure { margin: 0; flex: 0 1 auto; }
+.prose figure img { display: block; max-width: 100%; height: auto; }
+.prose figure.shot img { width: 300px; image-rendering: pixelated; border: 1px solid var(--brand-rule); }
+.prose figure.wide { flex-basis: 100%; }
+.prose figure.wide img { width: 100%; }
+.prose figcaption { color: var(--brand-muted); font-size: 12.5px; margin-top: .35rem; max-width: 300px; }
+.prose figure.wide figcaption { max-width: none; }
+/* the contents: down the side, staying in sight as the text goes by; first on a phone */
+nav.contents { padding: 14px 16px 16px; font-size: 12.5px; line-height: 1.45; }
+nav.contents ol { list-style: none; margin: 0; padding: 0; }
+nav.contents li { margin: 0; }
+nav.contents a { display: block; padding: 3px 0; color: var(--brand-ink); text-decoration: none; }
+nav.contents a:hover { color: var(--brand-green); text-decoration: underline; }
+@media (min-width: 48rem) { nav.contents { position: sticky; top: 3.5rem; max-height: calc(100vh - 4rem); overflow-y: auto; box-sizing: border-box; } }
+@media (max-width: 47.99rem) { nav.contents ol { columns: 2 12rem; column-gap: 1.2rem; } nav.contents li { break-inside: avoid; } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+/* this page's own: on a phone, a test's or a file's name may break, so its table fits */
+@media (max-width: 47.99rem) { .prose td:first-child, .prose td:first-child code { white-space: normal; } }
+</style>
+<link rel="canonical" href="https://stephencummins.github.io/smk37-aisling/docs/">
+<meta name="theme-color" content="#f3ead7">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../fonts/BarlowSemiCondensed-SemiBold.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../fonts/IBMPlexMono-Regular.woff2">
+<link rel="stylesheet" href="../site.css">
+<script src="../wall.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<div class="wall" data-art="docs" aria-hidden="true"></div>
+<div class="sitebar"><div class="sitebar-in">
+<a class="sitebar-home" href="../" title="AISLING: the home page"><img class="sitebar-mark" src="../mark.png" width="30" height="30" alt=""><span class="sitebar-name">AISLING</span><span class="sitebar-by">by CU_STE</span></a>
+<nav class="sitebar-nav" aria-label="AISLING's pages"><a href="../controls/" title="The Elite's buttons, knobs and keys, and the FM-1 job each does">controls</a><a href="../docs/" title="How the port works: the flash, the pins, building, testing, and what's still open" aria-current="page">docs</a><a href="https://aisling.stephen8n.com/" title="AISLING on the FM-1: install it, the manual, the emulator, the visualiser">fm-1 version</a><a href="https://github.com/stephencummins/smk37-aisling" title="The code, on GitHub: one tree for the FM-1 and the Elite">source</a><a href="https://www.stephen8n.com" title="Stephen Cummins's other things">stephen8n</a></nav>
+</div></div>
+<main id="content" class="bench">
+<div class="strip">
+<h1 class="lab"><b>docs</b> · AISLING on the M-VAVE SMK-37 Elite</h1>
+<a class="btn" href="../controls/">the controls</a>
+</div>
+<div class="cols">
+<aside class="side">
+<nav class="contents" aria-label="Contents"><h2 class="bh" id="contents">Contents</h2>
+<ol><li><a href="#s1">What differs from the FM-1</a></li><li><a href="#s2">The controls</a></li><li><a href="#s3">Volume</a></li><li><a href="#s4">The keys</a></li><li><a href="#s5">The pads and the faders</a></li><li><a href="#s6">The flash</a></li><li><a href="#s7">The pins</a></li><li><a href="#s8">Building</a></li><li><a href="#s9">Testing</a></li><li><a href="#s10">The simulator</a></li><li><a href="#s11">Installing, and going back</a></li><li><a href="#s12">Settled on an Elite, and still open</a></li><li><a href="#s13">The files</a></li><li><a href="#s14">Credits</a></li></ol>
+</nav>
+</aside>
+<article class="pane prose">
+<div class="status"><p><strong>Status.</strong> AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over M-VAVE's V016 firmware, played, taken off again with M-VAVE's own package, and installed again: the keys, buttons, knobs, pads, faders, lights, screen and sound were each checked by hand. Section 12 says what was checked and what is still open. It is one unit's evidence, so take the backup in section 11 before a first install.</p></div>
+<p>The Elite has the FM-1's chip and its audio path, so AISLING's whole app runs on it as it is: the same engine, the same eight pieces, the same pages and screen, saved the same way. What differs is the panel: 37 keys, more buttons, knobs that turn without end, pads, faders and wheels. One switch, <code>AISLING_BOARD_SMK37</code>, puts a board layer for the Elite under the FM-1's interfaces. Without it the same tree builds the FM-1's firmware exactly as before, to the byte.</p>
+<p>It is for the <strong>SMK-37 Elite</strong> only, its layout read from M-VAVE's V016 firmware for it: not the SMK-37 Pro, and not the MKE-P37.</p>
+<p>The site for the Elite is <a href="https://aisling.stephen8n.com/smk37/">aisling.stephen8n.com/smk37</a>, with the <a href="https://aisling.stephen8n.com/smk37/controls/">controls</a> on a page of their own. The package is in the <a href="https://github.com/stephencummins/smk37-aisling/releases/latest">releases</a>. Everything AISLING does is in the FM-1 version's <a href="https://aisling.stephen8n.com/manual/">manual</a>.</p>
+<hr>
+<h2 id="s1"><span class="num">1</span> What differs from the FM-1</h2>
+<div class="table"><table><thead><tr><th></th><th>FM-1</th><th>SMK-37 Elite</th></tr></thead><tbody><tr><td>Keys</td><td>27, lit</td><td>37, unlit; AISLING plays the middle 27, F3 to G5</td></tr><tr><td>MASTER</td><td>a pot</td><td>K1, a knob that turns without end: half volume at each power-on</td></tr><tr><td>Knobs</td><td>7 more</td><td>K2 to K8, the same 7 jobs</td></tr><tr><td>Buttons</td><td>14</td><td>14 doing the FM-1's jobs; FADER BANK, &lt; and &gt; work the pads and faders; KNOB BANK does nothing yet</td></tr><tr><td>Pads</td><td>none</td><td>16: an effect each while held (section 5)</td></tr><tr><td>Faders</td><td>none</td><td>4: the mix, or with FADER BANK the master actions</td></tr><tr><td>Wheels</td><td>none</td><td>pitch and mod, read but not used yet</td></tr><tr><td>MIDI in</td><td>USB and the TRS jack</td><td>USB only</td></tr><tr><td>Screen</td><td>240×240</td><td>the same picture, wired differently; the backlight always on</td></tr><tr><td>Calibration</td><td>the panel's</td><td>none: the Elite's buttons have fixed codes</td></tr><tr><td>Identity</td><td><code>FM-1_353XXYYZZ</code></td><td><code>SMK-37 Elite_353XYZ</code></td></tr></tbody></table></div>
+<h2 id="s2"><span class="num">2</span> The controls</h2>
+<p>Each of the Elite's buttons does the job of an FM-1 button. The manual, the cheat sheet and the screen use the FM-1's names; this is what they mean on the Elite:</p>
+<div class="table"><table><thead><tr><th>Elite</th><th>FM-1</th></tr></thead><tbody><tr><td>PATCH</td><td>HOME</td></tr><tr><td>SCALE</td><td>SEL</td></tr><tr><td>CHORD</td><td>ENV</td></tr><tr><td>NOTE REPEAT</td><td>LFO</td></tr><tr><td>PARA</td><td>EDIT</td></tr><tr><td>GLOBE</td><td>GLO</td></tr><tr><td>BT</td><td>SAVE</td></tr><tr><td>SEQ PLAY</td><td>PLAY</td></tr><tr><td>SEQ REC</td><td>REC</td></tr><tr><td>ARP, FX, SEQ</td><td>ARP, FX, SEQ</td></tr><tr><td>OCTAVE− and OCTAVE+</td><td>OCT− and OCT+</td></tr><tr><td>FADER BANK, &lt;, &gt;</td><td>the pads and faders (section 5)</td></tr><tr><td>KNOB BANK</td><td>nothing yet</td></tr><tr><td>K1</td><td>MASTER</td></tr><tr><td>K2, K3, K4</td><td>SELECT, ALGORITHM, PRESETS</td></tr><tr><td>K5 to K8</td><td>K1 to K4</td></tr></tbody></table></div>
+<p>Two buttons held together work as on the FM-1, by their Elite names: OCTAVE− with OCTAVE+ for five seconds, for instance, is the update mode. PARA has no light: the FM-1's EDIT has none either. The screen's hints still name the FM-1's buttons: TAP REC on the effects page means SEQ REC.</p>
+<p>The site's <a href="https://stephencummins.github.io/smk37-aisling/controls/">controls page</a> has what each one does.</p>
+<h2 id="s3"><span class="num">3</span> Volume</h2>
+<p>The FM-1's MASTER is a pot, which stays where it was left. The Elite's K1 turns without end, so AISLING keeps the level itself. At each power-on it is half (−6 dB). One click of the knob moves it a step, and 43 clicks take it from silence to full. The steps follow the same curve as the FM-1's pot, so the quiet end has room. The level isn't saved.</p>
+<h2 id="s4"><span class="num">4</span> The keys</h2>
+<p>The Elite's 37 keys run from C3 to C6. AISLING plays the middle 27, F3 to G5, which are the FM-1's 27: the white keys give the Lead, and the black keys do what the FM-1's do. The five below them (C3 to E3) and the five above (G♯5 to C6) are silent for now.</p>
+<p>A key sounds near the bottom of its travel and stops when it is nearly back up. AISLING doesn't use velocity, as on the FM-1. The Elite's keys have no lights, so the FM-1's lit key for the note the Lead sounds has no place to show.</p>
+<h2 id="s5"><span class="num">5</span> The pads and the faders</h2>
+<p><strong class="lead">The 16 pads</strong> are PERFORM's sixteen effects, on any page, each on while its pad is down, and several together:</p>
+<div class="table"><table><thead><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr></thead><tbody><tr><td>Top row</td><td>Stutter</td><td>Half time</td><td>Gate</td><td>Roll</td><td>Repeat</td><td>Macalla</td><td>Tape stop</td><td>Reverse</td></tr><tr><td>Bottom row</td><td>Reverb</td><td>Shimmer</td><td>Freeze</td><td>Wash</td><td>Flange</td><td>Phaser</td><td>Drive</td><td>Crush</td></tr></tbody></table></div>
+<ul><li><strong class="lead">Latch:</strong> hold &gt; and hit a pad, and its effect stays on; the same again lets it go. &gt; is lit while any is latched.</li><li><strong class="lead">Let go of everything:</strong> tap &lt;. It also learns the pads' resting levels again, which frees one that has stuck.</li><li><strong class="lead">A throw:</strong> with a pad down, turn K5, K6, K7 or K8 for Filter, Wet, Energy or Duck. They go back to where they were when the last pad is up.</li></ul>
+<ul><li><strong class="lead">Their lights:</strong> each pad glows in its group's colour, orange for the rhythm effects (Stutter to Roll), sea green for the echoes (Repeat to Reverse), heather for the space (Reverb to Wash) and yellow for the colour (Flange to Crush). A pad is bright while it is held and beats while it is latched. They are dark while the instrument sleeps.</li></ul>
+<p><strong class="lead">The 4 faders</strong> are the mix, left to right: the Drone, the Sequence, Sequence 2 and the Lead. FADER BANK (lit) makes them the master actions instead: Filter, Wet, Energy and Duck. A fader does nothing until it is moved, so a piece's own mix holds, and the screen names what it sets. The Atmosphere is on no fader: it is on the MIX page. The mix is saved with the piece. Filter, Wet, Energy and Duck are not, on either bank or knob: they start in the middle each time the instrument is switched on.</p>
+<p><strong class="lead">Not used yet:</strong> the pitch and mod wheels and the pedal (read, with no job), KNOB BANK, the outer keys (C3 to E3 and G♯5 to C6), TRS MIDI out and Bluetooth.</p>
+<h2 id="s6"><span class="num">6</span> The flash</h2>
+<p>The Elite's flash holds 1 MiB. Its regions are M-VAVE's own, read from M-VAVE's SMK-37 Elite V016 update package. AISLING writes three parts of it and never writes the rest:</p>
+<div class="table"><table><thead><tr><th>Range</th><th>What it holds</th><th>AISLING</th></tr></thead><tbody><tr><td>0x00000–0x03FFF</td><td>the head: the first-stage loader, its settings, the chip's key</td><td>never written</td></tr><tr><td>0x04000–0x9CFFF</td><td>the app</td><td>the app</td></tr><tr><td>0x9D000–0xBFFFF</td><td>the stock firmware's settings</td><td>an update's staging, in the top five sectors (0xBB000–0xBFFFF)</td></tr><tr><td>0xC0000–0xC0FFF</td><td>Bluetooth pairings</td><td>never written</td></tr><tr><td>0xC1000–0xC1FFF</td><td>the keys' velocity calibration, made for each unit</td><td>never written</td></tr><tr><td>0xC2000–0xEAFFF</td><td>the stock presets</td><td>AISLING's saved pieces and panel, 0xC2000–0xC5FFF</td></tr><tr><td>0xEB000–0xF3FFF</td><td>(not in the package)</td><td>not written</td></tr><tr><td>0xF4000–0xFDFFF</td><td>the stock firmware's resources</td><td>never written</td></tr><tr><td>0xFE000–0xFFFFF</td><td>(not in the package), and the key and address at 0xFF000</td><td>never written</td></tr></tbody></table></div>
+<p>The velocity calibration matters most: it was made for each Elite in the factory, and without a backup of that unit it can't be put back. AISLING's saved pieces sit over the start of the stock presets, so a full backup taken before the first install is what restores those: <code>tools/fm1_rescue.py --write --presets BACKUP.bin</code> (section 11).</p>
+<p>The map is in <code>firmware/hal/smk37/smk_flash_map.h</code>. Its <code>_Static_assert</code>s keep every window the firmware writes off the protected ranges; at run time the flash driver refuses a write that would touch one; and <code>tests/smk_flash_test.c</code> checks the saved pieces, the update and the update loader against each range, byte by byte. The FM-1's own map would cross three of those ranges on an Elite, which is why the Elite has its own.</p>
+<h2 id="s7"><span class="num">7</span> The pins</h2>
+<p>The Elite wires the same chip's pins to other things: PH8, the FM-1's TRS MIDI in, is a row of the Elite's button matrix, for instance, so the Elite has no MIDI in on its jack. The FM-1's drivers would set pins up wrongly here, so:</p>
+<ul><li>The Elite build never touches PB1 (the charger's status line: held low for eight seconds, it resets the chip), PC7 (TRS MIDI out). PA8, PC9 and PA10, the pads', faders' and wheels' three analog lines, are inputs only.</li><li>The pads' lights are sixteen colour LEDs on one data line, PC10, fed from the screen's SPI port switched to its other set of pins for the 0.8 ms a frame takes, between the screen's own transfers. That set's clock pin is PC9, the bottom row of pads' analog line; it stays an input, so the clock never reaches it.</li><li>Every pin it does set up is in one table, <code>firmware/hal/smk37/smk_pins.h</code>. Each driver sets up its own rows from it, inputs first, and an output's level before its direction.</li><li>The build fails if any of the FM-1's hardware headers (<code>fm1_input.h</code>, <code>fm1_adc.h</code>, <code>fm1_lcd_hw.h</code>, <code>fm1_uart.h</code>) is among the includes of any part of the Elite's firmware, by any path.</li></ul>
+<h2 id="s8"><span class="num">8</span> Building</h2>
+<p>The toolchain and the SDK are the FM-1's (<a href="https://github.com/stephencummins/smk37-aisling/blob/main/BUILDING.md">BUILDING.md</a>). Then:</p>
+<pre tabindex="0" aria-label="Command"><code>./build.sh --board smk37                    # build/smk37/amb.fwsc
+./build.sh --board smk37 --release 1.0      # build/smk37/aisling-smk37-elite-1.0.fwsc</code></pre>
+<p>The default board is the FM-1: <code>./build.sh</code> makes the same bytes it always has, in <code>build/</code>. The Elite's build goes into <code>build/smk37/</code> with the same file names (<code>amb.bin</code>, <code>loader/ota.bin</code>, the package), and its own checks: the app must fit the Elite's app area (0x4000–0x9CFFF), leave at least 2 KiB of RAM and 8 KiB of the pool spare, and pass the pin guard. A release's identity is <code>SMK-37 Elite_353</code> and the version's three numbers, one digit each (1.3.2 is <code>SMK-37 Elite_353132</code>): a package's identity holds 20 characters, the 20 marker blocks M-VAVE's own Elite package has. (1.3.1's, <code>SMK-37 Elite_353010301</code> in 36 blocks, was cut short by tools that read 20.)</p>
+<p><code>tools/mini_build.sh --board smk37</code> does the same on another Mac over ssh and fetches the package back.</p>
+<p>After a change to shared code, build the FM-1 too and check that <code>build/amb.bin</code>, <code>build/loader/ota.bin</code> and its package are unchanged.</p>
+<h2 id="s9"><span class="num">9</span> Testing</h2>
+<p><code>tests/run_tests.sh</code> runs the Elite's tests with the FM-1's. Each control must fail:</p>
+<div class="table"><table><thead><tr><th>Test</th><th>What it checks</th></tr></thead><tbody><tr><td><code>usb-desc-smk</code></td><td>the Elite's USB names</td></tr><tr><td><code>smk-flash</code></td><td>the flash map's guards; the control builds it with the FM-1's map</td></tr><tr><td><code>smk-input</code></td><td>the key and button matrix, simulated: every key, button and knob by its code; the control swaps OCTAVE− and OCTAVE+</td></tr><tr><td><code>smk-hw</code></td><td>the screen's and the battery's setup, on fake registers</td></tr><tr><td><code>smk-pins</code></td><td>every driver's pin setup, from four starting states; the control rotates the ports</td></tr><tr><td><code>pin-guard</code></td><td>that the build's guard catches an FM-1 header by any path</td></tr><tr><td><code>package</code></td><td>the Elite's package format, against M-VAVE's own</td></tr><tr><td><code>installer</code></td><td>that the installers refuse one model's package on the other</td></tr><tr><td><code>ota-entry-smk37</code></td><td>the update's way in, with an Elite package (needs a <code>build/smk37</code> package)</td></tr><tr><td><code>update-loader-smk37</code></td><td>the update loader, staging and record on the Elite's map (also needs the SDK)</td></tr><tr><td><code>smk37-&lt;scenario&gt;</code></td><td>all 34 of the FM-1's simulator scenarios, renamed to the Elite's controls, must give the FM-1's screens and sound byte for byte</td></tr><tr><td><code>smk37-own-*</code></td><td>the Elite's own scenarios (<code>tests/scenarios_smk37/</code>): MASTER on K1, the outer keys, the four more buttons, the pads and faders, the battery</td></tr><tr><td><code>smk37-control</code></td><td>an FM-1 script, and a script that sets MASTER, must be refused by the Elite's simulator</td></tr></tbody></table></div>
+<h2 id="s10"><span class="num">10</span> The simulator</h2>
+<p><code>sh host/build_host.sh</code> builds <code>build/host/amb_host_smk37</code> beside the FM-1's <code>amb_host</code>. It runs the same scripts (the command list is at the top of <code>host/amb_host.c</code>), with the Elite's controls by their printed names, underscores for spaces:</p>
+<ul><li><strong class="lead">Buttons:</strong> FX, SCALE, CHORD, NOTE_REPEAT, PARA, GLOBE, PATCH, BT, ARP, SEQ, SEQ_PLAY, SEQ_REC, OCT- and OCT+, and KNOB_BANK (nothing yet), FADER_BANK, &lt; and &gt;.</li><li><strong class="lead">Pads and faders:</strong> <code>pad N down</code>, <code>pad N up</code>, <code>tappad N</code> (0 to 7 the top row, 8 to 15 the bottom); <code>fader N V</code> (0 to 3, V 0 to 1023).</li><li><strong class="lead">Knobs:</strong> K1 to K8. K1 is MASTER, turned like the others (<code>turn</code>, <code>spin</code>), so <code>master N</code> is refused.</li><li><strong class="lead">Keys:</strong> 0 to 36 (C3 to C6), or w0 to w21 for the white keys and b0 to b14 for the black.</li><li><strong class="lead">The battery:</strong> <code>battery N</code> sets its reading.</li></ul>
+<p><code>tests/smk37_scenario.py</code> renames an FM-1 script for it:</p>
+<pre tabindex="0" aria-label="Command"><code>sh host/build_host.sh
+python3 tests/smk37_scenario.py tests/scenarios/pages.amb &gt; build/pages_smk37.amb
+build/host/amb_host_smk37 build/pages_smk37.amb build/pages_smk37</code></pre>
+<h2 id="s11"><span class="num">11</span> Installing, and going back</h2>
+<p>Done on one Elite with <code>tools/fm1_install.py</code>, in both directions; the web installer (<code>web/fm1ota.js</code>) uses the same protocol but has not yet been tried on an Elite.</p>
+<p><strong class="lead">First, a backup of the whole flash.</strong> It holds that unit's velocity calibration and its stock presets, and nothing else can bring those back:</p>
+<pre tabindex="0" aria-label="Command"><code>python3 tools/fm1_install.py build/smk37/aisling-smk37-elite-1.3.1-dryloader.fwsc --uboot --port "SMK-37 Elite"
+sudo python3 tools/fm1_rescue.py --location LOCATION "SMK-37 Elite_016.fwsc"</code></pre>
+<p>The first starts a loader that writes nothing and leaves the chip in its own update mode; the second, with no <code>--write</code>, reads the flash to a file. Switch the Elite off and on afterwards. Keep the file private: it is that unit's.</p>
+<p><strong class="lead">Installing:</strong> <code>python3 tools/fm1_install.py aisling-smk37-elite-1.3.1.fwsc --port "SMK-37 Elite"</code>. On M-VAVE's firmware the Elite has three MIDI ports and the installer uses the one ending "-Private"; under AISLING it has one, "DUB-1 SMK-37 Elite". The installers refuse a package made for the other model.</p>
+<p><strong class="lead">Going back:</strong> the same command with M-VAVE's own <code>SMK-37 Elite_016.fwsc</code>. The Elite then runs V016 again, makes its sounds, and its controls work. Its first presets hold AISLING's saved pieces, though: a fader showed a stale value until it was moved. <code>tools/fm1_rescue.py --write --presets BACKUP.bin</code> puts the four preset sectors AISLING uses (0xC2000–0xC5FFF) back from the unit's own backup; it checks the flash chip's ID and that the backup's bootloader area and velocity calibration equal the flash's, and writes only the app area and those sectors. That route has not been needed yet, so it is untried on an Elite.</p>
+<p>M-VAVE's own SMK37 OPEN firmware changes three sectors AISLING never writes (the Bluetooth record at 0xC0000, the end of the resources at 0xFD000, and 0xFE000). AISLING installed and ran over V016 afterwards all the same.</p>
+<div class="callout"><p>Installing AISLING on your Elite is at your own risk. It has run on one unit.</p></div>
+<h2 id="s12"><span class="num">12</span> Settled on an Elite, and still open</h2>
+<p>Settled, on one Elite on V016 (November 2026):</p>
+<ul><li><strong class="lead">The matrix.</strong> The shift registers' bit order is the guide's. The rows read belong to the column after the one the guide gives, so <code>fm1_input_tick</code> files them there (<code>smk_input.h</code>); with the guide's column every button and knob read as its neighbour.</li><li><strong class="lead">The knobs</strong> turn the right way, all eight, and K1 is the volume.</li><li><strong class="lead">The buttons and their lights</strong>, each by its name. The keys: F3 to G5 sound.</li><li><strong class="lead">The pads and faders:</strong> the pads' order and effects, latch, &lt; and a throw; the faders left to right, at rest 0 and at the top 1023.</li><li><strong class="lead">The stock loader's USB name,</strong> "ota-SMK-37 Elite_016": AISLING started it, and M-VAVE's package went back on.</li><li><strong class="lead">The flash chip's ID,</strong> 856014. EB6014 was read on an SMK-37 Pro; both are on the list, and any other part runs from RAM and saves nothing until it has been read and added.</li><li><strong class="lead">Saving, and running on the battery.</strong> A piece saved with BT held came back after a power-off, started from the battery with no cable; the icon showed three bars and Setup 76.</li><li><strong class="lead">The pads' lights:</strong> their order, their colours, bright while held, beating while latched.</li><li><strong class="lead">The protected ranges.</strong> After two installs and a return to stock, the bootloader area, the velocity calibration and the key at 0xFF000 equalled the backup taken before the first.</li><li><strong class="lead">A long run.</strong> An hour playing (13 November 2026, 18:39 to 19:40, read every five minutes over USB): no dropouts, no missed conversions in the analog scan; the heaviest audio block took 96% of its time.</li></ul>
+<p>Still open:</p>
+<ul><li><strong class="lead">The update record:</strong> whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00), so that a cable pulled mid-update resumes. No update has been interrupted on purpose.</li><li><strong class="lead">The battery's percentage:</strong> its span (<code>BATT_PCT_LO</code>) is a guess; it read 76 on a battery not known to be full or part used.</li><li><strong class="lead">The web installer</strong> on an Elite, and the presets' restore (section 11).</li></ul>
+<h2 id="s13"><span class="num">13</span> The files</h2>
+<div class="table"><table><thead><tr><th>File</th><th>What</th></tr></thead><tbody><tr><td><code>firmware/<wbr>src/<wbr>board_caps.h</code></td><td>what each board has (keys, outer keys, pads, faders, wheels), so the Elite's paths compile away on the FM-1</td></tr><tr><td><code>firmware/<wbr>src/<wbr>app/<wbr>master.h</code></td><td>MASTER's curve, and MASTER on a knob that turns without end</td></tr><tr><td><code>firmware/<wbr>hal/<wbr>fl_map.h</code></td><td>the flash map, per board</td></tr><tr><td><code>firmware/<wbr>hal/<wbr>smk37/<wbr>smk_flash_map.h</code></td><td>the Elite's flash, and the ranges never written</td></tr><tr><td><code>firmware/<wbr>hal/<wbr>smk37/<wbr>smk_input.h</code></td><td>the keys, buttons, knobs and button lights, behind <code>fm1_input.h</code>'s interface</td></tr><tr><td><code>firmware/<wbr>hal/<wbr>smk37/<wbr>smk_lcd_hw.h</code></td><td>the screen's wiring</td></tr><tr><td><code>firmware/<wbr>hal/<wbr>smk37/<wbr>smk_adc.h</code></td><td>the analog multiplexers: the battery, the pads, the faders and the wheels</td></tr><tr><td><code>firmware/<wbr>hal/<wbr>smk37/<wbr>smk_rgb.h</code></td><td>the pads' lights</td></tr><tr><td><code>firmware/<wbr>hal/<wbr>smk37/<wbr>smk_pins.h</code></td><td>every pin the Elite build sets up, in one table</td></tr><tr><td><code>firmware/<wbr>hal/<wbr>smk37/<wbr>smk_reg.h</code></td><td>the register access, so the tests can fake it</td></tr><tr><td><code>tools/<wbr>build.py</code></td><td>the build, per board (<code>--board</code>)</td></tr><tr><td><code>tools/<wbr>fm1pkg_make.py</code></td><td>the package, per board (<code>BOARDS</code>)</td></tr><tr><td><code>tools/<wbr>make_pages_smk37.py</code></td><td>the Elite's site</td></tr><tr><td><code>tools/<wbr>publish_pages_smk37.sh</code></td><td>puts the site on GitHub Pages</td></tr></tbody></table></div>
+<h2 id="s14"><span class="num">14</span> Credits</h2>
+<p>AISLING is by CU_STE (<a href="https://www.stephen8n.com">www.stephen8n.com</a>). Its board layer for the Elite follows M. Geisler's (genkigenki) SMK-37 ports on the <code>smk37</code> branches of <a href="https://github.com/genkigenki/fm1-amb/tree/smk37">fm1-amb</a> and <a href="https://github.com/genkigenki/fm1-fomni/tree/smk37">fm1-fomni</a> (GPL-3.0), written again for AISLING. The hardware's facts are from M. Geisler's guide, <a href="https://github.com/genkigenki/fm1-to-smk37">FM-1 to SMK-37 Pro</a> (CC BY-NC 4.0), cited in each file and not copied. The flash regions were read from M-VAVE's own SMK-37 Elite V016 package, none of which is in this tree. <a href="https://github.com/stephencummins/smk37-aisling/blob/main/LICENSING.md">LICENSING.md</a> has the rest.</p>
+<p>M-VAVE, FM-1 and SMK-37 are trademarks of their owners. AISLING is not affiliated with M-VAVE, or with the authors of the ports it follows.</p>
+</article>
+</div>
+
+</main>
+</body>
+</html>
