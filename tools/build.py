@@ -53,7 +53,7 @@ SDK_SHA256 = {
     "cfg/eq_cfg_hw.bin": "41167491bffed4651750719c973d2758adeb9021a5670d02d6a53c85ed80ea7d",
 }
 
-PRODUCT = "FM-1_353000000"          # package identity; release builds are FM-1_353XXYYZZ (see main)
+PRODUCT = "FM-1_353000000"          # package identity; release builds are FM-1_353XXYYZZ, SMK-37 Elite_353XYZ (see main)
 # The boards. flags: before -Ifirmware/hal, so a board header comes first; none for the FM-1, whose
 # build stays byte-identical. slot: room for app.bin in the package's app area, which is also the
 # linker's XIP length (fm1pkg_make's BOARDS: the SMK's area is flash 0x4000..0x9CFFF, the FM-1's
@@ -418,7 +418,7 @@ def main():
     global PRODUCT, VERSION, QUIET, BOARD, OUT, LDR, DRY_LOADER
     ap = argparse.ArgumentParser()
     ap.add_argument("--board", choices=sorted(BOARDS), default="fm1", help="fm1 (default) or smk37 (SMK-37 Elite)")
-    ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity FM-1_353XXYYZZ (SMK-37 Elite_353XXYYZZ), version string X.Y[.Z]")
+    ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity FM-1_353XXYYZZ (SMK-37 Elite_353XYZ), version string X.Y[.Z]")
     ap.add_argument("--dry-loader", action="store_true",
                     help="a backup package (NAME-dryloader.fwsc, loader in loader-dry/): its update loader compares "
                          "the app area and never writes it, and stays up for the UBOOT soft key "
@@ -430,6 +430,12 @@ def main():
     OUT, LDR = BOARD["out"], BOARD["out"] / ("loader-dry" if DRY_LOADER else "loader")
     model = BOARD["model"]
     PRODUCT = PRODUCT.replace("FM-1", model, 1)
+    if a.board == "smk37":
+        # a package's identity is at most 20 characters: 20 marker blocks, as M-VAVE's own SMK-37 Elite_016 has,
+        # and what The Firmware Hub's check, Sven's packager and genkigenki's installers read. "SMK-37 Elite_" takes
+        # 13, so the number is 353 and one digit each for major, minor and patch (1.3.2 -> SMK-37 Elite_353132).
+        # 1.3.1 had 353XXYYZZ in 36 blocks: 22 characters, and the hub read SMK-37 Elite_3530103.
+        PRODUCT = f"{model}_353000"
     name = "amb.fwsc"
     if a.release:
         # identity FM-1_353 (AISLING's: Ireland's dialling code; NACHTFAHRT's is 197) + major, minor, patch as two
@@ -440,7 +446,13 @@ def main():
         m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?(-[A-Za-z0-9]+)?", a.release)
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y[.Z][-suffix], up to two digits each")
-        PRODUCT = f"{model}_353%02d%02d%02d" % (int(m[1]), int(m[2]), int(m[3] or 0))
+        x, y, z = int(m[1]), int(m[2]), int(m[3] or 0)
+        if a.board == "smk37":
+            if max(x, y, z) > 9:
+                raise SystemExit(f"--release {a.release}: the SMK-37 Elite's identity has one digit each (20 characters)")
+            PRODUCT = f"{model}_353{x}{y}{z}"
+        else:
+            PRODUCT = f"{model}_353%02d%02d%02d" % (x, y, z)
         VERSION = a.release.upper()
         QUIET = (m[4] or "").lower() == "-quiet"    # (the suffix sets it, so a quiet build can't be mislabelled)
         name = f"{BOARD['stem']}-{a.release}.fwsc"

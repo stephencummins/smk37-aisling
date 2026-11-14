@@ -149,8 +149,8 @@ def _enc(data, key=0xFFFF):
 
 def marker_blocks(raw):
     """how many 0x2F-byte blocks carry a marker byte: the file's length less the logical length in the
-    package header (M-VAVE's FM-1 and SMK-37 Elite packages have 20, the SMK-37 Pro's and AISLING's
-    SMK-37 Elite packages 36). The header is the logical image's first 0x40 bytes, ENC'd."""
+    package header (M-VAVE's FM-1 and SMK-37 Elite packages have 20, as AISLING's do, the SMK-37 Pro's and
+    AISLING 1.3.1's SMK-37 Elite package 36). The header is the logical image's first 0x40 bytes, ENC'd."""
     if len(raw) < BLOCKS * BLK:
         raise InstallError("badpkg", "not an FM-1 package (too short)")
     hdr = _enc(raw[0:KEEP] + raw[BLK:BLK + 0x40 - KEEP])

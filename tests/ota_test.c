@@ -138,6 +138,21 @@ static uint32_t ota_body_off(void)                  /* ota.bin data + 0x20 in th
     return 0;
 }
 
+static uint32_t pkg_flash_len(void)                 /* flash.bin's length (file type 0): the board's app area end */
+{
+    uint8_t h[0x400];
+    uint32_t i, n;
+    memcpy(h, logical, sizeof h);
+    ota_jl_enc(h, 0x40);
+    n = ota_rd16(h + 8);
+    for (i = 0; i < n; i++) {
+        uint8_t *e = h + 0x40 + i * 0x50u;
+        ota_jl_enc(e, 0x50);
+        if (ota_rd16(e) == 0) return ota_rd32(e + 12);
+    }
+    return 0;
+}
+
 static int check(const char *what, int ok)
 {
     printf("%-52s %s\n", what, ok ? "ok" : "FAIL");
@@ -178,6 +193,7 @@ int main(int argc, char **argv)
     if (!blocks) { printf("%s: not a package (no valid header)\n", argv[1]); return 2; }
     printf("  " T_BOARD ": %u marker blocks\n", blocks);
     bad += check("marker blocks as this board's packages have", blocks == T_BLOCKS);
+    bad += check("flash.bin as long as this board's app area", pkg_flash_len() == T_APP_HI);
 
     /* handshake outside a session */
     reset_dev();

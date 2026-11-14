@@ -53,7 +53,7 @@ version's [manual](https://aisling.stephen8n.com/manual/).
 | MIDI in | USB and the TRS jack | USB only |
 | Screen | 240×240 | the same picture, wired differently; the backlight always on |
 | Calibration | the panel's | none: the Elite's buttons have fixed codes |
-| Identity | `FM-1_353XXYYZZ` | `SMK-37 Elite_353XXYYZZ` |
+| Identity | `FM-1_353XXYYZZ` | `SMK-37 Elite_353XYZ` |
 
 ## 2. The controls
 
@@ -183,7 +183,9 @@ The toolchain and the SDK are the FM-1's ([BUILDING.md](../BUILDING.md)). Then:
 The default board is the FM-1: `./build.sh` makes the same bytes it always has, in `build/`. The Elite's build goes
 into `build/smk37/` with the same file names (`amb.bin`, `loader/ota.bin`, the package), and its own checks: the app
 must fit the Elite's app area (0x4000–0x9CFFF), leave at least 2 KiB of RAM and 8 KiB of the pool spare, and pass the
-pin guard. A release's identity is `SMK-37 Elite_353` and the version's three numbers, two digits each.
+pin guard. A release's identity is `SMK-37 Elite_353` and the version's three numbers, one digit each (1.3.2 is
+`SMK-37 Elite_353132`): a package's identity holds 20 characters, the 20 marker blocks M-VAVE's own Elite package
+has. (1.3.1's, `SMK-37 Elite_353010301` in 36 blocks, was cut short by tools that read 20.)
 
 `tools/mini_build.sh --board smk37` does the same on another Mac over ssh and fetches the package back.
 

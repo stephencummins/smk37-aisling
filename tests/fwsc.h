@@ -16,7 +16,7 @@
 
 #if defined(AISLING_BOARD_SMK37) && AISLING_BOARD_SMK37
 #define T_BOARD "SMK-37 Elite"
-#define T_BLOCKS 36u                /* AISLING's SMK-37 packages (tools/fm1pkg_make.py BOARDS) */
+#define T_BLOCKS 20u                /* AISLING's SMK-37 packages, as M-VAVE's Elite_016 (tools/fm1pkg_make.py BOARDS) */
 #define T_APP_HI 0x9D000u           /* the app area ends ... */
 #define T_REC_HI 0xC0000u           /* ... update records below the calibration (0xC0000..0xC1FFF) */
 #define T_OTA_LO 0xBB000u           /* ota.c's staging: the top of the VM */

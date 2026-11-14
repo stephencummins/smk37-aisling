@@ -34,9 +34,9 @@ AISLING's web installer hasn't been tried on an Elite yet, so install from a com
 
 1. **First, a backup of the whole flash** ([section 11](docs/SMK37.md#11-installing-and-going-back)). It holds that
    unit's velocity calibration and its stock presets, and nothing else can bring those back.
-2. `python3 tools/fm1_install.py aisling-smk37-elite-1.3.1.fwsc --port "SMK-37 Elite"`, with the package from the
+2. `python3 tools/fm1_install.py aisling-smk37-elite-1.3.2.fwsc --port "SMK-37 Elite"`, with the package from the
    [release](https://github.com/stephencummins/smk37-aisling/releases/latest). Its identity is
-   `SMK-37 Elite_353010301`; the installers refuse a package made for the other model.
+   `SMK-37 Elite_353132`; the installers refuse a package made for the other model.
 
 **Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again.
 

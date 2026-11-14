@@ -16,8 +16,8 @@ function crc16(d) {                                  // CRC-16/XMODEM
 }
 
 // how many 0x2F-byte blocks carry a marker byte: the file's length less the logical length in the
-// package header (M-VAVE's FM-1 and SMK-37 Elite packages have 20, the SMK-37 Pro's and AISLING's
-// SMK-37 Elite packages 36). The header is the logical image's first 0x40 bytes, ENC'd.
+// package header (M-VAVE's FM-1 and SMK-37 Elite packages have 20, as AISLING's do, the SMK-37 Pro's and
+// AISLING 1.3.1's SMK-37 Elite package 36). The header is the logical image's first 0x40 bytes, ENC'd.
 export function markerBlocks(fwsc) {
   if (fwsc.length < BLOCKS * BLK) throw new Error("not an FM-1 package (too short)");
   const h = new Uint8Array(0x40);

@@ -73,9 +73,9 @@ if [ -f build/amb.fwsc ]; then
 else
     echo "  skip update-path tests (no build/amb.fwsc: run ./build.sh)"
 fi
-# the SMK-37 Elite's update path: its packages have 36 marker blocks, and its own staging, record and app area
+# the SMK-37 Elite's update path: its packages have 20 marker blocks, and its own staging, record and app area
 # (tests/fwsc.h); against its package from tools/mini_build.sh --board smk37. The control runs the FM-1's build of
-# the test on it, which must fail (36 marker blocks, not 20)
+# the test on it, which must fail (its flash.bin runs to the Elite's 0x9D000, not the FM-1's 0x93000)
 SMK_PKG=
 for f in build/smk37/amb.fwsc build/smk37/aisling-smk37-elite-*.fwsc; do
     case "$f" in *-dryloader.fwsc) continue ;; esac     # a backup package: the same app, another loader

@@ -8,7 +8,7 @@ then "device asks, host answers" reads of the logical image. Run from the repo r
 Also checks logical_image/product_of against web/fm1pkg.js (needs node; the
 built packages, build/amb.fwsc and build/smk37/*.fwsc, when they are there).
 Test packages are written by tools/fm1pkg_make.py: the FM-1's with 20 marker
-blocks, the SMK-37 Elite's with 36."""
+blocks, the SMK-37 Elite's with 20 too (and a 36-block one, as the SMK-37 Pro's)."""
 import io
 import json
 import os
@@ -161,12 +161,15 @@ class FakeFM1:
 
 # ----------------------------------------------------------------- helpers ---
 
-def package(product="FM-1_900", marker=True, size=0x2000, board=None):
-    """a package as tools/fm1pkg_make.py writes it: the FM-1's 20 marker blocks, an SMK-37's 36"""
+def package(product="FM-1_900", marker=True, size=0x2000, board=None, blocks=None):
+    """a package as tools/fm1pkg_make.py writes it: 20 marker blocks (blocks=36: as the SMK-37 Pro's)"""
     board = board or ("smk37" if product.startswith("SMK-37") else "fm1")
     flash = bytes((i * 7) & 0xFF for i in range(size))
     ota = bytearray((i * 13 + 5) & 0xFF for i in range(0x800))
     ota[0x100:0x110] = I.LOADER_MARK if marker else bytes(16)
+    if blocks:                                  # another block count: a board like the SMK's with that many
+        P.BOARDS[f"t{blocks}"] = dict(P.BOARDS[board], blocks=blocks)
+        board = f"t{blocks}"
     return P.ufw(flash, bytes(ota), product, board)
 
 
@@ -303,14 +306,14 @@ def errors():
 
 
 def smk37():
-    """the SMK-37 Elite: its packages have 36 marker blocks, and no package goes to another model"""
+    """the SMK-37 Elite: its packages have 20 marker blocks, and no package goes to another model"""
     raw = package("SMK-37 Elite_900")
     image = I.logical_image(raw)
-    ok(I.marker_blocks(raw) == 36 and I.product_of(raw) == "SMK-37 Elite_900" and len(image) == len(raw) - 36,
-       "SMK-37 Elite package: 36 marker blocks, identity and logical image")
-    short = package("FM-1_900", board="smk37")
-    ok(I.marker_blocks(short) == 36 and I.product_of(short) == "FM-1_900",
-       "  the count comes from the header, not the identity's length")
+    ok(I.marker_blocks(raw) == 20 and I.product_of(raw) == "SMK-37 Elite_900" and len(image) == len(raw) - 20,
+       "SMK-37 Elite package: 20 marker blocks, identity and logical image")
+    long = package("SMK-37 Elite_353010301", board="smk37", blocks=36)     # 1.3.1's, and the SMK-37 Pro's count
+    ok(I.marker_blocks(long) == 36 and I.product_of(long) == "SMK-37 Elite_353010301" and I.logical_image(long) == image,
+       "  a 36-block package (1.3.1's): the count comes from the header, the same logical image")
     p = pkgfile("smk.fwsc", raw)
     fm1 = pkgfile("fm1.fwsc", package())
     pro = pkgfile("pro.fwsc", package("SMK-37 Pro_016"))
@@ -421,7 +424,7 @@ def against_js():
 
     built = [ROOT / "build/amb.fwsc"] + sorted((ROOT / "build/smk37").glob("*.fwsc"))
     made = {"fm1.fwsc": package("FM-1_906"), "smk.fwsc": package("SMK-37 Elite_901"),
-            "short.fwsc": package("FM-1_900", board="smk37")}
+            "short.fwsc": package("FM-1_900", board="smk37", blocks=36)}           # a short identity in 36 blocks
     for name, raw in made.items():
         built.append(Path(pkgfile(name, raw)))
     for path in built:

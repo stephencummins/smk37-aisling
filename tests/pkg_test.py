@@ -43,7 +43,7 @@ ELITE_016 = [bytes.fromhex(h) for h in (
     "1804ffff00100c0000100000928100005553525452494d00ffffffffffffffff",
     "cbd0ffff00200c000090020092810000555352464c41534800ffffffffffffff",
     "0498ffff00400f0000a000009281010055535200ffffffffffffffffffffffff")]
-IDENTITY = {"fm1": "FM-1_353010000", "smk37": "SMK-37 Elite_353010000"}
+IDENTITY = {"fm1": "FM-1_353010000", "smk37": "SMK-37 Elite_353100"}
 
 
 def area_entries(flash):
@@ -97,7 +97,9 @@ for board, b in P.BOARDS.items():
     ok(raises(lambda: P.ufw(flash, ota, "X" * (b["blocks"] + 1), board)),
        f"{board}: an identity over {b['blocks']} characters is refused")
 
-ok(raises(lambda: P.ufw(bytes(16), bytes(16), IDENTITY["smk37"], "fm1")), "fm1: the 22-character SMK identity is refused")
+ok(raises(lambda: P.ufw(bytes(16), bytes(16), "SMK-37 Elite_353010301", "smk37")),
+   "smk37: 1.3.1's 22-character identity is refused (20 blocks, as M-VAVE's Elite_016)")
+ok(P.BOARDS["smk37"]["blocks"] == 20, "smk37: 20 marker blocks, the 20 characters the hub's check reads")
 
 # the firmware's map (hal/fl_map.h, hal/smk37/smk_flash_map.h): the app area the loader writes ends where
 # the package's flash.bin does

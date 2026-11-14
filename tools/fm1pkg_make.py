@@ -37,9 +37,10 @@ BOARDS = {
         (0, 0x93000, 0x92, 0x82, 0, bytes.fromhex("5052435400ffffffffffffff434f4445")),
         (0xE9000, 0x1000, 0x92, 0x80, 0, bytes.fromhex("4254494600ffffffffffffff4155544f")),
         (0xEA000, 0x12000, 0x92, 0x81, 1, "USR")]),
-    # M-VAVE's SMK-37 Elite_016.fwsc. Its own package has 20 marker blocks and the SMK-37 Pro's 36;
-    # AISLING's identity, SMK-37 Elite_353XXYYZZ, is 22 characters, so 36.
-    "smk37": dict(flash_size=0x9D000, app_slot=0x97FBC, blocks=36, regions=[
+    # M-VAVE's SMK-37 Elite_016.fwsc. Its own package has 20 marker blocks (the SMK-37 Pro's 36), and so
+    # do AISLING's: its identity, SMK-37 Elite_353XYZ, is 19 characters. (1.3.1's had 36 blocks for a
+    # 22-character identity, which readers that take 20, The Firmware Hub's among them, cut short.)
+    "smk37": dict(flash_size=0x9D000, app_slot=0x97FBC, blocks=20, regions=[
         (0x9D000, 0x23000, 0x12, 0x81, 0, bytes.fromhex("564d00ffffffffffffffffff00800000")),
         (0, 0x9D000, 0x92, 0x82, 0, bytes.fromhex("5052435400ffffffffffffff434f4445")),
         (0xC0000, 0x1000, 0x92, 0x82, 0, bytes.fromhex("4254494600ffffffffffffff4155544f")),
