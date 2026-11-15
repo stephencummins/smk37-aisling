@@ -177,6 +177,16 @@ __STYLE__/* The rest is the bench's magazine parts (web/brand/site.css, mg-*) */
 .mg-in p b { font-weight: 400; color: var(--brand-green); }
 .mg-in strong { font: 600 16px/1.3 var(--brand-display); letter-spacing: .02em; color: var(--brand-rust); }
 .mg-draw.dark { background: #1c1610; }
+/* the film: a dark tile in type (there is no photograph of an Elite here yet), a play mark in its corner */
+.film { position: relative; display: grid; place-items: center; min-height: 250px; padding: 24px; background: #1c1610; color: #f3ead7;
+        text-align: center; text-decoration: none; }
+.film::before { content: ""; position: absolute; top: 16px; left: 18px; border-style: solid; border-width: 11px 0 11px 18px;
+                border-color: transparent transparent transparent #e9a23b; }
+.film span { font: 600 clamp(30px, 4.4vw, 54px)/.98 var(--brand-display); text-transform: uppercase; color: #e9a23b; transition: color .2s; }
+.film small { display: block; padding: .5em 0; font: 400 clamp(11px, 1.1vw, 13px)/1.2 var(--brand-mono); letter-spacing: .1em;
+              text-transform: none; color: #c9b99a; }
+.film:hover span, .film:focus-visible span { color: #f3ead7; }
+@media (prefers-reduced-motion: reduce) { .film span { transition: none; } }
 ol.stages { list-style: none; padding: 0; margin: 0; counter-reset: stage; }
 ol.stages li { position: relative; padding: 0 0 10px 92px; counter-increment: stage; }
 ol.stages li:last-child { padding-bottom: 0; }
@@ -210,11 +220,23 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 </div>
 
 <nav class="mg-jump" aria-label="On this page">
-<a href="#try"><i>01</i>Try it</a><a href="#controls"><i>02</i>Controls</a><a href="#install"><i>03</i>Install</a>
+<a href="#watch"><i>01</i>Watch it</a><a href="#try"><i>02</i>Try it</a><a href="#controls"><i>03</i>Controls</a><a href="#install"><i>04</i>Install</a>
 </nav>
 
-<section class="mg-feat" id="try" aria-labelledby="tryh">
+<section class="mg-feat" id="watch" aria-labelledby="watchh">
 <div class="mg-head"><div class="mg-num" aria-hidden="true">01</div>
+<div><p class="mg-kick">The film</p><h2 id="watchh">See it played</h2></div></div>
+<div class="mg-split">
+<div>
+<p class="mg-stand">AISLING on an SMK-37 Elite: <em>the keys, the pads and the faders at work</em>, with its sound.</p>
+<p class="mg-go" style="margin:0"><a class="btn go big" href="https://youtu.be/869_HoE3s1g">Watch on YouTube</a></p>
+</div>
+<a class="film" href="https://youtu.be/869_HoE3s1g" tabindex="-1" aria-hidden="true"><span><small>AISLING on the SMK-37</small>Lots more<br>pots and pans<small>a film by CÚ_STE</small></span></a>
+</div>
+</section>
+
+<section class="mg-feat" id="try" aria-labelledby="tryh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">02</div>
 <div><p class="mg-kick">The emulator</p><h2 id="tryh">Try it in your browser</h2></div></div>
 <div class="mg-split">
 <div>
@@ -231,7 +253,7 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 </section>
 
 <section class="mg-feat" id="controls" aria-labelledby="controlsh">
-<div class="mg-head"><div class="mg-num" aria-hidden="true">02</div>
+<div class="mg-head"><div class="mg-num" aria-hidden="true">03</div>
 <div><p class="mg-kick">The controls</p><h2 id="controlsh">Every knob, pad, fader and key</h2></div></div>
 <a class="mg-draw dark" href="controls/" title="The controls page">__PANEL__</a>
 <p class="mg-stand" style="margin-top:18px">Its buttons and knobs take the FM-1's jobs, its middle 27 keys are the FM-1's, <em>its pads play the effects and its faders set the mix</em>.</p>
@@ -239,7 +261,7 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 </section>
 
 <section class="mg-feat" id="install" aria-labelledby="installh">
-<div class="mg-head"><div class="mg-num" aria-hidden="true">03</div>
+<div class="mg-head"><div class="mg-num" aria-hidden="true">04</div>
 <div><p class="mg-kick">Install</p><h2 id="installh">Put it on your Elite</h2></div></div>
 <ol class="mg-steps">
 <li><b>From a computer,</b> for now: the web installer is still to come.</li>
