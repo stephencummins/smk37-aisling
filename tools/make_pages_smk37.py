@@ -169,21 +169,14 @@ __HEAD_COMMON__<title>AISLING · Irish ambient for the SMK-37 Elite</title>
 <meta property="og:description" content="The FM-1's AISLING, ported to the M-VAVE SMK-37 Elite. It runs on an Elite; a download follows.">
 <meta property="og:url" content="__SITE__">
 <style>
-__STYLE__.what { display: flex; gap: 16px; align-items: flex-start; }
-.card { flex: none; width: 96px; height: 96px; image-rendering: pixelated; border: 1px solid var(--brand-rule); }
-.lede { margin: 0; font-size: 14.5px; }
-.shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-content: start; }
-.shots img { display: block; box-sizing: border-box; width: 100%; height: auto; image-rendering: pixelated; border: 1px solid var(--brand-rule); }
-.shots p { grid-column: 1 / -1; margin: 0; }
-.ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--brand-rule); }
-.ways a { display: block; padding: 12px 16px 14px; background: var(--brand-ground); color: var(--brand-ink); text-decoration: none; }
-.ways a:hover { background: var(--brand-strip); color: var(--brand-ink); }
-.ways a:focus-visible { outline-offset: -3px; }
-.ways strong { display: block; margin-bottom: 4px; font: 600 16px/1.3 var(--brand-display); letter-spacing: .02em; }
-.ways span { display: block; font-size: 12.5px; color: var(--brand-muted); }
-.ways a.go, .ways a.go span { background: var(--brand-green); color: var(--brand-ground); }
-.ways a.go:hover, .ways a.go:hover span { background: #0f5332; }
-.ways a.go:focus-visible { outline-color: var(--brand-ground); }
+__STYLE__/* The rest is the bench's magazine parts (web/brand/site.css, mg-*) */
+.mg-pic.px { align-items: center; justify-content: center; background: #146c41; }
+.mg-pic.px img { width: min(100%, 384px); height: auto; aspect-ratio: 1; }
+.mg-in p { margin: 0 0 10px; }
+.mg-in p:last-child { margin-bottom: 0; }
+.mg-in p b { font-weight: 400; color: var(--brand-green); }
+.mg-in strong { font: 600 16px/1.3 var(--brand-display); letter-spacing: .02em; color: var(--brand-rust); }
+.mg-draw.dark { background: #1c1610; }
 ol.stages { list-style: none; padding: 0; margin: 0; counter-reset: stage; }
 ol.stages li { position: relative; padding: 0 0 10px 92px; counter-increment: stage; }
 ol.stages li:last-child { padding-bottom: 0; }
@@ -191,13 +184,7 @@ ol.stages li::before { content: counter(stage) " · " attr(data-state); position
                        font: 400 12px/1.5 var(--brand-mono); color: var(--brand-muted); }
 ol.stages li.done::before { color: var(--brand-green); }
 ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
-@media (max-width: 59.99rem) {
-  .two.hero { grid-template-columns: minmax(0, 1fr); }
-  .two.hero > * + * { border-left: 0; border-top: 1px solid var(--brand-rule); }
-}
-@media (max-width: 47.99rem) { .ways { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 26rem) {
-  .what { display: block; } .card { float: left; margin: 0 12px 4px 0; width: 72px; height: 72px; }
   ol.stages li { padding-left: 0; } ol.stages li::before { position: static; display: block; width: auto; }
 }
 </style>
@@ -207,40 +194,71 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <!--AISLING-BAR-->
 <main class="bench">
 <div class="strip">
-<h1 class="lab"><b>aisling</b> · Irish ambient for the M-VAVE SMK-37 Elite</h1>
-<p class="lab">__BY__</p>
+<p class="lab"><b>aisling</b> · Irish ambient for the M-VAVE SMK-37 Elite</p>
+<p class="lab">v1.3.1 · __BY__</p>
 </div>
-<div class="pane notice" role="note">
+
+<div class="mg-cover">
+<div class="mg-words">
+<div>
+<h1>Aisling <span>SMK-37</span></h1>
+<p class="mg-gloss">For the SMK-37 Elite only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
+</div>
+<p class="mg-deck">The FM-1's Irish ambient on a 37-key keyboard: the same engine, the same eight pieces, with pads for the effects and faders for the mix.</p>
+</div>
+<div class="mg-pic px"><img src="img/card-smk37.png" width="240" height="240" alt="A gold 8-bit harp on green, with 37 beside it"></div>
+</div>
+
+<nav class="mg-jump" aria-label="On this page">
+<a href="#try"><i>01</i>Try it</a><a href="#controls"><i>02</i>Controls</a><a href="#install"><i>03</i>Install</a>
+</nav>
+
+<section class="mg-feat" id="try" aria-labelledby="tryh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">01</div>
+<div><p class="mg-kick">The emulator</p><h2 id="tryh">Try it in your browser</h2></div></div>
+<div class="mg-split">
+<div>
+<p class="mg-stand">The FM-1 version's emulator: <em>the same code, with sound</em>, on the FM-1's panel. No Elite needed.</p>
+<p class="mg-go"><a class="btn go big" href="__FM1__emu/">Open the emulator</a></p>
+<p class="mg-small">The Elite's screens, from its simulator: the same, pixel for pixel, as the FM-1's.</p>
+</div>
+<div class="mg-shots">
+  <img src="img/screen-launch.png" width="240" height="240" alt="The launch screen: a green triskele, AISLING, by CU_STE, www.stephen8n.com">
+  <img src="img/screen-main.png" width="240" height="240" alt="The main screen: the chord's name among orbiting dots, the five layers' meters, the two harps' lanes">
+  <img src="img/screen-perform.png" width="240" height="240" alt="PERFORM: Filter, Wet, Energy and Sweep on the knobs">
+</div>
+</div>
+</section>
+
+<section class="mg-feat" id="controls" aria-labelledby="controlsh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">02</div>
+<div><p class="mg-kick">The controls</p><h2 id="controlsh">Every knob, pad, fader and key</h2></div></div>
+<a class="mg-draw dark" href="controls/" title="The controls page">__PANEL__</a>
+<p class="mg-stand" style="margin-top:18px">Its buttons and knobs take the FM-1's jobs, its middle 27 keys are the FM-1's, <em>its pads play the effects and its faders set the mix</em>.</p>
+<p class="mg-go" style="margin:0"><a class="btn go big" href="controls/">See the controls</a></p>
+</section>
+
+<section class="mg-feat" id="install" aria-labelledby="installh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">03</div>
+<div><p class="mg-kick">Install</p><h2 id="installh">Put it on your Elite</h2></div></div>
+<ol class="mg-steps">
+<li><b>From a computer,</b> for now: the web installer is still to come.</li>
+<li><b>An SMK-37 Elite,</b> on M-VAVE's firmware V016.</li>
+<li><b>The way back</b> to M-VAVE's firmware is proven: off, and on again.</li>
+</ol>
+<p class="mg-go"><a class="btn go big" href="docs/#s11">How to install</a></p>
+<p class="mg-small"><a href="__REPO__/releases/latest">Download 1.3.1</a> · <a href="docs/">The docs</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
+</section>
+
+<section class="mg-fold" aria-label="More about AISLING on the Elite">
+<details><summary>1.3.1, released <small>what was done on an Elite</small></summary><div class="mg-in">
 <p><strong>1.3.1, released.</strong> In November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
 off again with M-VAVE's own firmware, and installed again. The package is in its
 <a href="__REPO__/releases/latest">release</a>; it installs from a computer for now, as the
 <a href="docs/#s11">docs</a> say, and they say what was checked and what is still open.</p>
 <p>It is for the <b>SMK-37 Elite</b> only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
-</div>
-<div class="two hero">
-<div class="pane what">
-<img class="card" src="img/card-smk37.png" width="240" height="240" alt="A gold 8-bit harp on green, with 37 beside it">
-<p class="lede"><a href="__FM1__">AISLING</a> is a generative instrument for the M-VAVE FM-1, after the harpers and
-the west of Ireland: a harp's ostinato over a held drone, a second harp drifting against it, a flute far back in the
-reverb, with surf, wind or rain behind. The SMK-37 Elite has the FM-1's chip, so it can run the same code: the same
-engine, the same eight pieces, saved the same way, on a 37-key keyboard. Its buttons and knobs take the FM-1's jobs,
-its middle 27 keys are the FM-1's, its pads play the effects and its faders set the mix.</p>
-</div>
-<div class="pane shots">
-  <img src="img/screen-launch.png" width="240" height="240" alt="The launch screen: a green triskele, AISLING, by CU_STE, www.stephen8n.com">
-  <img src="img/screen-main.png" width="240" height="240" alt="The main screen: the chord's name among orbiting dots, the five layers' meters, the two harps' lanes">
-  <img src="img/screen-perform.png" width="240" height="240" alt="PERFORM: Filter, Wet, Energy and Sweep on the knobs">
-  <p class="small">The Elite's screens, from its simulator: the same, pixel for pixel, as the FM-1's.</p>
-</div>
-</div>
-<nav class="ways" aria-label="AISLING on the Elite">
-  <a class="go" href="controls/"><strong>The controls</strong><span>Which of the Elite's buttons, knobs and keys does each of the FM-1's jobs, its pads and faders, and what it doesn't use yet.</span></a>
-  <a href="docs/"><strong>The docs</strong><span>How the port works: the Elite's flash and pins, building and testing it, installing and going back, and what is still open.</span></a>
-  <a href="__FM1__emu/"><strong>Try it in the browser</strong><span>The FM-1 version's emulator: the same code, on the FM-1's panel, with sound. No Elite needed.</span></a>
-  <a href="__REPO__"><strong>Source</strong><span>GitHub, GPL-3.0: one tree that builds AISLING for the FM-1 and for the Elite.</span></a>
-</nav>
-<section class="pane" aria-labelledby="stagesh">
-<h2 class="bh" id="stagesh">Where it stands</h2>
+</div></details>
+<details><summary>Where it stands <small>six done, the web installer next</small></summary><div class="mg-in">
 <ol class="stages">
   <li class="done" data-state="done"><b class="lead">On a computer.</b> AISLING builds for the Elite from the FM-1's
   tree, and the FM-1's own build is unchanged to the byte. The Elite's simulator plays all 34 of the FM-1's test
@@ -261,7 +279,9 @@ its middle 27 keys are the FM-1's, its pads play the effects and its faders set 
   <li data-state="to do"><b class="lead">Later.</b> The pitch wheel bends the Lead, the mod wheel opens the filters,
   the outer white keys extend the Lead's scale.</li>
 </ol>
+</div></details>
 </section>
+
 <div class="pane">
 <p class="small">AISLING is by CU_STE (<a href="https://www.stephen8n.com">www.stephen8n.com</a>). Its board layer
 for the Elite follows M. Geisler's (genkigenki) SMK-37 ports, on the <code>smk37</code> branches of
@@ -481,7 +501,7 @@ def main(out, marks=False):
     shutil.copy(SRC / "docs" / "card-smk37.png", out / "img" / "card-smk37.png")
     shutil.copy(SRC / "docs" / "img" / "smk37-panel.svg", out / "img" / "smk37-panel.svg")   # tools/gen_smk37_figure.py
     common = dict(HEAD_COMMON=HEAD_COMMON, STYLE=STYLE, BY=BY, FM1=FM1, REPO=REPO, SITE=SITE)
-    (out / "index.html").write_text(st(page(LANDING, **common), "", None), encoding="utf-8")
+    (out / "index.html").write_text(st(page(LANDING, PANEL=panel_svg(), **common), "", None), encoding="utf-8")
     (out / "controls" / "index.html").write_text(
         st(page(CONTROLS, TABLE=controls_table(), PANEL=panel_svg(), SKINS=skin_buttons(), **common), "../", "controls"), encoding="utf-8")
     (out / "docs" / "index.html").write_text(
