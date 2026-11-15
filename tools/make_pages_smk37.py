@@ -456,18 +456,31 @@ __BODY__
 </html>
 """
 DOCS_STRIP = """<div class="strip">
-<h1 class="lab"><b>docs</b> · AISLING on the M-VAVE SMK-37 Elite</h1>
+<p class="lab"><b>docs</b> · AISLING on the M-VAVE SMK-37 Elite</p>
 <a class="btn" href="../controls/">the controls</a>
 </div>
+<div class="mg-cover">
+<div class="mg-words">
+<div><h1>The <span>Docs</span></h1>
+<p class="mg-gloss">AISLING on the M-VAVE SMK-37 Elite.</p></div>
+<p class="mg-deck">What differs from the FM-1, the flash and the pins, building, testing, installing and going back, in __N__ sections.</p>
+</div>
+<div class="mg-pic px"><img src="../img/screen-main.png" width="240" height="240" alt="AISLING's main screen, as the Elite shows it"></div>
+</div>
+<nav class="mg-jump" aria-label="Sections">__TILES__</nav>
 """
+COUNTS = "no one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen".split()
 
 
 def docs_body():
     """docs/SMK37.md as the FM-1 site's manual is drawn (the contents down the side), under this site's strip; its links
     up to the repo's other documents go to this repo, not the FM-1's."""
     body = manual_html.on_the_bench(manual_html.convert((SRC / "docs" / "SMK37.md").read_text(encoding="utf-8")))
-    body, n = re.subn(r'<div class="strip">\n.*?</div>\n', lambda m: DOCS_STRIP, body, count=1, flags=re.S)
-    if n != 1 or "<aside" not in body:
+    tiles = re.findall(r'<a href="#s(\d+)">(.*?)</a>', body.split("</aside>")[0])
+    strip = (DOCS_STRIP.replace("__N__", COUNTS[len(tiles)] if len(tiles) < len(COUNTS) else str(len(tiles)))
+             .replace("__TILES__", "".join(f'<a href="#s{n}"><i>{int(n):02d}</i>{t}</a>' for n, t in tiles)))
+    body, n = re.subn(r'<div class="strip">\n.*?</div>\n', lambda m: strip, body, count=1, flags=re.S)
+    if n != 1 or "<aside" not in body or not tiles:
         raise SystemExit("docs/SMK37.md: manual_html.py no longer draws a strip and contents as this expects")
     # a path in a table may break after a slash, so the files table fits a phone
     body = re.sub(r"<td><code>([^<]*)</code>",

@@ -28,8 +28,22 @@ html { scroll-padding-top: 4rem; }
 .prose { font-size: 14px; line-height: 1.65; }
 .prose > :first-child { margin-top: 0; }
 .prose h2, .prose h3 { font-family: var(--brand-display); font-weight: 600; text-wrap: balance; line-height: 1.25; color: var(--brand-ink); }
-.prose h2 { font-size: 19px; letter-spacing: .02em; margin: 2.4rem 0 .7rem; padding-top: .8rem; border-top: 1px solid var(--brand-rule); }
-.prose h2 .num { color: var(--brand-green); margin-right: .25em; font-variant-numeric: tabular-nums; }
+.prose h2 { display: flex; align-items: baseline; gap: .45em; font-size: clamp(24px, 3vw, 34px); line-height: 1.05; letter-spacing: .03em;
+            text-transform: uppercase; margin: 3.2rem 0 1.1rem; padding-top: 1rem; border-top: 2px solid var(--brand-ink); }
+.prose h2 .num { flex: none; font-size: 1.7em; line-height: .8; color: transparent; -webkit-text-stroke: 1.5px var(--brand-rust);
+                 font-variant-numeric: tabular-nums; }
+@supports not (-webkit-text-stroke: 2px red) { .prose h2 .num { color: var(--brand-rust); } }
+/* under a cover: the sections as numbered tiles (a phone has them in place of the side contents) */
+.mg-pic.px { align-items: center; justify-content: center; padding: 22px; background: #146c41; }
+.mg-pic.px img { width: min(100%, 300px); height: auto; aspect-ratio: 1; box-shadow: 0 0 0 6px #1c1610; }
+nav.mg-jump { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); border-bottom: 1px solid var(--brand-rule); }
+nav.mg-jump a { font-size: 17px; overflow-wrap: anywhere; }
+nav.mg-jump a i { flex: none; overflow-wrap: normal; }
+@media (max-width: 47.99rem) { nav.mg-jump { grid-template-columns: 1fr 1fr; } }
+details.status { max-width: 78ch; }
+details.status > summary { cursor: pointer; }
+details.status > summary b { font: 600 15px/1.3 var(--brand-display); letter-spacing: .06em; text-transform: uppercase; color: var(--brand-rust); }
+details.status[open] > summary { margin-bottom: .6rem; }
 .prose h3 { font-size: 16px; letter-spacing: .01em; margin: 1.7rem 0 .4rem; }
 .prose p, .prose li { max-width: 78ch; }
 .prose p { margin: 0 0 .9rem; }
@@ -73,7 +87,8 @@ nav.contents li { margin: 0; }
 nav.contents a { display: block; padding: 3px 0; color: var(--brand-ink); text-decoration: none; }
 nav.contents a:hover { color: var(--brand-green); text-decoration: underline; }
 @media (min-width: 48rem) { nav.contents { position: sticky; top: 3.5rem; max-height: calc(100vh - 4rem); overflow-y: auto; box-sizing: border-box; } }
-@media (max-width: 47.99rem) { nav.contents ol { columns: 2 12rem; column-gap: 1.2rem; } nav.contents li { break-inside: avoid; } }
+@media (max-width: 47.99rem) { nav.contents ol { columns: 2 12rem; column-gap: 1.2rem; } nav.contents li { break-inside: avoid; }
+  .mg-jump ~ .cols aside.side { display: none; } }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 """
 # --fragment: no site.css, so the page brings the little of it the text above stands on
@@ -248,7 +263,10 @@ def convert(md):
                 para.append(lines[i])
             text = inline(" ".join(p.strip() for p in para))
             if text.startswith("<strong>Status.</strong>"):
-                out.append(f'<div class="status"><p>{text}</p></div>')
+                # folded: its first sentence is what shows
+                first, _, rest = text.removeprefix("<strong>Status.</strong>").strip().partition(". ")
+                out.append(f'<details class="status"><summary><b>Status</b> · {first}.</summary><p>{rest}</p></details>'
+                           if rest else f'<div class="status"><p>{text}</p></div>')
             elif out and out[-1].startswith("<h1>"):
                 out.append(f'<p class="lede">{text}</p>')
             else:
