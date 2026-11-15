@@ -36,7 +36,7 @@ smk37_scenario = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(smk37_scenario)
 
 REPO = "https://github.com/stephencummins/smk37-aisling"
-SITE = "https://stephencummins.github.io/smk37-aisling/"
+SITE = "https://aisling.stephen8n.com/smk37/"
 FM1 = "https://aisling.stephen8n.com/"
 BY = 'by CU_STE · <a href="https://www.stephen8n.com">www.stephen8n.com</a>'
 # (the page's key, its label, where it goes, what it is), as site_brand.NAV

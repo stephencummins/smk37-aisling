@@ -83,7 +83,7 @@ Two buttons held together work as on the FM-1, by their Elite names: OCTAVE− w
 instance, is the update mode. PARA has no light: the FM-1's EDIT has none either. The screen's hints still name the FM-1's buttons: TAP REC on the effects page means SEQ
 REC.
 
-The site's [controls page](https://stephencummins.github.io/smk37-aisling/controls/) has what each one does.
+The site's [controls page](https://aisling.stephen8n.com/smk37/controls/) has what each one does.
 
 ## 3. Volume
 
