@@ -331,6 +331,12 @@ __HEAD_COMMON__<title>AISLING on the SMK-37 Elite · the controls</title>
 <style>
 __STYLE__.wrap { overflow-x: auto; }
 svg.skp { display: block; width: 100%; min-width: 1100px; height: auto; }
+/* the headline over the drawing */
+.ct-head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 6px 26px; }
+.ct-head h1 { margin: 0; font: 700 clamp(40px, 7.4vw, 84px)/.86 var(--brand-display); letter-spacing: .01em; text-transform: uppercase; color: var(--brand-ink); }
+.ct-head h1 span { color: var(--brand-rust); }
+.pane.ct-head p { margin: 0 0 3px; max-width: 36ch; font: 600 clamp(16px, 1.8vw, 20px)/1.3 var(--brand-display); letter-spacing: .01em; }
+@media (max-width: 47.99rem) { .ct-head { grid-template-columns: minmax(0, 1fr); } }
 .skins { margin: 0 0 10px; }
 .skins button { font: inherit; margin-left: 6px; padding: 2px 10px; border: 1px solid var(--brand-rule); border-radius: 4px;
                 background: transparent; color: inherit; cursor: pointer; }
@@ -365,8 +371,12 @@ ul.plain li::marker { color: var(--brand-green); }
 <!--AISLING-BAR-->
 <main class="bench">
 <div class="strip">
-<h1 class="lab"><b>aisling</b> · the controls on the SMK-37 Elite</h1>
+<p class="lab"><b>aisling</b> · the controls on the SMK-37 Elite</p>
 <p class="lab">__BY__</p>
+</div>
+<div class="pane ct-head">
+<h1>The <span>controls</span></h1>
+<p>Every knob, button, pad, fader and key, drawn. The table under the drawing says the same in words.</p>
 </div>
 <div class="pane notice" role="note">
 <p><strong>Checked on an Elite.</strong> Each button, knob, key, pad and fader here was tried by hand on an SMK-37
