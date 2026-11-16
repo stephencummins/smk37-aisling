@@ -5,7 +5,7 @@
  *
  * piece=N takes piece N's recipe (0..7) first; NAME=V sets a parameter by its name as amb.c's table
  * has it, spaces as underscores (Echo_time=2, Cutoff=60); freeze=T0-T1 holds from T0 to T1 seconds;
- * NAME=V@T sets it at T seconds instead; fx=N@T0-T1 holds the effects grid's effect N (0..15) from T0 to T1; log prints each bar's section and stabs, and the chord as it moves.
+ * NAME=V@T sets it at T seconds instead; fx=N@T0-T1 holds effect N (EN_FX_*, 0..31) from T0 to T1; mv=M@T0-T1 holds the moves M (1 Rise, 2 Close); amt=N:CC@T sets effect N's amount (32 Rise, 33 Close) as its CC, 64..127, at T seconds (1.4); log prints each bar's section and stabs, and the chord as it moves.
  *   cc -O2 -ffp-contract=off -D_GNU_SOURCE -DEN_HOST -Ifirmware/src/dsp -o build/host/en_render host/en_render.c \
  *      firmware/src/dsp/amb.c -lm */
 #define EN_HOST 1
@@ -47,7 +47,9 @@ int main(int argc, char **argv)
     int nfx = 0, fxn[16];
     uint32_t fxwas = 0;
     unsigned seed = 0;
-    struct { double t; int p, v; } ev[64];
+    struct { double t; int p, v; } ev[64], am[64];
+    int nam = 0, mvm = 0, mvwas = 0;
+    double mv0 = -1, mv1 = -1;
     int nev = 0, e;
     if (argc < 3) {
         fprintf(stderr, "usage: en_render OUT.wav SECS [piece=N] [NAME=V ...] [freeze=T0-T1] [chorus=V] [seed=S] [log]\n");
@@ -72,6 +74,12 @@ int main(int argc, char **argv)
         } else if (!strncmp(a, "fx=", 3) && nfx < 16) {
             sscanf(a + 3, "%d@%lf-%lf", &fxn[nfx], &fx0[nfx], &fx1[nfx]);
             nfx++;
+        } else if (!strncmp(a, "mv=", 3)) {
+            sscanf(a + 3, "%d@%lf-%lf", &mvm, &mv0, &mv1);
+        } else if (!strncmp(a, "amt=", 4) && nam < 64) {
+            am[nam].t = 0;
+            sscanf(a + 4, "%d:%d@%lf", &am[nam].p, &am[nam].v, &am[nam].t);
+            nam++;
         } else if (!strncmp(a, "chorus=", 7)) {    /* (1.3) PERFORM's Chorus, 0..100, from the start */
             en_chorus(atoi(a + 7));
         } else if (!strncmp(a, "seed=", 5)) {
@@ -109,6 +117,16 @@ int main(int argc, char **argv)
             int want = t >= fz0 && t < fz1;
             if (want != fzs)
                 en_freeze(fzs = want);
+        }
+        for (e = 0; e < nam; e++)                /* (before the effects: the queue keeps the order) */
+            if (am[e].t >= 0 && t >= am[e].t) {
+                en_amt(am[e].p, am[e].v);
+                am[e].t = -1;
+            }
+        {
+            const int mw = t >= mv0 && t < mv1 ? mvm : 0;
+            if (mw != mvwas)
+                en_move((uint32_t)(mvwas = mw));
         }
         {
             uint32_t m = 0;

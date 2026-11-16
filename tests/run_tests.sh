@@ -111,9 +111,11 @@ for s in tests/scenarios/*.amb; do
 done
 # the SMK-37 Elite (build/host/amb_host_smk37): every FM-1 scenario with its controls' names (tests/smk37_scenario.py)
 # must pass and write what the FM-1's run just wrote, file for file (screens, MIDI out, audio): the same app on its
-# controls. Then its own (tests/scenarios_smk37/: K1 as MASTER, the outer keys, the four more buttons, the pads and faders, the
+# controls. But for Setup's page drawn (SMK_SETUP: the Elite's fourth knob there is Screen, the FM-1's Save), which must
+# differ. Then its own (tests/scenarios_smk37/: K1 as MASTER, the outer keys, the four more buttons, the pads and faders, the
 # battery). The controls must fail: an FM-1 scenario as written, `master N` (and the renamer on it), and its battery
 # scenario on the FM-1's simulator
+SMK_SETUP="first/setup.png journey_stay/setup_journey.png sleep/setup.png"
 smk_same() {
     sn="$1" sd="build/scenarios_smk37/fm1/$1"
     rm -rf "$sd" && mkdir -p "$sd" || return 1
@@ -121,7 +123,12 @@ smk_same() {
     build/host/amb_host_smk37 "$sd.amb" "$sd" || return 1
     for f in "$sd"/*; do
         [ -f "$f" ] || continue
-        cmp "$f" "build/scenarios/$sn/${f##*/}" || return 1
+        case " $SMK_SETUP " in
+            *" $sn/${f##*/} "*)
+                ! cmp -s "$f" "build/scenarios/$sn/${f##*/}" || { echo "$sn/${f##*/}: Setup's page, the same as the FM-1's"; return 1; }
+                echo "$sn/${f##*/}: Setup's page, not the FM-1's (Screen for Save)" ;;
+            *)  cmp "$f" "build/scenarios/$sn/${f##*/}" || return 1 ;;
+        esac
     done
     echo "the same files as the FM-1's run"
 }

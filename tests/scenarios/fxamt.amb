@@ -1,0 +1,87 @@
+# 1.4: an effect's CC is its amount too. 64 the least, 127 full (as 1.3), under 64 lets go; held by hand it is full
+# again, whatever a CC last said. Half time, Freeze, Octave and Drop are switches (no amount)
+wait 500
+expect view 0
+listen
+# nothing sent yet: full
+expect amt14 127
+# Reverb (key 14, CC 104) at 64: held, the least
+midi B0 68 40
+wait 300
+said Reverb
+expect pcc 16384
+expect amt14 64
+# swept up while held: the amount follows, it is still held
+midi B0 68 60
+wait 100
+expect amt14 96
+expect pcc 16384
+midi B0 68 7F
+wait 100
+expect amt14 127
+midi B0 68 50
+wait 100
+expect amt14 80
+# let go
+midi B0 68 00
+wait 100
+expect pcc 0
+# Rise (key 8, CC 28), a move: its amount too
+midi B0 1C 50
+wait 200
+expect amt8 80
+expect pcc 256
+midi B0 1C 00
+wait 100
+# Half time (key 2, CC 22): a switch, held all the same (the engine is told the amount and makes nothing of it)
+midi B0 16 40
+wait 200
+expect pcc 4
+midi B0 16 00
+wait 100
+expect pcc 0
+# Repeat (key 7, CC 27) at the least by CC, let go; then by hand on PERFORM (w4): full
+midi B0 1B 40
+wait 200
+expect amt7 64
+midi B0 1B 00
+wait 200
+tap SEL
+wait 300
+expect view 17
+key w4 down
+wait 300
+expect pheld 128
+expect amt7 127
+key w4 up
+wait 300
+expect pheld 0
+# 1.4: the screen and the link. Reverb by CC at 96 on PERFORM: its band shows a bar, the link says 33 of 64;
+# at 127 no bar and nothing listed (a 1.3 frame and a 0); by hand over a CC's part amount, full, no bar
+midi B0 68 60
+wait 400
+expect pbar 1
+link hello
+wait 700
+expect lamt14 33
+expect lstatelen 37
+midi B0 68 7F
+wait 400
+expect pbar 0
+expect lamt14 64
+expect lstatelen 35
+midi B0 68 50
+wait 300
+expect pbar 1
+midi B0 68 00
+wait 400
+expect pbar 0
+expect lstatelen 35
+# (found on the FM-1, 2026-11-12) a switch held by CC at a part value has no amount: no bar, nothing listed.
+# Freeze is CC 108 (key 18)
+midi B0 68 00
+midi B0 6C 60
+wait 700
+expect lamt18 64
+midi B0 6C 00
+wait 300

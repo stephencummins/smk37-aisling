@@ -12,7 +12,7 @@ theme and grows new ideas out of it; pick a piece and a key, thin or fill the ha
 echo, or tap SEL and play the effects on the whole music.
 
 Source, releases and the web installer: [github.com/stephencummins/fm1-aisling](https://github.com/stephencummins/fm1-aisling)
-and [aisling.stephen8n.com](https://aisling.stephen8n.com/). AISLING is by CU_STE
+and [aisling.stephen8n.com](https://aisling.stephen8n.com/). AISLING is by CÚ_STE
 ([www.stephen8n.com](https://www.stephen8n.com)).
 
 AISLING is said ASH-ling. It's Irish for a dream or a vision (an *aisling* is also an old kind of Irish poem, a
@@ -20,7 +20,7 @@ vision), and a pun on *AI Synth Link*; [Saying the names](#saying-the-names) has
 by FartyPants, a Berlin School firmware: it keeps NACHTFAHRT's whole machine and changes what it plays. NACHTFAHRT
 is a fork of DUB-1, itself a fork of AMB-1, Charles Vestal's generative ambient firmware for the FM-1.
 
-**This is 1.3.1:** PERFORM is all effects, twelve of them new, with Chorus and a CC for each (1.3), and the effects grid redrawn to match. It runs
+**This is 1.4.1:** 1.4 (the journey through the pieces, the day and the weather, and an amount on each effect's CC, over 1.3's PERFORM of 27 effects) with a screen you can set dark or light, and its meters and lanes named. It runs
 on the FM-1 (install it from the web installer) and in the browser emulator, from the same code.
 
 ![A drawing of the FM-1 running AISLING, each control labelled with what it does: the Controls section below says the same in words](img/fm1-panel.svg "The FM-1 (a drawing), running AISLING, each control labelled")
@@ -111,7 +111,7 @@ second.
 | Control | What it does |
 |---|---|
 | MASTER | The volume, with room at the quiet end: a low listening level sits about a quarter of the way up. The USB audio doesn't follow it: there, the computer sets the volume |
-| SELECT | On a layer's pages (the Drone, the Sequence, the Lead, Sequence 2, the Atmosphere, and each one's further pages), the layer's level, 1 a click: a ring in the middle of the screen shows it, and the header says it ("SEQ 64"). On the Aisling page it turns **Energy**, PERFORM's (the same value, 1 a click: the screen shows twice), so you can play the keys and push Energy at once: the knobs' rule shows "ENERGY 24" with a bar while you turn, and the header says it. Elsewhere it does nothing (the pages are on their buttons, the tempo on the Key page) |
+| SELECT | On a layer's pages (the Drone, the Sequence, the Lead, Sequence 2, the Atmosphere, and each one's further pages), the layer's level, 1 a click: a ring in the middle of the screen shows it, and the header says it ("SEQ 64"). On the Aisling page it turns **Energy**, PERFORM's (the same value, 1 a click: the screen shows twice), so you can play the keys and push Energy at once: the knobs' rule shows "ENERGY 24" with a bar while you turn, and the header says it. On GLO's Setup and Journey pages it sets the journey's stay (see [The journey](#3-controls)). Elsewhere it does nothing (the pages are on their buttons, the tempo on the Key page) |
 | PRESETS | The piece (eight) |
 | ALGORITHM | On a layer's page, its voice (on the Atmosphere's pages, its character). On the Chords page, the chord walk's character (Home, Wander, Free). On the Aisling page, Evolve's timing (see Nudges, below). On the Setup page, the sleep timer (see Sleep, below) |
 | OCT− / OCT+ | On the Sequence's, the Lead's and Sequence 2's pages, the layer's octave, a step a press (the Sequence −2 to 2, the Lead and Sequence 2 −2 to 1): the page's Octave knob shows it, the header says it ("SEQ OCTAVE −1"). OCT+ is lit while that octave is above where the piece was loaded, OCT− while it's below. On the other pages they do nothing. With HOME held, OCT− undoes and OCT+ redoes (see Undo, below). Both held 5 s: the update mode |
@@ -162,6 +162,37 @@ a key or a turn wakes it, and that touch only wakes it: the screen comes back, a
 if it was playing. MIDI doesn't wake it (a sequencer left running would), and MIDI sent while it sleeps is ignored.
 The USB audio isn't faded, since it comes before MASTER, but it stops with the music. The timer isn't saved: it's off
 every time the FM-1 starts.
+
+**The journey.** Left alone, AISLING can walk through its pieces by itself. On GLO's Setup page (or its Journey page,
+GLO a third time), SELECT sets a stay: Off, or 5, 10, 20 or 40 minutes on each piece. When the stay is up, at the
+start of the next phrase, the piece glides into the next one over sixteen bars: the Lead falls silent, then the
+sequences, then the pings; the Atmosphere thins and the tempo moves across under the Drone and the echo's tail; the
+piece changes, and the layers come back in the other order. Nothing stops and nothing clicks. A touch (a button, a
+key, a knob, or a note over MIDI) starts the stay again, so it never changes under your hands, and a touch during
+a glide calls it off where it is. While the music is stopped the time waits.
+
+The **Journey page** is its set list: KNOB 1 picks a piece, KNOB 2 puts it in or out (the last piece in can't go
+out), and the journey passes over the ones that are out. The journey changes nothing in the pieces and saves
+nothing; the stay and the list aren't saved either, so it's off, with all eight in, every time the FM-1 starts.
+
+**The screen, dark or light.** KNOB 3 on the Journey page, **Screen**, sets the whole screen: Dark, the colours on
+black, as it comes; or Light, the same colours deeper, on white, for a bright room or daylight. It changes nothing
+in the sound. It's saved with the pieces, as Lights is, and a CC never turns it. The turn itself redraws the whole
+screen at once, the busiest moment the FM-1 has: set it between pieces rather than in the middle of one.
+
+![The main screen, light: the same screen on white, the colours deeper](img/screen-light.png "The main screen with Screen at Light")
+
+![The Journey page: JOURNEY 20 MIN A PIECE over the eight pieces in two columns, Carolan picked, and the knobs Piece, In set, Screen and Day](img/screen-journey.png "The Journey page: a stay of 20 minutes, all eight in, the day at 1 hour")
+
+**The day and the weather.** KNOB 4 on the Journey page, **Day**, lays a slow day over whatever plays: Off, or a
+whole day in 20 minutes, 1 hour or 3 hours. It begins at dawn. By day the sequences' filter and the pings' tone
+open and the reverb grows; by night they darken and the room closes in, and the sequences thin a little. Three
+fronts of weather cross each day (a middling one at dawn, a slight one in the afternoon, a heavy one in the
+evening): the Atmosphere rises with each, and at the worst of the evening's a shower falls (Fras, lightly, for
+40 seconds at most). A piece whose Atmosphere is at 0 stays dry. A small sun, or a moon by night, crosses the top of
+the Aisling page while the day is on. The time runs only while the music plays. The day moves none of the piece's
+own values (the knobs read as you left them) and saves nothing, and it isn't saved itself: off every time the FM-1
+starts. It works with the journey or without it.
 
 A long press says what it did on a card in the middle of the screen.
 
@@ -531,11 +562,11 @@ Reverb, Echo. **Its Move page:** Width, Time, Rate, Intro.
 (the tail, in seconds), Reverb. The echo is a tape echo that ping-pongs left and right. **FX again: Echo:** Blur, Tone, Width, Size
 (the plate).
 
-**GLO: Setup:** Tune (±50 cents), MIDI out, Lights, Screen (Dark, the colours on black; or Light, the same colours
-deeper, on white: saved, as Lights is; set it between pieces, since the turn redraws the whole screen at once);
-ALGORITHM the sleep timer (see
-[Sleep](#3-controls)). **GLO again: Arc:** Lead in, Bridge, Arc,
-Memory (see [The arc and the filter motion](#6-the-arc-and-the-filter-motion)).
+**GLO: Setup:** Tune (±50 cents), MIDI out, Lights, Save (on the SMK-37 Elite this knob is Screen, as the Journey
+page's: [docs/SMK37.md](SMK37.md)); ALGORITHM the sleep timer (see
+[Sleep](#3-controls)); SELECT the journey's stay. **GLO again: Arc:** Lead in, Bridge, Arc,
+Memory (see [The arc and the filter motion](#6-the-arc-and-the-filter-motion)). **GLO a third time: Journey:** Piece,
+In set, Screen (Dark or Light) and Day; SELECT the stay (see [The journey](#3-controls)).
 
 **EDIT: Chords:** eight slots. In **Endless** the walk writes them and slot 1 plays; on each change they move
 up a slot. A key writes a slot's root, KNOB 2 its kind, KNOB 3 its type, KNOB 4 Play: Endless or **Loop**
@@ -646,6 +677,11 @@ Stutter, Reverse, Flange and Comb share one line of memory, so only one of them 
 pressed. If you are still holding another when you let go, that one comes back. They work on the music in the
 middle (mono) and a little duller than the rest, which is what lets them fit.
 
+Each effect held adds to the audio load, and the heavy ones add most: Shimmer, Reverb, Wash, Phaser, Crush, Drive,
+Macalla and the four above. On the busiest piece, Aran, eight heavy effects held together dropped out about once a
+minute on one FM-1 (21 times in 20 minutes; with Comb among them, 24 times in 3), where Aran with nothing held didn't
+drop out at all. If you hear clicks with a lot held, let some go. How many Aran carries cleanly hasn't been measured.
+
 **The screen shows the keys.** While nothing is held, the middle of the screen is a map of PERFORM's effects, as the
 effect grid shows its own: four rows of four for the white keys from F3 up, then the black keys, each group in its
 colour. Hold a key and the screen flashes that effect's colour and name; let go and the map is back. In the map's
@@ -686,11 +722,16 @@ clock from a Korg nanoKEY Fold, over a plain stereo cable. Type B hasn't been tr
 - **In, CCs:** on any channel, a CC turns a knob (see the table below). It sets the value outright: 0 to 127 spans
   the knob's range, and on the centred knobs (Filter, Wet, Energy, the sound pages' ±50) 64 is the middle. A CC counts
   as a touch for the sleep timer, as a note does. CCs never save, and never turn Setup's Tune, MIDI out, Lights or
-  Screen; while the effects grid is up, 16 to 19 rest, as the knobs do. A change is saved by itself later, as a turn's
+  Save, or the Journey page's Screen; while the effects grid is up, 16 to 19 rest, as the knobs do. A change is saved by itself later, as a turn's
   is (Filter, Wet, Energy and Chorus aren't saved at all). Other CCs are ignored.
 - **In, effects:** each of PERFORM's 27 effects has a CC, on any channel (the second table below). 64 or more holds
-  the effect, less lets it go, as its key does. They work on any page, PERFORM or not; in PERFORM the screen flashes
-  as it does for a key. All notes off and all sound off (CC 123 and 120) let every one go, and so does leaving
+  the effect, less lets it go, as its key does. From 64 to 127 the value is also how much of the effect there is:
+  127 is all of it, as its key gives, and 64 is next to none, so a fader or a pedal on the CC fades an effect in.
+  What "more" means depends on the effect: more of it in the mix for most, a deeper fall for Dive, more growl for
+  Drive, a longer way for Rise and Close. Half time, Freeze, Octave and Drop are either held or not, whatever the
+  value. A key pressed by hand is always all of it. They work on any page, PERFORM or not; in PERFORM the screen
+  flashes as it does for a key, with a bar up the left edge of the effect's band when it is under full: the taller
+  the bar, the more of the effect. All notes off and all sound off (CC 123 and 120) let every one go, and so does leaving
   PERFORM.
 - **Out, effects:** an effect you play by hand, in PERFORM or on the effects grid, sends its CC on channel 16: 127 as
   it starts, 0 as it ends. So a DAW can record a performance and play it back, and a screen can follow which effects
@@ -775,15 +816,17 @@ jack ignores it.
 
 ## 12. Saving
 
-AISLING keeps all eight pieces in the FM-1's memory, each as you left it, with Tune, MIDI out, Lights and Evolve's
+AISLING keeps all eight pieces in the FM-1's memory, each as you left it, with Tune, MIDI out, Lights, Screen and Evolve's
 timing.
 
 - **By itself:** a few seconds after a change, while resting (writing to the memory interrupts the sound
   for a moment, so it never happens while the music plays). A dot at the top means unsaved changes.
 - **SAVE or GLO held** half a second: saves now ("SAVED"). While the music plays, that can cost a very short dropout.
+- **Setup's KNOB 4 (Save):** shows Save while there are unsaved changes, Saved once there aren't; a turn
+  saves.
 - **GLO held on** (1.5 s): the piece back to its recipe ("RESET"). Like any change, it's saved by itself a few seconds after the music stops.
 
-The sleep timer isn't saved. Lock and PERFORM's Filter, Wet, Energy and Chorus aren't saved either; a piece change (or GLO's reset) returns the four to 0, so
+The sleep timer isn't saved, nor are the journey's stay, its set list or the day. Lock and PERFORM's Filter, Wet, Energy and Chorus aren't saved either; a piece change (or GLO's reset) returns the four to 0, so
 none of one piece's push carries into the next. Projects saved by DUB-1, AMB-1 or an earlier AISLING
 build aren't read: AISLING starts with its eight recipes.
 
@@ -831,7 +874,8 @@ has the next block's time to catch up, and only a run of slow blocks drops out. 
 four pieces at their recipes dropped out over ten minutes each, on one FM-1: Samhain 29 times, Skellig 117, Aran 251 and
 Blasket 374. A piece changed by hand can load the chip more: in one short test, Aran's Sequence on 16ths instead of
 8ths added about 8 points by itself. Holding GLO on puts a piece back to its recipe, and takes your changes with it. A
-computer reading the USB audio adds about 6 points to the load.
+computer reading the USB audio adds about 6 points to the load. So do PERFORM's effects, held: see the note after
+their list.
 
 **No USB audio on an older Mac:** in a simple test on macOS 13.7.8, the FM-1's MIDI appeared but no sound device did,
 so expect no USB sound or recording there. AISLING lists the audio first, as Felucca does, and that didn't fix it.
@@ -887,7 +931,7 @@ an earlier AISLING, go through the chip's own download mode, once:
 ## 14. Credits
 
 Source, releases and the web installer: [github.com/stephencummins/fm1-aisling](https://github.com/stephencummins/fm1-aisling)
-and [aisling.stephen8n.com](https://aisling.stephen8n.com/). AISLING is by CU_STE:
+and [aisling.stephen8n.com](https://aisling.stephen8n.com/). AISLING is by CÚ_STE:
 [www.stephen8n.com](https://www.stephen8n.com).
 
 AISLING is free software under the GNU General Public License, version 3. If you share the firmware, you

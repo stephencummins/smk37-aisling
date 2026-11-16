@@ -486,6 +486,36 @@ def chip_js():
        "fm1ota.js flashChip: the same handshake as fm1_install.py, the chip from the answer, 0 with no answer")
 
 
+def resume_js():
+    """web/fm1ota.js's resume refuses a loader of another model, before sending it anything: an SMK-37 Elite left in
+    update mode also calls itself "Felucca Update". With its own model's loader it goes on (UPGRADE sent)."""
+    if not shutil.which("node"):
+        print("resume in fm1ota.js: skipped (needs node)")
+        return
+    shutil.copyfile(ROOT / "web/fm1ota.js", TMP / "fm1ota.mjs")
+    js = ("import { Updater } from %r;"
+          "const run = async (h, product) => {"
+          "  const frame = Array.from(Buffer.from(h, 'hex')), sent = [];"
+          "  const input = { name: 'Felucca Update', state: 'connected', onmidimessage: null, async open() {} };"
+          "  const output = { name: 'Felucca Update', state: 'connected', async open() {}, send(b) {"
+          "    sent.push(Buffer.from(b).toString('hex'));"
+          "    if (b[0] === 0xF0 && b[7] === 0x40) setTimeout(() => input.onmidimessage({ data: frame }), 5);"
+          "    else { input.state = 'disconnected'; output.state = 'disconnected'; } } };"
+          "  const up = new Updater({ inputs: new Map([[1, input]]), outputs: new Map([[1, output]]) });"
+          "  try { return { r: await up.resume(new Uint8Array(64), () => {}, product), sent }; }"
+          "  catch (e) { return { code: e.code, sent }; } };"
+          "const [elite, fm1, product] = process.argv.slice(1);"
+          "process.stdout.write(JSON.stringify([await run(elite, product), await run(fm1, product)]));") % str(TMP / "fm1ota.mjs")
+    r = subprocess.run(["node", "--input-type=module", "-e", js, ident_frame("ota-SMK-37 Elite_016", 0).hex(),
+                        ident_frame("ota-FM-1_016", 0).hex(), "FM-1_391010000"], capture_output=True, check=True)
+    a, b = json.loads(r.stdout)
+    upgrade = bytes([0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7]).hex()
+    ok(a.get("code") == "model" and upgrade not in a["sent"],
+       "fm1ota.js resume: an SMK-37 Elite's loader is refused for an FM-1 package, nothing sent but the handshake")
+    ok(b.get("r") is False and b["sent"][-1] == upgrade,
+       "fm1ota.js resume: the FM-1's own loader is resumed (UPGRADE sent)")
+
+
 wire()
 installs()
 errors()
@@ -493,6 +523,7 @@ smk37()
 against_js()
 identity_js()
 chip_js()
+resume_js()
 shutil.rmtree(TMP, ignore_errors=True)
 print(f"INSTALL TESTS FAILED ({failed})" if failed else "install tests passed")
 sys.exit(1 if failed else 0)

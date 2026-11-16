@@ -1,0 +1,45 @@
+# the SMK-37 Elite: the screen, dark or light, on Setup (GLOBE) too: KNOB 8, where the FM-1 has Save (BT, the FM-1's
+# SAVE, saves). The same value as the Journey page's Screen (tests/scenarios/screenlight.amb, which runs here as well)
+wait 300
+expect light 0
+expect pfcontrast 0
+tap GLOBE
+wait 600
+shot dark.png
+turn K8 2
+wait 200
+expect light 1
+expect dirty 1
+expect pfcontrast 0
+wait 2500
+shot light.png
+# saved, and still light after a restart
+press BT
+wait 600
+release BT
+wait 40
+expect dirty 0
+reboot
+wait 600
+expect light 1
+shot light_restart.png
+tap GLOBE
+wait 600
+turn K8 -2
+wait 200
+expect light 0
+wait 600
+shot dark_again.png
+# the Journey page's Screen (GLOBE twice more: KNOB 7) is the same setting
+tap GLOBE
+wait 300
+tap GLOBE
+wait 600
+turn K7 2
+wait 200
+expect light 1
+tap GLOBE
+wait 600
+turn K8 -2
+wait 200
+expect light 0

@@ -3,75 +3,160 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AISLING · the add-on screen</title>
-<meta name="description" content="A 3.5-inch touch screen for the M-VAVE FM-1 running AISLING: it paints the visualiser's landscape from the FM-1's MIDI, shows the FM-1's own screen, and turns its knobs. How it was made, the parts, and an FAQ.">
-<meta property="og:title" content="AISLING · the add-on screen">
-<meta property="og:description" content="A small touch screen beside the FM-1: the landscape painted from its MIDI, the FM-1's own screen, and its knobs under your finger. How it was made, and the parts.">
+<title>VOXBOX · the add-on screen</title>
+<meta name="description" content="VOXBOX: a 3.5-inch touch screen for the M-VAVE FM-1 running AISLING: it paints the visualiser's landscape from the FM-1's MIDI, shows the FM-1's own screen, and turns its knobs. How it was made, the parts, and an FAQ.">
+<meta property="og:title" content="VOXBOX · the add-on screen">
+<meta property="og:description" content="VOXBOX, a small touch screen beside the FM-1: the landscape painted from its MIDI, the FM-1's own screen, and its knobs under your finger. How it was made, and the parts.">
 <meta property="og:url" content="https://aisling.stephen8n.com/screen/">
 <meta property="og:image" content="https://aisling.stephen8n.com/screen/img/share.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <style>
-/* The screen page's own: the clip beside what it is, the pictures, the parts list, the questions. The rest is the
-   site's (web/brand/site.css) */
+/* The screen page's own, laid out like a magazine: a cover, three numbered features (see it, other firmware, get one),
+   then the small print folded away. The rest is the site's (web/brand/site.css) */
 .pane p { margin: 0 0 10px; }
 .pane p:last-child { margin-bottom: 0; }
 .pane p b, .pane li b { font-weight: 400; color: var(--brand-green); }
-.pane.clip { display: flex; align-items: center; padding: 0; background: #1c1610; }
-.clip video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
-.lede { font-size: 14.5px; }
-.note { padding: 10px 12px; border: 1px solid var(--brand-rule); background: var(--brand-strip); font-size: 13px; }
-.pics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.pics figure { margin: 0; min-width: 0; }
-.pics img { display: block; box-sizing: border-box; width: 100%; height: auto; border: 1px solid var(--brand-rule); }
-.pics figcaption { margin-top: 6px; font-size: 12.5px; color: var(--brand-muted); }
-/* the two photos side by side at one height (their widths in the ratio of their shapes) */
-.photos { display: grid; grid-template-columns: minmax(0, 1.136fr) minmax(0, 1fr); gap: 12px; max-width: 760px; margin: 0 0 14px; }
-.photos figure { margin: 0; min-width: 0; }
-.photos img { display: block; box-sizing: border-box; width: 100%; height: auto; border: 1px solid var(--brand-rule); }
-.photos figcaption { margin-top: 6px; font-size: 12.5px; color: var(--brand-muted); }
+.d { font-family: var(--brand-display); font-weight: 600; text-transform: uppercase; }
+/* the cover */
+.cover { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); background: #1c1610; color: #f3ead7; }
+.cover-words { display: flex; flex-direction: column; justify-content: space-between; gap: 18px; padding: 22px 22px 20px; min-width: 0; }
+.cover h1 { margin: 0; font: 600 clamp(54px, 9.4vw, 122px)/.84 var(--brand-display); letter-spacing: .01em; text-transform: uppercase; }
+.cover h1 span { display: block; color: #e9a23b; }
+.cover .gloss { margin: 10px 0 0; font-size: 12px; letter-spacing: .04em; color: #c9b99a; }
+.cover .deck { margin: 0; font: 600 clamp(19px, 2.1vw, 25px)/1.2 var(--brand-display); letter-spacing: .01em; max-width: 22ch; }
+.cover video { display: block; width: 100%; height: 100%; object-fit: cover; aspect-ratio: 16 / 9; }
+.jump { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.jump a { display: flex; align-items: baseline; gap: 12px; padding: 12px 16px 11px; text-decoration: none;
+          font: 600 clamp(17px, 2vw, 22px)/1.1 var(--brand-display); letter-spacing: .04em; text-transform: uppercase; }
+.jump a + a { border-left: 1px solid var(--brand-rule); }
+.jump a i { font: 400 12px/1 var(--brand-mono); font-style: normal; color: var(--brand-rust); }
+.jump a:hover { background: var(--brand-strip); }
+/* a feature: its number, very big, and its question */
+.feat { padding: 26px 22px 28px; }
+.feat-head { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; column-gap: 22px; margin: 0 0 22px; }
+.num { font: 600 clamp(84px, 13vw, 168px)/.74 var(--brand-display); letter-spacing: -.01em; color: transparent;
+       -webkit-text-stroke: 2px var(--brand-rust); }
+@supports not (-webkit-text-stroke: 2px red) { .num { color: var(--brand-rust); } }
+.kick { margin: 0 0 6px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--brand-rust); }
+.feat h2 { margin: 0; font: 600 clamp(30px, 5vw, 58px)/.98 var(--brand-display); letter-spacing: .005em; text-transform: uppercase; max-width: 18ch; }
+.stand { margin: 0 0 20px; font: 600 clamp(18px, 2vw, 23px)/1.3 var(--brand-display); letter-spacing: .01em; text-transform: none; max-width: 46ch; }
+.stand em { font-style: normal; color: var(--brand-green); }
+/* pictures: square corners, a hairline, a caption in small mono */
+figure { margin: 0; min-width: 0; }
+figure img { display: block; box-sizing: border-box; width: 100%; height: auto; border: 1px solid var(--brand-rule); }
+figcaption { margin-top: 6px; font-size: 12px; line-height: 1.45; color: var(--brand-muted); }
+/* 01: three films, then the pages as a mosaic */
+.films { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin: 0 0 12px; }
+.film { position: relative; display: block; overflow: hidden; background: #1c1610; color: #f3ead7; text-decoration: none; }
+.film img { display: block; width: 100%; height: 100%; min-height: 150px; object-fit: cover; opacity: .82; transition: opacity .2s, transform .4s; }
+.film:hover img { opacity: 1; transform: scale(1.03); }
+.film:hover { color: #f3ead7; }
+.film span { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 14px 12px;
+             background: linear-gradient(to top, rgba(20, 15, 10, .92), rgba(20, 15, 10, 0));
+             font: 600 clamp(17px, 2vw, 24px)/1.05 var(--brand-display); letter-spacing: .03em; text-transform: uppercase; }
+.film span small { display: block; margin-bottom: 5px; font: 400 11px/1 var(--brand-mono); letter-spacing: .1em; color: #e9a23b; }
+.film::before { content: ""; position: absolute; top: 12px; left: 14px; z-index: 1; border-style: solid; border-width: 9px 0 9px 15px;
+                border-color: transparent transparent transparent #f3ead7; }
+.mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.mosaic figcaption b { display: block; font: 600 16px/1.2 var(--brand-display); letter-spacing: .04em; text-transform: uppercase; color: var(--brand-ink); }
+/* 02: the answer in three sizes of yes, beside the two photos */
+.fwgrid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 26px; align-items: start; }
+.tiers { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--brand-ink); }
+.tiers li { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); align-items: start; column-gap: 14px; padding: 14px 0 13px; border-bottom: 1px solid var(--brand-rule); }
+.tiers .big { font: 600 clamp(26px, 2.7vw, 34px)/1 var(--brand-display); color: var(--brand-green); text-transform: uppercase; }
+.tiers h3 { margin: 0 0 3px; font: 600 19px/1.2 var(--brand-display); letter-spacing: .03em; text-transform: uppercase; }
+.tiers p { margin: 0; font-size: 13px; }
+.tiers .tried { display: inline-block; margin-top: 6px; padding: 1px 6px; font-size: 11px; letter-spacing: .04em; border: 1px solid var(--brand-green); color: var(--brand-green); }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.caveat { margin: 16px 0 0; padding: 10px 12px; border-left: 3px solid var(--brand-rust); background: var(--brand-strip); font-size: 12.5px; }
+.vids { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+a.btn.big { min-height: 48px; padding: 10px 20px; font: 600 19px/1 var(--brand-display); letter-spacing: .06em; text-transform: uppercase; }
+/* 03: the kit, the store, the six steps */
+.buy { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 26px; align-items: start; margin: 0 0 26px; }
+.kit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--brand-rule); border: 1px solid var(--brand-rule); }
+.kit > div { padding: 12px 14px 13px; background: var(--brand-ground); }
+.kit h3 { margin: 0 0 4px; font: 600 18px/1.15 var(--brand-display); letter-spacing: .03em; text-transform: uppercase; }
+.kit p { margin: 0 0 6px; font-size: 12.5px; color: var(--brand-muted); }
+.kit .where { font-size: 12px; }
+.ad { display: inline-block; margin-right: 6px; padding: 0 5px; font: 400 10.5px/1.6 var(--brand-mono); letter-spacing: .04em;
+  background: var(--brand-soft); border: 1px solid var(--brand-rule); color: var(--brand-muted); }
+.steps { list-style: none; counter-reset: s; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0; padding: 0;
+         background: var(--brand-rule); border: 1px solid var(--brand-rule); }
+.steps li { counter-increment: s; padding: 12px 14px 14px; background: var(--brand-ground); font-size: 13px; }
+.steps li::before { content: counter(s); display: block; margin: 0 0 4px; font: 600 44px/1 var(--brand-display); color: var(--brand-green); }
+.steps li b { font-weight: 400; color: var(--brand-green); }
+.never { margin: 12px 0 0; font: 600 17px/1.3 var(--brand-display); letter-spacing: .01em; color: var(--brand-rust); }
+.sub { margin: 0 0 12px; font: 600 22px/1.1 var(--brand-display); letter-spacing: .04em; text-transform: uppercase; }
+/* 04: the Lego tray */
+.facts { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 16px 0 0; padding: 0; background: var(--brand-rule); border: 1px solid var(--brand-rule); }
+.facts li { padding: 10px 12px 11px; background: var(--brand-ground); font-size: 12px; color: var(--brand-muted); }
+.facts b { display: block; font: 600 clamp(24px, 2.6vw, 32px)/1.05 var(--brand-display); color: var(--brand-green); }
+.steps.bricks { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.steps.bricks li { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-content: start; }
+.steps.bricks li:last-child { grid-column: span 2; }
+.steps.bricks li::before { grid-row: 2; margin: 0; }
+.steps.bricks img { grid-column: 1 / -1; width: 100%; height: 150px; object-fit: contain; margin: 0 0 8px; }
+.steps.bricks b { grid-column: 2; align-self: end; font: 600 17px/1.15 var(--brand-display); letter-spacing: .02em; text-transform: uppercase; color: var(--brand-ink); }
+.steps.bricks span { grid-column: 1 / -1; margin-top: 6px; font-size: 12px; color: var(--brand-muted); }
+.parts { width: auto; min-width: min(100%, 26rem); border-collapse: collapse; margin: 0 0 12px; font-size: 13px; }
+.parts th, .parts td { padding: 4px 18px 4px 0; text-align: left; border-bottom: 1px solid var(--brand-rule); }
+.parts th { font-weight: 400; color: var(--brand-muted); }
+ol.plain { margin: 0 0 12px; padding-left: 1.4em; font-size: 13px; }
+ol.plain li { margin: 0 0 4px; }
+/* the small print: folded away until asked for */
+.fold { padding: 0; }
+.fold details { border-top: 1px solid var(--brand-rule); }
+.fold details:first-child { border-top: 0; }
+.fold summary { display: flex; align-items: baseline; gap: 12px; padding: 14px 22px 13px; cursor: pointer; list-style: none;
+                font: 600 clamp(19px, 2.2vw, 24px)/1.1 var(--brand-display); letter-spacing: .04em; text-transform: uppercase; }
+.fold summary::-webkit-details-marker { display: none; }
+.fold summary::before { content: "+"; flex: none; width: .7em; color: var(--brand-rust); }
+.fold details[open] > summary::before { content: "\2212"; }
+.fold summary:hover { background: var(--brand-strip); }
+.fold summary small { font: 400 12px/1.3 var(--brand-mono); letter-spacing: .02em; text-transform: none; color: var(--brand-muted); }
+.fold .in { padding: 2px 22px 20px; }
+ul.how { list-style: square; padding-left: 1.3rem; margin: 0 0 10px; }
+ul.how li { margin: 0 0 8px; } ul.how li::marker { color: var(--brand-green); }
 .parts { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .parts th, .parts td { padding: 9px 10px 9px 0; border-top: 1px solid var(--brand-rule); text-align: left; vertical-align: top; }
 .parts thead th { border-top: 0; padding-top: 0; font: 400 12px/1.4 var(--brand-mono); letter-spacing: .04em; color: var(--brand-muted); }
-.parts td:last-child { white-space: nowrap; padding-right: 0; font: 400 12px/1.5 var(--brand-mono); }
-.parts .what { display: block; color: var(--brand-muted); font-size: 12.5px; }
-.ad { display: inline-block; margin-right: 6px; padding: 0 5px; font: 400 10.5px/1.6 var(--brand-mono); letter-spacing: .04em;
-  background: var(--brand-soft); border: 1px solid var(--brand-rule); color: var(--brand-muted); }
-ol.steps, ul.how { padding-left: 1.3rem; margin: 0 0 10px; }
-ol.steps li, ul.how li { margin: 0 0 8px; }
-ul.how { list-style: square; }
-ul.how li::marker, ol.steps li::marker { color: var(--brand-green); }
-.never { color: var(--brand-rust); }
+.fw tbody th { width: 22%; font: 600 14px/1.35 var(--brand-display); letter-spacing: .02em; }
+.fw td { width: 39%; }
 .faq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 32px; }
 .faq h3 { margin: 10px 0 4px; font: 600 15.5px/1.3 var(--brand-display); letter-spacing: .02em; }
 .faq div > p { font-size: 13.5px; }
 p.small { color: var(--brand-muted); font-size: 12.5px; }
 p.small code { overflow-wrap: anywhere; }
-.vids { display: flex; flex-wrap: wrap; gap: 8px; }
-/* which firmware: the row names on the left, both answers in plain text (not the parts list's mono "where" column) */
-.fw { margin: 0 0 6px; }
-.fw tbody th { width: 22%; font: 600 14px/1.35 var(--brand-display); letter-spacing: .02em; }
-.fw td { width: 39%; }
-.fw td:last-child { white-space: normal; font: inherit; }
 @media (max-width: 59.99rem) {
-  .two.hero { grid-template-columns: minmax(0, 1fr); }
-  .two.hero > * + * { border-left: 0; border-top: 1px solid var(--brand-rule); }
-  .pics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cover, .fwgrid, .buy { grid-template-columns: minmax(0, 1fr); }
+  .films { grid-template-columns: repeat(2, minmax(0, 1fr)); } .films .film:first-child { grid-column: 1 / -1; }
+  .mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .steps, .steps.bricks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 47.99rem) {
-  .faq, .photos { grid-template-columns: minmax(0, 1fr); }
+  .jump { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .jump a:nth-child(3) { border-left: 0; }
+  .jump a:nth-child(n+3) { border-top: 1px solid var(--brand-rule); }
+  .feat { padding: 20px 16px 22px; } .fold summary { padding-left: 16px; padding-right: 16px; } .fold .in { padding: 2px 16px 18px; }
+  .feat-head { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .faq { grid-template-columns: minmax(0, 1fr); }
   .parts thead { display: none; }
   .parts, .parts tbody, .parts tr, .parts td { display: block; }
   .parts tr { border-top: 1px solid var(--brand-rule); padding: 9px 0; }
-  .parts tr:first-child { border-top: 0; padding-top: 0; }
   .parts td { border: 0; padding: 0 0 4px; }
-  .parts td:last-child { white-space: normal; }
   .fw tbody th, .fw td { display: block; width: auto; border: 0; padding: 0 0 6px; }
   .fw td::before { content: attr(data-l); display: block; font: 400 11.5px/1.5 var(--brand-mono); letter-spacing: .04em; color: var(--brand-muted); }
 }
-@media (max-width: 26rem) { .pics { grid-template-columns: minmax(0, 1fr); } }
-@media print { .clip { display: none; } }
+@media (max-width: 30rem) {
+  .jump a { flex-direction: column; gap: 4px; padding: 10px 12px; }
+  .kit, .steps, .films { grid-template-columns: minmax(0, 1fr); }
+  .jump a { font-size: 15px; }
+  .tiers li { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .film img { transition: none; } .film:hover img { transform: none; } }
+@media print { .cover video { display: none; } }
 </style>
 <!--AISLING-HEAD-->
 </head>
@@ -79,82 +164,194 @@ p.small code { overflow-wrap: anywhere; }
 <!--AISLING-BAR-->
 <main class="bench">
 <div class="strip">
-<h1 class="lab"><b>aisling</b> · the add-on screen</h1>
-<p class="lab">a touch screen for the FM-1 · made and tried on one FM-1, on AISLING 1.3</p>
+<p class="lab"><b>voxbox</b> · the add-on screen</p>
+<p class="lab">made and tried on one FM-1, on AISLING 1.3</p>
 </div>
 
-<div class="two hero">
-<div class="pane clip">
+<div class="cover">
+<div class="cover-words">
+<div>
+<h1>Vox<span>box</span></h1>
+<p class="gloss">For an FM-1 running AISLING.</p>
+</div>
+<p class="deck">A touch screen for the FM-1 that paints what it plays.</p>
+</div>
 <video id="loop" src="img/loop.mp4" poster="img/loop-poster.jpg" width="960" height="540" autoplay muted loop playsinline preload="metadata"
   aria-label="The screen on a stand above the FM-1, painting the landscape as AISLING plays, then a close look at it"></video>
 </div>
-<div class="pane">
-<p class="lede">A 3.5-inch touch screen that sits beside the FM-1 and gives it a second, bigger screen. It has two pages,
-a tap apart:</p>
-<ul class="how">
-<li><b>The landscape.</b> The <a href="../visualiser/">visualiser</a>'s Irish landscape, painted from what the FM-1
-plays: the flute the sky, the harps the hills and fields, the drone the bog. A strip of the eight pieces runs along
-the bottom; touch one and the FM-1 changes to it.</li>
-<li><b>The FM-1's own screen,</b> bigger: the page, the four knobs and their values, as AISLING shows them. Drag a
-knob sideways and the FM-1's knob turns.</li>
-<li><b>PERFORM's flash:</b> hold an effect on the FM-1's PERFORM page and the box fills with that effect's colour
-and name for a second, as the FM-1's own screen does.</li>
-</ul>
-<p>It's two cheap boards pushed together, with no computer in the loop: the FM-1 plugs into the box, and the box
-into a USB charger. Nothing changes on the FM-1 but one setting.</p>
-<p class="vids"><a class="btn go" href="https://youtu.be/m0fL2Crroo4">Watch the touchscreen demo</a><a class="btn" href="https://youtube.com/shorts/WtvuUBjDFCo">Watch PERFORM played</a><a class="btn" href="https://youtu.be/NsIO6Zmxpek">Watch the first test</a></p>
-<p class="note">You can make one: the parts are below, and the box's program is a
-<a href="aisling-screen-test7.uf2" download>ready-built file</a> you drag onto the board. It's the seventh test build,
-the one on mine, for this board and this screen only.</p>
-</div>
-</div>
 
-<section class="pane" aria-labelledby="seeh">
-<h2 class="bh" id="seeh">What it looks like</h2>
-<div class="pics">
-<figure><img src="img/over-fm1.jpg" width="1280" height="720" loading="lazy" alt="The screen on a stand above the whole FM-1, showing the landscape in mauve, pink and gold, with the strip of pieces along its bottom"><figcaption>The landscape above the FM-1, as it plays Blasket.</figcaption></figure>
-<figure><img src="img/landscape.jpg" width="1280" height="720" loading="lazy" alt="Close up: the landscape's soft bands of colour, and the strip of the eight pieces with Blasket lit"><figcaption>Close up: the sky, hills and fields, and the strip of pieces.</figcaption></figure>
-<figure><img src="img/fm1-page.jpg" width="1280" height="720" loading="lazy" alt="The FM-1's Aisling page on the box: the piece, its key and tempo, four knobs with their values, and the scale"><figcaption>The FM-1's own page: Blasket, E Dorian, tempo 70.</figcaption></figure>
-<figure><img src="img/drag.jpg" width="1280" height="720" loading="lazy" alt="A knob being dragged on the box: MOTION reads 58 in orange, and NOT SAVED shows"><figcaption>A finger on Motion: 58 in orange while it turns, and the FM-1's NOT SAVED.</figcaption></figure>
+<nav class="jump" aria-label="On this page">
+<a href="#see"><i>01</i>See it</a><a href="#others"><i>02</i>Other firmware</a><a href="#get"><i>03</i>Get one</a><a href="#tray"><i>04</i>Lego tray</a>
+</nav>
+
+<section class="feat" id="see" aria-labelledby="seeh">
+<div class="feat-head"><div class="num d" aria-hidden="true">01</div>
+<div><p class="kick">The demo</p><h2 id="seeh">Watch it play</h2></div></div>
+<div class="films">
+<a class="film" href="https://youtu.be/m0fL2Crroo4"><img src="img/over-fm1.jpg" width="1280" height="720" alt="The screen on a stand above the FM-1, showing the landscape in mauve, pink and gold"><span><small>Film</small>The touchscreen demo</span></a>
+<a class="film" href="https://youtube.com/shorts/WtvuUBjDFCo"><img src="img/drag.jpg" width="1280" height="720" loading="lazy" alt="A knob being dragged on the box, its value in orange"><span><small>Short</small>PERFORM played</span></a>
+<a class="film" href="https://youtu.be/NsIO6Zmxpek"><img src="img/landscape.jpg" width="1280" height="720" loading="lazy" alt="Close up of the landscape's soft bands of colour"><span><small>Film</small>The first test</span></a>
+</div>
+<div class="mosaic">
+<figure><img src="img/landscape.jpg" width="1280" height="720" loading="lazy" alt="The landscape's soft bands of colour, and the strip of the eight pieces with Blasket lit"><figcaption><b>The landscape</b>Painted from what the FM-1 plays. Touch a piece on the strip and the FM-1 changes to it.</figcaption></figure>
+<figure><img src="img/fm1-page.jpg" width="1280" height="720" loading="lazy" alt="The FM-1's Aisling page on the box: the piece, its key and tempo, four knobs with their values"><figcaption><b>The FM-1's screen, bigger</b>Drag a knob sideways and the FM-1's knob turns.</figcaption></figure>
+<figure><img src="img/effects.png" width="960" height="544" loading="lazy" alt="The effects page: a grid of the 27 effect names, six of them filled in their colours"><figcaption><b>The effects</b>All 27 of PERFORM's. Tap to hold, tap to let go. (Drawn by the box's code on a computer, not a photo.)</figcaption></figure>
+<figure><img src="img/pad.png" width="960" height="544" loading="lazy" alt="The pad: an orange line and a green line crossing where the finger is"><figcaption><b>The pad</b>One finger moves two knobs at once: Filter across, Wet up. (Drawn the same way.)</figcaption></figure>
 </div>
 </section>
 
-<section class="pane" aria-labelledby="needh">
-<h2 class="bh" id="needh">What you need</h2>
-<div class="photos">
-<figure><img src="img/parts.jpg" width="1200" height="1078" loading="lazy" alt="The Waveshare RP2350-PiZero board beside the back of the ELEGOO 3.5 inch screen, its 26-pin socket at the top left"><figcaption>The two boards: the RP2350-PiZero, and the back of the screen with its 26-pin socket.</figcaption></figure>
-<figure><img src="img/fitted.jpg" width="900" height="918" loading="lazy" alt="The board laid on the back of the screen, its pin labels lined up with the screen's socket"><figcaption>The board lines up with the screen's socket at one corner: header pins 1 to 26.</figcaption></figure>
+<section class="feat" id="others" aria-labelledby="othersh">
+<div class="feat-head"><div class="num d" aria-hidden="true">02</div>
+<div><p class="kick">Other firmware</p><h2 id="othersh">Does it work with other firmware?</h2></div></div>
+<div class="fwgrid">
+<div>
+<p class="stand"><em>Yes.</em> The landscape paints from any firmware that sends its notes over USB MIDI. How much more you get depends on what's on the FM-1.</p>
+<ul class="tiers">
+<li><div class="big">All of it</div><div><h3>AISLING</h3><p>The landscape, the FM-1's own screen, its knobs under your finger, the effects and the pad.</p></div></li>
+<li><div class="big">A lot</div><div><h3>Firmware with a screen reader</h3><p>About 47 in the store carry Charles Vestal's reader. The box paints their notes by pitch and shows what their screen says, as a page of text. It sends them none of AISLING's controls.</p><span class="tried">tried: AMB-1 1.3.2</span></div></li>
+<li><div class="big">The picture</div><div><h3>Anything else</h3><p>The landscape, painted by pitch: low notes the bog, high notes the sky. The box says it isn't AISLING and sends nothing more.</p><span class="tried">tried: stock V16</span></div></li>
+</ul>
+<p class="caveat">The second and third rows are a newer build, tried on the box on 15 November 2026. It isn't the download below yet: today's download paints other firmware by MIDI channel, and its touch controls are AISLING's only.</p>
+<p class="vids"><a class="btn go big" href="https://youtube.com/shorts/NtA-R_5Em_0">Watch it with AMB-1</a></p>
 </div>
-<table class="parts">
-<thead><tr><th scope="col">Part</th><th scope="col">What it does</th><th scope="col">Where</th></tr></thead>
+<div class="pair">
+<figure><img src="img/guest-landscape.jpg" width="900" height="1200" loading="lazy" alt="The FM-1 running AMB-1, its screen showing the piece Departures, and below it the box painting a landscape in orange, white and green"><figcaption>Charles Vestal's AMB-1 playing Departures, painted by pitch.</figcaption></figure>
+<figure><img src="img/guest-words.jpg" width="900" height="1200" loading="lazy" alt="The box's page for AMB-1: its name and version at the top, then in large letters the chord and the notes of the scale"><figcaption>AMB-1's page of words. A few letters come out lower case: a fault still to fix.</figcaption></figure>
+</div>
+</div>
+</section>
+
+<section class="feat" id="get" aria-labelledby="geth">
+<div class="feat-head"><div class="num d" aria-hidden="true">03</div>
+<div><p class="kick">Get one</p><h2 id="geth">How do I buy it?</h2></div></div>
+<div class="buy">
+<div>
+<p class="stand">It's a kit you put together: <em>two boards that push onto each other</em>, two cables, and a free file. No soldering on mine.</p>
+<p class="vids"><a class="btn go big" href="https://store.stephen8n.com/#g-screen">The screen kit, in the store</a></p>
+<p class="small" style="margin-top:14px">The store's card has the same parts as the list here, with the rest of the FM-1's kit. No FM-1 yet? <a href="https://store.stephen8n.com/#g-fm1">Where to buy one</a>.</p>
+<figure style="margin-top:16px"><img src="img/parts.jpg" width="1200" height="1078" loading="lazy" style="max-height:300px;object-fit:cover" alt="The Waveshare RP2350-PiZero board beside the back of the ELEGOO 3.5 inch screen, its 26-pin socket at the top left"><figcaption>The two boards: the RP2350-PiZero, and the back of the screen with its 26-pin socket.</figcaption></figure>
+</div>
+<div>
+<div class="kit">
+<div><h3>The board</h3><p>Waveshare RP2350-PiZero. The brains, with two USB-C sockets; the FM-1 plugs straight into one.</p>
+<p class="where"><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B0FGH8KNB2?tag=stephen8n-21"><span class="ad">ad</span>Amazon</a></p></div>
+<div><h3>The screen</h3><p>ELEGOO 3.5" touch screen for Raspberry Pi, 480 × 320, with a pen. It pushes onto the board's header.</p>
+<p class="where"><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B01MRQTMTD?tag=stephen8n-21"><span class="ad">ad</span>Amazon</a></p></div>
+<div><h3>A data cable</h3><p>USB-C to USB-C, from the box to the FM-1. It must carry data, not just charge.</p>
+<p class="where"><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B088NMR44C?tag=stephen8n-21"><span class="ad">ad</span>Anker</a></p></div>
+<div><h3>Power</h3><p>Any USB charger, power bank or computer. The box powers the FM-1 too. A power bank must stay on at a small load.</p>
+<p class="where"><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B01GGKYO1I?tag=stephen8n-21"><span class="ad">ad</span>A to C cable</a> · <a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B08JTQ66K7?tag=stephen8n-21"><span class="ad">ad</span>power bank</a></p></div>
+<div><h3>AISLING 1.3</h3><p>On the FM-1. Free. There's an older build of the box's program for 1.2.</p>
+<p class="where"><a href="../install/">install</a></p></div>
+<div><h3>The program</h3><p>A ready-built file you drag onto the board. The eighth test build, for this board and this screen only.</p>
+<p class="where"><a href="aisling-screen-test8.uf2" download>aisling-screen-test8.uf2</a></p></div>
+</div>
+<figure style="margin-top:12px"><img src="img/fitted.jpg" width="900" height="918" loading="lazy" alt="The board laid on the back of the screen, its pin labels lined up with the screen's socket" style="max-height:260px;object-fit:cover"><figcaption>The board lines up with the screen's socket at one corner: header pins 1 to 26.</figcaption></figure>
+</div>
+</div>
+<h3 class="sub">Six steps</h3>
+<ol class="steps">
+<li><b>Load the program first,</b> before the screen goes on. Hold the board's BOOT button while you plug its socket marked USB into a computer; drag <a href="aisling-screen-test8.uf2" download>the file</a> onto the RP2350 drive that appears. Unplug.</li>
+<li><b>Push the screen on,</b> so its socket covers header pins 1 to 26 and the screen lies over the board.</li>
+<li><b>Plug in the FM-1,</b> into the socket marked PIO-USB, with a data cable.</li>
+<li><b>Plug in power,</b> into the socket marked USB.</li>
+<li><b>Turn MIDI out on,</b> in AISLING's Setup page on the FM-1.</li>
+<li><b>Play.</b> Tap the landscape for the FM-1's page, and tap that for the effects. LAND goes back. Hold a finger down for two seconds for the calibration screen.</li>
+</ol>
+<p class="never">Never power both of the board's sockets from two sources at once: they share one power line, which also feeds the FM-1.</p>
+</section>
+
+<section class="feat" id="tray" aria-labelledby="trayh">
+<div class="feat-head"><div class="num d" aria-hidden="true">04</div>
+<div><p class="kick">A stand from bricks</p><h2 id="trayh">Build it a Lego tray</h2></div></div>
+<div class="buy">
+<div>
+<p class="stand">A tray of ordinary Lego bricks that holds the VOXBOX <em>at a tilt</em>: 50 parts, seven steps.</p>
+<p class="caveat"><b>Built once.</b> I put a prototype together from loose bricks on 15 November 2026 and it worked well. That is one build, from the bricks I had, not checked brick for brick against the list; <a href="#tray-built">a photo and a short film</a> are below. Its sizes are read from photos of the real box, not taken with a ruler, and the tightest gap is 1.2 mm, so try the fit with the real boards at step 4.</p>
+<p class="caveat"><b>The tray needs the turned build.</b> The boards sit in the tray with their cables out of the back, and the page's main download (test 8) then reads upside down. <a href="aisling-screen-test15.uf2" download>Test 15</a> turns the picture and the touch half a turn; it runs on my own box, the right way up, touch working. It is a later build than test 8 and carries parts I have not tried, a settings card among them; <a href="https://github.com/stephencummins/aisling-viz-box/tree/main/viz-test15">its notes</a> say which. 364,032 bytes, SHA-256 <span style="word-break:break-all">03926d6c96d5f2c088b141c12dbcb3482bd13ec46e998a0128ce29fdc5d4899b</span>. It loads the same way as test 8.</p>
+<p class="vids"><a class="btn go big" href="voxbox-lego-tray.ldr" download>Download the model</a><a class="btn big" href="voxbox-lego-tray-bricklink.xml" download>Shopping list</a></p>
+<p class="small" style="margin-top:14px">voxbox-lego-tray.ldr, an LDraw file, 2,715 bytes. It opens in BrickLink's free Studio; how is in the small print below. The shopping list is the same 50 parts as a BrickLink wanted list in the drawing's colours, 1,497 bytes; <a href="#tray-shop">how to use it</a> is below the steps.</p>
+<ul class="facts">
+<li><b>13 × 10</b>studs across, 104 × 80 mm</li>
+<li><b>11 × 7</b>studs of pocket, 88 × 56 mm</li>
+<li><b>50</b>parts, 14 kinds</li>
+</ul>
+</div>
+<div>
+<figure><img src="img/lego/fitted.webp" width="874" height="554" loading="lazy" alt="The tray drawn with the screen in it: a low black box of bricks around the screen, which shows bands of mauve, orange and pink"><figcaption>The tray with the screen in it, drawn. The screen and board are not in the file.</figcaption></figure>
+<div class="pair" style="margin-top:12px;align-items:start">
+<figure><img src="img/lego/empty.webp" width="874" height="554" loading="lazy" alt="The tray drawn empty: a walled pocket with pillars inside"><figcaption>Empty.</figcaption></figure>
+<figure><img src="img/lego/back.webp" width="860" height="467" loading="lazy" alt="The tray drawn from behind, the foot of bricks under its back edge"><figcaption>From behind: the foot that tilts it.</figcaption></figure>
+</div>
+</div>
+</div>
+<h3 class="sub" id="tray-built">The first one, built</h3>
+<div class="pair" style="align-items:start">
+<figure><img src="img/lego/built.webp" width="1200" height="1111" loading="lazy" alt="The screen in a frame of mixed-colour Lego bricks on the FM-1, showing AISLING's page, a lollipop standing behind it"><figcaption>15 November 2026: the prototype, from the bricks that were to hand, so not in the drawing's colours. The picture is the right way up: this is the turned build, test 15.</figcaption></figure>
+<figure><video src="img/lego/built.mp4" poster="img/lego/built-poster.jpg" width="960" height="540" controls muted playsinline preload="none" style="display:block;width:100%;height:auto;border:1px solid var(--brand-rule)"
+  aria-label="The screen in its brick tray: the effects page, then the landscape, touched with a lollipop stick"></video><figcaption>29 seconds, no sound: the effects page and the landscape, with a lollipop stick for a stylus. It is <a href="https://youtu.be/BqivrrI86kE">on YouTube</a> too.</figcaption></figure>
+</div>
+<h3 class="sub">Seven steps</h3>
+<ol class="steps bricks">
+<li><img src="img/lego/step1.webp" width="906" height="660" loading="lazy" alt="Step 1, drawn: the floor, the new parts in orange"><b>The floor</b><span>2 × Plate 6 × 10, 1 × Plate 1 × 10.</span></li>
+<li><img src="img/lego/step2.webp" width="984" height="749" loading="lazy" alt="Step 2, drawn: the first course of the wall, the new parts in orange"><b>The first course of the wall</b><span>3 × Brick 2 × 4, 3 × Brick 1 × 2, 2 × Brick 1 × 8.</span></li>
+<li><img src="img/lego/step3.webp" width="948" height="754" loading="lazy" alt="Step 3, drawn: the second course, the new parts in orange"><b>The second course</b><span>4 × Brick 1 × 3, 2 × Brick 2 × 4, 1 × Brick 2 × 3, 2 × Brick 1 × 6.</span></li>
+<li><img src="img/lego/step4.webp" width="936" height="745" loading="lazy" alt="Step 4, drawn: three pillars and the stop, the new parts in orange, the front wall drawn see-through"><b>Three pillars and the stop</b><span>6 × Brick 2 × 2, 4 × Tile 2 × 2. Try the two boards in the pocket here, before the wall's plates go on. If the pins touch the floor, add one Plate 2 × 2 under each pillar's tile.</span></li>
+<li><img src="img/lego/step5.webp" width="929" height="750" loading="lazy" alt="Step 5, drawn: the first layer of plates on the wall, the new parts in orange"><b>The first layer of plates on the wall</b><span>2 × Plate 2 × 6, 1 × Plate 1 × 10, 2 × Plate 1 × 8, 1 × Plate 1 × 3.</span></li>
+<li><img src="img/lego/step6.webp" width="910" height="746" loading="lazy" alt="Step 6, drawn: the second layer of plates, the new parts in orange"><b>The second layer of plates</b><span>1 × Plate 1 × 10, 2 × Plate 2 × 6, 2 × Plate 1 × 8, 1 × Plate 1 × 3.</span></li>
+<li><img src="img/lego/step7.webp" width="836" height="597" loading="lazy" alt="Step 7, drawn: the foot under the back edge, the new parts in orange"><b>The foot under the back edge</b><span>5 × Brick 2 × 4, 2 × Brick 2 × 2, 1 × Brick 1 × 2 × 2.</span></li>
+</ol>
+<h3 class="sub" id="tray-shop">Buying the bricks</h3>
+<p class="small">The shopping list, voxbox-lego-tray-bricklink.xml, is not a file to open and read. It is the parts list in the form that BrickLink, the marketplace for Lego parts, takes: paste it in and the 50 parts are on a wanted list in your account, with nothing typed by hand.</p>
+<ol class="plain">
+<li>Press Shopping list above; the file lands in your downloads.</li>
+<li>Open it in a plain text editor (TextEdit on a Mac, Notepad on Windows), select all of it and copy.</li>
+<li>Sign in at bricklink.com. An account is free.</li>
+<li>Open Wanted, then Upload, then the tab Upload BrickLink XML format.</li>
+<li>Paste into the box and press Proceed to verify items. BrickLink shows 16 lines, each with its picture, name, colour and quantity. Nothing is added yet.</li>
+<li>Press Add to Wanted List.</li>
+<li>Wanted's Buy tab then looks for shops that hold the parts between them. You pay those shops, and postage to each.</li>
+</ol>
+<p class="small" style="margin-top:12px">LEGO is a trademark of the LEGO Group, which does not sponsor or endorse this.</p>
+</section>
+
+<section class="fold" aria-label="The small print">
+<details><summary>Other firmware, part by part <small>what today's download does with each page</small></summary><div class="in">
+<p>The landscape works with any firmware that sends its notes over USB MIDI, but the touch controls for the FM-1 (its
+page, its knobs and the strip of pieces) are made for AISLING. With the download on this page:</p>
+<table class="parts fw">
+<thead><tr><th scope="col">On the screen</th><th scope="col">With AISLING 1.3</th><th scope="col">With any other firmware</th></tr></thead>
 <tbody>
-<tr><td>Waveshare RP2350-PiZero</td><td><span class="what">The brains: a Raspberry Pi RP2350 chip on a board the shape of a Pi Zero, with two USB-C
-sockets. One of them can be a USB host, which is what lets the FM-1 plug straight into it.</span></td>
-<td><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B0FGH8KNB2?tag=stephen8n-21"><span class="ad">ad</span>Amazon</a></td></tr>
-<tr><td>ELEGOO 3.5" touch screen for Raspberry Pi</td><td><span class="what">480 × 320, SPI, with a resistive touch layer
-and a pen. Made for a Raspberry Pi's header, so it pushes straight onto the RP2350-PiZero's.</span></td>
-<td><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B01MRQTMTD?tag=stephen8n-21"><span class="ad">ad</span>Amazon</a></td></tr>
-<tr><td>USB-C to USB-C data cable</td><td><span class="what">From the box's PIO-USB socket to the FM-1. It must carry data, not
-just charge.</span></td>
-<td><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B088NMR44C?tag=stephen8n-21"><span class="ad">ad</span>Anker</a></td></tr>
-<tr><td>Power: a USB cable and a supply</td><td><span class="what">Into the box's other socket, marked USB. Any USB charger
-or power bank, or a computer. The box powers the FM-1 too. A power bank needs to be one that stays on at a small
-load.</span></td>
-<td><a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B01GGKYO1I?tag=stephen8n-21"><span class="ad">ad</span>A to C cable</a><br>
-<a rel="sponsored nofollow" href="https://www.amazon.co.uk/dp/B08JTQ66K7?tag=stephen8n-21"><span class="ad">ad</span>power bank</a></td></tr>
-<tr><td>An FM-1 on AISLING 1.3</td><td><span class="what">Free. This build knows 1.3's knobs; there's an older one for 1.2 below.</span></td>
-<td><a href="../install/">install</a><br>
-<a href="https://store.stephen8n.com/#g-fm1">buy an FM-1</a></td></tr>
+<tr><th scope="row">The landscape</th><td data-l="AISLING 1.3">Paints the sky from the flute, the hills and fields from the
+harps, and the bog from the drone.</td><td data-l="Other firmware">Paints, if the firmware sends its notes over USB MIDI. Each part lands
+where its channel puts it (DUB-1's drums on channel 10 would paint fields, its bass on channel 3 the sky), so the
+picture means less.</td></tr>
+<tr><th scope="row">Switching pages, hold for calibration</th><td data-l="AISLING 1.3">Works.</td><td data-l="Other firmware">Works.
+That part is the box's own and doesn't ask the FM-1 anything.</td></tr>
+<tr><th scope="row">The strip of pieces</th><td data-l="AISLING 1.3">A tap changes the piece, and the strip follows the FM-1's
+piece however it was picked.</td><td data-l="Other firmware">Still shows AISLING's eight names. A tap sends a program change, 0 to 7,
+and lights the one you tapped; what the FM-1 does with it is up to its firmware.</td></tr>
+<tr><th scope="row">The FM-1's page</th><td data-l="AISLING 1.3">The FM-1's own screen, bigger, kept up to date as you play.</td>
+<td data-l="Other firmware">A firmware without a screen reader leaves it at WAITING FOR THE FM-1'S SCREEN READER. DUB-1 and its
+relatives have one, but they describe their own pages in their own words, which the box doesn't know, so expect
+little or nothing. Untried.</td></tr>
+<tr><th scope="row">Turning the knobs from the screen</th><td data-l="AISLING 1.3">Drag a knob sideways and the FM-1's knob
+turns.</td><td data-l="Other firmware">Nothing to turn. The box only turns a knob whose values it knows, and it knows
+AISLING's.</td></tr>
+<tr><th scope="row">The effects and the pad</th><td data-l="AISLING 1.3">A tap holds an effect or lets it go; a finger on the
+pad moves two of Filter, Wet, Energy and Chorus.</td><td data-l="Other firmware">The pages show, and send AISLING's CCs. What another
+firmware does with those numbers is up to it, so leave them alone.</td></tr>
+<tr><th scope="row">PERFORM's flash</th><td data-l="AISLING 1.3">A held effect's colour and name fill the box for a
+second.</td><td data-l="Other firmware">Never shows.</td></tr>
 </tbody>
 </table>
-<p class="small">The same parts are on one card in the store, with the rest of the FM-1's kit: <a href="https://store.stephen8n.com/#g-screen">the screen kit</a>.</p>
-<p class="small">No soldering on mine: the board came with its header fitted and the screen pushes onto it. If yours
-comes without a header, it needs one soldered on first. Something to prop it up behind the FM-1 helps.</p>
-</section>
-
-<div class="two">
-<section class="pane" aria-labelledby="howh">
-<h2 class="bh" id="howh">How it was done</h2>
+<p>The newer build asks the FM-1 who it is every two seconds, using Charles Vestal's screen-reader protocol. About 47
+firmwares in the store carry that reader: 41 with their own words (X0X, FoMni-1, AMB-1, Polly, MOSS-1 and so on) and 6
+with the common words only. With one that names itself something other than AISLING, the box places the notes by pitch
+instead of by channel, shows what that firmware's screen says as a page of text, and sends it none of AISLING's
+controls. A firmware that doesn't answer gets the landscape only. Only AMB-1 and the stock firmware have been tried.</p>
+</div></details>
+<details><summary>How it was done <small>USB host, a landscape in C, the screen reader</small></summary><div class="in">
 <ul class="how">
 <li><b>The FM-1 is a USB MIDI device,</b> and AISLING sends everything it plays out of its USB socket: the drone, the
 harps and the flute on channels 1 to 4, and the clock. The RP2350 runs as a USB host on its second socket (in
@@ -168,77 +365,26 @@ text and draws the page.</li>
 page is on its screen. The box knows each knob's values in order, so a drag steps through them from where the knob
 is and never jumps. If the FM-1 doesn't say the knob back, the box says so in red.</li>
 <li><b>The strip of pieces</b> sends a program change, 0 to 7, back to the FM-1.</li>
+<li><b>The effects and the pad</b> use what AISLING 1.3 added: a MIDI CC for each of the 27 effects (64 or more holds
+it, less lets it go) and fixed CCs for Filter, Wet, Energy and Chorus. They work from any page of the FM-1, though
+only PERFORM shows them on its own screen. Going from the effects to the pad lets go of whatever was held.</li>
 </ul>
 <p>It's all new code, on the Raspberry Pi Pico SDK with TinyUSB and Pico-PIO-USB, under the GPL like AISLING:
 <a href="https://github.com/stephencummins/aisling-viz-box">the source is on GitHub</a>. The screen's settings were
-written from the panel chip's datasheet and tuned by eye on a calibration screen. It was built up in seven test
+written from the panel chip's datasheet and tuned by eye on a calibration screen. It was built up in eight test
 builds, from "does the screen light up" to the knobs, tried on the board as it went.</p>
-</section>
-
-<section class="pane" aria-labelledby="seth">
-<h2 class="bh" id="seth">Putting it together</h2>
-<ol class="steps">
-<li>Put the program on the board first, before the screen goes on. Download
-<a href="aisling-screen-test7.uf2" download>aisling-screen-test7.uf2</a>. Hold the board's <b>BOOT</b> button while you
-plug its socket marked <b>USB</b> into a computer: a drive called RP2350 appears. Drag the file onto it. The drive
-goes away by itself, and that's it loaded. Unplug the board.</li>
-<li>Push the screen onto the board's header, so its socket covers pins 1 to 26 and the screen lies over the
-board.</li>
-<li>Plug the FM-1 into the socket marked <b>PIO-USB</b>, with a data cable.</li>
-<li>Plug power into the socket marked <b>USB</b>.</li>
-<li>On the FM-1, in AISLING's Setup page, turn <b>MIDI out</b> on.</li>
-<li>Play. Tap the screen to switch between the landscape and the FM-1's page. Holding a finger on it for two
-seconds brings up the calibration screen.</li>
-</ol>
-<p class="never">Never power both of the board's sockets from two sources at once: they share one power line, which
-also feeds the FM-1.</p>
-<p>The screen covers the board's BOOT button, which is why the program goes on first. After that, a new build loads
-over USB with the screen in place: <a href="https://github.com/stephencummins/aisling-viz-box#load">the source's README</a> has the two lines.</p>
-<p class="small">The file is 238,592 bytes; its SHA-256 is
-<code>bb2310c51972623b296af71686f15f94126eaeff6c12ff06f86e32dee3b327c3</code>. It's a hobby build with no warranty,
-tried on one board. It's for AISLING 1.3. Still on 1.2? Use
-<a href="aisling-screen-test7-for-1.2.uf2" download>the build made for 1.2</a> (233,984 bytes, SHA-256
-<code>60510ee6d58301f22f45206a0a64d5a9527fbd9dfe7391b9a7f87dad48945adc</code>): it has 1.2's PERFORM knobs and no
-flash.</p>
-</section>
-</div>
-
-<section class="pane" aria-labelledby="faqh">
-<h2 class="bh" id="faqh">Questions</h2>
-<p class="lede">The short answer: the landscape works with any firmware that sends its notes over USB MIDI, but the
-touch controls for the FM-1 (its page, its knobs and the strip of pieces) are made for AISLING. Part by part:</p>
-<table class="parts fw">
-<thead><tr><th scope="col">On the screen</th><th scope="col">With AISLING 1.3</th><th scope="col">With any other firmware</th></tr></thead>
-<tbody>
-<tr><th scope="row">The landscape</th><td data-l="AISLING 1.3">Paints the sky from the flute, the hills and fields from the
-harps, and the bog from the drone.</td><td data-l="Other firmware">Paints, if the firmware sends its notes over USB MIDI. Each part lands
-where its channel puts it (DUB-1's drums on channel 10 would paint fields, its bass on channel 3 the sky), so the
-picture means less.</td></tr>
-<tr><th scope="row">Tap to switch pages, hold for calibration</th><td data-l="AISLING 1.3">Works.</td><td data-l="Other firmware">Works.
-That part is the box's own and doesn't ask the FM-1 anything.</td></tr>
-<tr><th scope="row">The strip of pieces</th><td data-l="AISLING 1.3">A tap changes the piece, and the strip follows the FM-1's
-piece however it was picked.</td><td data-l="Other firmware">Still shows AISLING's eight names. A tap sends a program change, 0 to 7,
-and lights the one you tapped; what the FM-1 does with it is up to its firmware.</td></tr>
-<tr><th scope="row">The FM-1's page</th><td data-l="AISLING 1.3">The FM-1's own screen, bigger, kept up to date as you play.</td>
-<td data-l="Other firmware">A firmware without a screen reader leaves it at WAITING FOR THE FM-1'S SCREEN READER. DUB-1 and its
-relatives have one, but they describe their own pages in their own words, which the box doesn't know, so expect
-little or nothing. Untried.</td></tr>
-<tr><th scope="row">Turning the knobs from the screen</th><td data-l="AISLING 1.3">Drag a knob sideways and the FM-1's knob
-turns.</td><td data-l="Other firmware">Nothing to turn. The box only turns a knob whose values it knows, and it knows
-AISLING's.</td></tr>
-<tr><th scope="row">PERFORM's flash</th><td data-l="AISLING 1.3">A held effect's colour and name fill the box for a
-second.</td><td data-l="Other firmware">Never shows.</td></tr>
-</tbody>
-</table>
+</div></details>
+<details><summary>Questions <small>knobs, saving, colours, the code</small></summary><div class="in">
 <div class="faq">
 <div>
 <h3>Which AISLING do I need?</h3>
 <p>1.3 for this build: it knows 1.3's knobs (PERFORM's fourth is Chorus) and its 27 effects. On 1.2, use the older
-build under the steps above: with this one, PERFORM's fourth knob would be wrong. The knobs need 1.2 or later, the
+build under The files, below: with this one, PERFORM's fourth knob would be wrong. The knobs need 1.2 or later, the
 first AISLING to take them over MIDI (CC 16 to 19); the strip of pieces needs 1.1 or later, for program change.</p>
 <h3>What about the FM-1's stock firmware?</h3>
-<p>Untried. If it sends its notes over USB MIDI, the landscape should paint from them. The FM-1's page and the knobs
-won't work, and what it does with the strip's program change is up to it.</p>
+<p>With the download on this page, untried. With the newer build (see Other firmware, above), tried on 15 November 2026: stock V16
+sends the notes you play over USB MIDI and the landscape paints from them by pitch. It doesn't answer when asked who
+it is, so the box says it isn't AISLING and sends it nothing more.</p>
 <h3>What if the FM-1 doesn't take a turn?</h3>
 <p>While you drag, the box shows the value it's sending in orange, until the FM-1 says the knob back. If nothing comes
 back within a second and a half (on an older AISLING, say, or with the grid up), it puts the FM-1's own value back
@@ -270,8 +416,8 @@ listens to the FM-1's MIDI and asks what's on its screen, which changes nothing.
 <p>No. It turns knobs and picks pieces; the FM-1 still does the playing.</p>
 <h3>Can I get the code?</h3>
 <p>Yes: <a href="https://github.com/stephencummins/aisling-viz-box">github.com/stephencummins/aisling-viz-box</a>, under the GPL-3.0 like AISLING. Each of the
-seven test builds has its own folder and notes. The <a href="aisling-screen-test7.uf2" download>ready-built file</a>
-is test 7's, and the licences of the libraries inside it are in the source's <code>NOTICES.md</code>.</p>
+eight test builds has its own folder and notes. The <a href="aisling-screen-test8.uf2" download>ready-built file</a>
+is test 8's, and the licences of the libraries inside it are in the source's <code>NOTICES.md</code>.</p>
 </div>
 <div>
 <h3>Why are the colours paler than on a computer?</h3>
@@ -286,6 +432,39 @@ to be made for a Pi's header.</p>
 or Edge still paints the full landscape from an FM-1 plugged into the computer.</p>
 </div>
 </div>
+</div></details>
+<details id="tray-parts"><summary>The tray's parts <small>50 bricks, plates and tiles</small></summary><div class="in">
+<table class="parts"><thead><tr><th>How many</th><th>Part</th><th>LDraw number</th></tr></thead><tbody><tr><td>10</td><td>Brick 2 × 4</td><td>3001</td></tr><tr><td>2</td><td>Brick 1 × 8</td><td>3008</td></tr><tr><td>1</td><td>Brick 2 × 3</td><td>3002</td></tr><tr><td>2</td><td>Brick 1 × 6</td><td>3009</td></tr><tr><td>8</td><td>Brick 2 × 2</td><td>3003</td></tr><tr><td>4</td><td>Brick 1 × 3</td><td>3622</td></tr><tr><td>3</td><td>Brick 1 × 2</td><td>3004</td></tr><tr><td>1</td><td>Brick 1 × 2 × 2</td><td>3245b</td></tr><tr><td>2</td><td>Plate 6 × 10</td><td>3033</td></tr><tr><td>4</td><td>Plate 2 × 6</td><td>3795</td></tr><tr><td>3</td><td>Plate 1 × 10</td><td>4477</td></tr><tr><td>4</td><td>Plate 1 × 8</td><td>3460</td></tr><tr><td>4</td><td>Tile 2 × 2</td><td>3068b</td></tr><tr><td>2</td><td>Plate 1 × 3</td><td>3623</td></tr></tbody></table>
+<p>The tray is drawn around sizes read from photos of the real box, scaled by its 2.54 mm pin spacing and good to about 0.7 mm; none has been checked with a ruler. The screen's board is 85.5 × 56 mm, its nominal size. Under it, the small board's face is 17.9 mm down and the tips of its soldered pins 19.5 mm; above it, the glass is 4.6 mm up.</p>
+<p>On pillars of 22.4 mm the pin tips clear the floor's studs by 1.2 mm, which is about the size of the measuring error. If they touch, one Plate 2 × 2 under each pillar's tile lifts the boards 3.2 mm. The glass stands about 1.3 mm above the wall's studs. The tile on the floor carries nothing: it sits 1.3 mm under the small board and stops that corner dipping when the screen is pressed.</p>
+</div></details>
+<details id="tray-buy"><summary>Buying the tray's bricks <small>a BrickLink wanted list</small></summary><div class="in">
+<p>There is no kit to buy yet. The steps for using the shopping list are <a href="#tray-shop">under the tray's seven steps</a>; these are its details.</p>
+<p>The list asks for each part in the colour it is drawn in: light bluish grey for the floor, dark bluish grey for the wall's bricks and the foot, black for the wall's plates, orange for the pillars and the stop. That makes 16 lines for 14 kinds of part, as two kinds come in two colours. No colour matters to the fit; change any of them on BrickLink's check page or in the wanted list, to whatever is cheap or to your taste. It asks for new or used alike. BrickLink calls the 2 × 2 tile 3068, where the model and the parts list above say 3068b; they are the same tile. BrickLink took the first 15 lines on 15 November 2026, as far as step 5; the sixteenth, the Brick 1 × 2 × 2 (BrickLink's 3245b), was added afterwards and checked only against BrickLink's catalogue, which lists it in dark bluish grey; I did not add it or go on to buy, so steps 6 and 7 are as BrickLink names them, not tried. The prices, the postage and the sale are between you and BrickLink's shops; I take no part in them and earn nothing from them.</p>
+</div></details>
+<details id="tray-studio"><summary>Opening the tray in Studio <small>the file, its steps, its parts</small></summary><div class="in">
+<ol class="plain">
+<li>Install Studio 2.0 from BrickLink. It is free.</li>
+<li>File, Import, Import LDraw File, and choose voxbox-lego-tray.ldr. Plain File, Open lists only Studio's own .io files.</li>
+<li>The Step List panel shows the seven steps; clicking one shows the model built up to there.</li>
+<li>To turn the view, hold the right mouse button and drag. Scroll to zoom. To turn a part, select it and press the arrow keys.</li>
+<li>Model Info lists the parts, and can send them to a BrickLink wanted list.</li>
+</ol>
+<p>The file opened in Studio this way on 15 November 2026; the menu and panel names are as remembered, not checked. Studio shows only the Lego, and its collision and stability checks have not been run on this model.</p>
+</div></details>
+<details><summary>The files <small>sizes, checksums, older builds</small></summary><div class="in">
+<p>The screen covers the board's BOOT button, which is why the program goes on first. After that, a new build loads
+over USB with the screen in place: <a href="https://github.com/stephencummins/aisling-viz-box#load">the source's README</a> has the two lines.</p>
+<p class="small">The file is 298,496 bytes; its SHA-256 is
+<code>526dc6d2d00717378e417caf278290708affdee188d224ba956e03f90edeab42</code>. It's a hobby build with no warranty,
+tried on one board. It's for AISLING 1.3. Still on 1.2? Use
+<a href="aisling-screen-test7-for-1.2.uf2" download>the build made for 1.2</a> (233,984 bytes, SHA-256
+<code>60510ee6d58301f22f45206a0a64d5a9527fbd9dfe7391b9a7f87dad48945adc</code>): it has 1.2's PERFORM knobs and no
+flash. The build before this one, without the effects and the pad, is still here:
+<a href="aisling-screen-test7.uf2" download>test 7</a>.</p>
+<p class="small">No soldering on mine: the board came with its header fitted and the screen pushes onto it. If yours
+comes without a header, it needs one soldered on first. Something to prop it up behind the FM-1 helps.</p>
+</div></details>
 </section>
 
 <section class="pane">

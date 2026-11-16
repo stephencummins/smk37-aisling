@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """docs/MANUAL.md -> docs/manual.html. The Markdown is the source; run this after editing it.
 
-  tools/manual_html.py [IN.md [OUT.html]] [--fragment]
+  tools/manual_html.py [IN.md [OUT.html]] [--fragment] [--part fx1] [--away smk37=URL]
 
 --fragment writes the page without its <!doctype>/<html>/<head>/<body> wrapper (for hosts that
-add their own); the default is a complete document that opens in any browser.
+add their own); the default is a complete document that opens in any browser. --part says whose manual it is (PARTS):
+the FM-1's (the default) at manual/, the FX-1's at fx1/manual/.
 
 Handles what the manual uses: headings, paragraphs, **bold**, `code`, lists, tables, fenced
 code, rules, and the contents list (linked to the sections by number). An image is
@@ -17,6 +18,7 @@ import re
 import sys
 from pathlib import Path
 
+import site_brand
 from site_brand import stamp
 
 SRC = Path(__file__).resolve().parents[1]
@@ -24,7 +26,6 @@ PART_COLOURS = {}                                     # (X0X marks its parts wit
 
 CSS = """
 /* The manual's own, on the site's bench (web/brand/site.css): the contents down the side, the text beside them */
-html { scroll-padding-top: 4rem; }
 .prose { font-size: 14px; line-height: 1.65; }
 .prose > :first-child { margin-top: 0; }
 .prose h2, .prose h3 { font-family: var(--brand-display); font-weight: 600; text-wrap: balance; line-height: 1.25; color: var(--brand-ink); }
@@ -33,17 +34,6 @@ html { scroll-padding-top: 4rem; }
 .prose h2 .num { flex: none; font-size: 1.7em; line-height: .8; color: transparent; -webkit-text-stroke: 1.5px var(--brand-rust);
                  font-variant-numeric: tabular-nums; }
 @supports not (-webkit-text-stroke: 2px red) { .prose h2 .num { color: var(--brand-rust); } }
-/* under a cover: the sections as numbered tiles (a phone has them in place of the side contents) */
-.mg-pic.px { align-items: center; justify-content: center; padding: 22px; background: #146c41; }
-.mg-pic.px img { width: min(100%, 300px); height: auto; aspect-ratio: 1; box-shadow: 0 0 0 6px #1c1610; }
-nav.mg-jump { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); border-bottom: 1px solid var(--brand-rule); }
-nav.mg-jump a { font-size: 17px; overflow-wrap: anywhere; }
-nav.mg-jump a i { flex: none; overflow-wrap: normal; }
-@media (max-width: 47.99rem) { nav.mg-jump { grid-template-columns: 1fr 1fr; } }
-details.status { max-width: 78ch; }
-details.status > summary { cursor: pointer; }
-details.status > summary b { font: 600 15px/1.3 var(--brand-display); letter-spacing: .06em; text-transform: uppercase; color: var(--brand-rust); }
-details.status[open] > summary { margin-bottom: .6rem; }
 .prose h3 { font-size: 16px; letter-spacing: .01em; margin: 1.7rem 0 .4rem; }
 .prose p, .prose li { max-width: 78ch; }
 .prose p { margin: 0 0 .9rem; }
@@ -63,7 +53,17 @@ details.status[open] > summary { margin-bottom: .6rem; }
 .prose th, .prose td { text-align: left; vertical-align: top; padding: .4rem .7rem .4rem 0; border-bottom: 1px solid var(--brand-rule); }
 .prose th { font-weight: 400; font-size: 12.5px; color: var(--brand-muted); border-bottom-color: var(--brand-muted); }
 .prose td:first-child { white-space: nowrap; }
-.prose .lede { font-size: 14.5px; margin-bottom: 1.2rem; }
+.prose .lede { font: 600 clamp(17px, 1.7vw, 20px)/1.4 var(--brand-display); letter-spacing: .01em; max-width: 64ch; margin-bottom: 1.4rem; }
+.prose .lede a { color: inherit; }
+/* the cover: what the page is, and the firmware's own screen; the sections as numbered tiles under it */
+.mg-pic.px { align-items: center; justify-content: center; padding: 22px; background: #146c41; }
+.mg-pic.px img { width: min(100%, 300px); height: auto; aspect-ratio: 1; box-shadow: 0 0 0 6px #1c1610; }
+nav.mg-jump { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); border-bottom: 1px solid var(--brand-rule); }
+nav.mg-jump a { font-size: 17px; overflow-wrap: anywhere; }
+nav.mg-jump a i { flex: none; overflow-wrap: normal; }
+@media (max-width: 47.99rem) { nav.mg-jump { grid-template-columns: 1fr 1fr; } }
+details.status { max-width: 78ch; }
+details.status > summary b { font: 600 15px/1.3 var(--brand-display); letter-spacing: .06em; text-transform: uppercase; color: var(--brand-rust); }
 .status, .callout { background: var(--brand-strip); border: 1px solid var(--brand-rule); padding: 10px 14px; margin: 0 0 1.1rem; max-width: 78ch; }
 .callout { border-left: 3px solid var(--brand-green); }
 .status p, .callout p { margin: 0; }
@@ -86,9 +86,8 @@ nav.contents ol { list-style: none; margin: 0; padding: 0; }
 nav.contents li { margin: 0; }
 nav.contents a { display: block; padding: 3px 0; color: var(--brand-ink); text-decoration: none; }
 nav.contents a:hover { color: var(--brand-green); text-decoration: underline; }
-@media (min-width: 48rem) { nav.contents { position: sticky; top: 3.5rem; max-height: calc(100vh - 4rem); overflow-y: auto; box-sizing: border-box; } }
-@media (max-width: 47.99rem) { nav.contents ol { columns: 2 12rem; column-gap: 1.2rem; } nav.contents li { break-inside: avoid; }
-  .mg-jump ~ .cols aside.side { display: none; } }
+@media (min-width: 48rem) { nav.contents { position: sticky; top: calc(var(--brand-bar) + .45rem); max-height: calc(100vh - var(--brand-bar) - 1rem); overflow-y: auto; box-sizing: border-box; } }
+@media (max-width: 47.99rem) { aside.side { display: none; } }   /* a phone has the tiles under the cover */
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 """
 # --fragment: no site.css, so the page brings the little of it the text above stands on
@@ -115,10 +114,23 @@ def on_the_bench(body):
         contents = nav.group(0).replace('<h2 id="contents">Contents</h2>', '<h2 class="bh" id="contents">Contents</h2>')
         contents = contents.replace("<hr>\n", "")
         side = f'<aside class="side">\n{contents}</aside>\n'
-    strip = (f'<div class="strip">\n<h1 class="lab"><b>{title.lower()}</b> · {NAME}, Irish ambient for the M-VAVE FM-1</h1>\n'
-             f'<a class="btn" href="../cheat/">cheat sheet</a>\n</div>\n')
+    part = PARTS[PART]
+    cover, tag = "", "h1"
+    if h1 and title == "Manual" and nav:              # the firmware's own manual: a cover, and its sections as tiles
+        tag = "p"
+        tiles = re.findall(r'<a href="#s(\d+)">(.*?)</a>', nav.group(0))
+        count = COUNTS[len(tiles)] if len(tiles) < len(COUNTS) else str(len(tiles))
+        w, h = size(IMG_BASE / part["shot"][0])
+        cover = (f'<div class="mg-cover">\n<div class="mg-words">\n<div><h1>{part["cover"]}</h1>\n'
+                 f'<p class="mg-gloss">{part["name"]}, {part["what"]}.</p></div>\n'
+                 f'<p class="mg-deck">{part["deck"].replace("__N__", count)}</p>\n</div>\n'
+                 f'<div class="mg-pic px"><img src="{part["shot"][0]}" width="{w}" height="{h}" alt="{part["shot"][1]}"></div>\n</div>\n'
+                 '<nav class="mg-jump" aria-label="Sections">' +
+                 "".join(f'<a href="#s{n}"><i>{int(n):02d}</i>{t}</a>' for n, t in tiles) + "</nav>\n")
+    strip = (f'<div class="strip">\n<{tag} class="lab"><b>{title.lower()}</b> · {part["name"]}, {part["what"]}</{tag}>\n'
+             f'<a class="btn" href="{part["button"][0]}">{part["button"][1]}</a>\n</div>\n')
     text = f'<article class="pane prose">\n{body}\n</article>\n'
-    return strip + (f'<div class="cols">\n{side}{text}</div>\n' if side else text)
+    return strip + cover + (f'<div class="cols">\n{side}{text}</div>\n' if side else text)
 
 
 def inline(t):
@@ -147,7 +159,33 @@ def slug(title):
 
 NAME = "AISLING"
 IMG_BASE = SRC / "docs"
+# whose manual: its name (a "# NAME" title is the manual's own), what it is, where it sits below the site's root, and
+# the strip's button
+# and its cover: the title, the line under it (__N__: how many sections), and the screen beside them
+COUNTS = "no one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen".split()
+PARTS = {"fm1": dict(name=NAME, what="Irish ambient for the M-VAVE FM-1", root="../", button=("../cheat/", "cheat sheet"),
+                     desc="a generative Irish ambient instrument for the M-VAVE FM-1",
+                     cover="The <span>Manual</span>", deck="Every control, page and piece, in __N__ sections.",
+                     shot=("img/screen-main.png", "AISLING's main screen")),
+         "fx1": dict(name=NAME + " FX-1", what="an FM-1 as a USB effects box", root="../../", button=("../controls/", "controls"),
+                     desc="an M-VAVE FM-1 running AISLING's effects on a computer's sound, over USB",
+                     cover="FX-1 <span>Manual</span>", deck="Setting it up, the controls and the effects, in __N__ sections.",
+                     shot=("img/fx1-screen.png", "AISLING FX-1's screen while the computer's sound plays"))}
+PART = "fm1"
 EMBED = False                                         # --fragment: images as data URIs
+
+
+def size(path):
+    """An image's width and height, for its <img> to keep its place before it loads: a lazy image that grows above a
+    heading jumped to from the contents pushes that heading down the page. A PNG's from its header, an SVG's from its
+    viewBox."""
+    data = path.read_bytes()
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
+    box = re.search(rb'<svg[^>]*?viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"', data)
+    if box:
+        return round(float(box.group(1))), round(float(box.group(2)))
+    raise SystemExit(f"{path}: not a PNG, nor an SVG with a viewBox: its size is unknown")
 
 
 def figure(alt, src, caption=None):
@@ -159,7 +197,8 @@ def figure(alt, src, caption=None):
     else:
         url = src
     cls = "wide" if src.endswith(".svg") else "shot"
-    return (f'<figure class="{cls}"><img src="{url}" alt="{html.escape(alt)}" loading="lazy">'
+    w, h = size(path)
+    return (f'<figure class="{cls}"><img src="{url}" width="{w}" height="{h}" alt="{html.escape(alt)}" loading="lazy">'
             f"<figcaption>{inline(caption)}</figcaption></figure>")
 
 
@@ -209,7 +248,7 @@ def convert(md):
             continue
         if ln.startswith("# "):                         # the title; AISLING's own a way home (the site's root)
             t = ln[2:].strip()
-            if t == NAME:                               # the site's bar is the page's way home
+            if t in (NAME, PARTS[PART]["name"]):        # the site's bar is the page's way home
                 out.append('<h1>Manual</h1>')
             else:
                 out.append(f'<a class="home" href="../">{NAME}</a>\n<h1>{inline(t)}</h1>')
@@ -268,7 +307,8 @@ def convert(md):
                 out.append(f'<details class="status"><summary><b>Status</b> · {first}.</summary><p>{rest}</p></details>'
                            if rest else f'<div class="status"><p>{text}</p></div>')
             elif out and out[-1].startswith("<h1>"):
-                out.append(f'<p class="lede">{text}</p>')
+                first, dot, rest = text.partition(". ")   # its first sentence is the standfirst
+                out.append(f'<p class="lede">{first}{dot.strip()}</p>' + (f"\n<p>{rest}</p>" if rest else ""))
             else:
                 out.append(f"<p>{lead(text)}</p>")
         i += 1
@@ -276,15 +316,28 @@ def convert(md):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if a != "--fragment"]
-    global EMBED
-    fragment = "--fragment" in sys.argv
+    global EMBED, PART
+    argv = sys.argv[1:]
+    if "--part" in argv:
+        i = argv.index("--part")
+        PART = argv[i + 1]
+        if PART not in PARTS:
+            raise SystemExit(f"--part: one of {', '.join(PARTS)}")
+        del argv[i:i + 2]
+    while "--away" in argv:                          # --away KEY=URL: a part whose pages aren't in this build (make_pages)
+        i = argv.index("--away")
+        key, _, url = argv[i + 1].partition("=")
+        site_brand.away(key, url)
+        del argv[i:i + 2]
+    args = [a for a in argv if a != "--fragment"]
+    fragment = "--fragment" in argv
+    name = PARTS[PART]["name"]
     EMBED = fragment
     src = Path(args[0]) if args else SRC / "docs" / "MANUAL.md"
     dst = Path(args[1]) if len(args) > 1 else SRC / "docs" / "manual.html"
     md = src.read_text()
     h1 = re.search(r"^# (.+)$", md, re.M)
-    title, what = (f"Manual · {NAME}", "The manual") if not h1 or h1.group(1) == NAME else (f"{NAME}: {h1.group(1)}", h1.group(1))
+    title, what = (f"Manual · {name}", "The manual") if not h1 or h1.group(1) in (NAME, name) else (f"{NAME}: {h1.group(1)}", h1.group(1))
     body = convert(md)
     if not fragment:
         body = on_the_bench(body)
@@ -292,7 +345,7 @@ def main():
     main_class = "" if fragment else ' class="bench"'
     skip = '<a class="skip" href="#content">Skip to content</a>\n'
     page = (f"<title>{html.escape(title)}</title>\n"
-            f'<meta name="description" content="{html.escape(what)} for {NAME}, a generative Irish ambient instrument for the M-VAVE FM-1.">\n'
+            f'<meta name="description" content="{html.escape(what)} for {name}, {PARTS[PART]["desc"]}.">\n'
             f'<style>{(FRAGMENT_CSS if fragment else "") + CSS}</style>\n{skip}<!--AISLING-BAR-->\n'
             f'<main id="content"{main_class}>\n{body}\n</main>\n')
     if not fragment:
@@ -300,7 +353,7 @@ def main():
         page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
                 '<meta name="viewport" content="width=device-width, initial-scale=1">\n' + head + "</style>\n" +
                 "<!--AISLING-HEAD-->\n</head>\n<body>\n" + rest + "</body>\n</html>\n")
-        page = stamp(page, "../", "manual")
+        page = stamp(page, PARTS[PART]["root"], "manual", PART)
     else:
         page = page.replace("<!--AISLING-BAR-->\n", "")
     dst.write_text(page)

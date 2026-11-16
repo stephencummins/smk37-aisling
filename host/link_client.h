@@ -7,7 +7,7 @@ static struct {
     uint32_t bytes, frames, hellos, states, acks, chunks, vals_n;
     uint8_t seq, ack_seq, ack_status, ack_x[6], ack_n;
     uint8_t hello[64], hello_n;
-    uint8_t state[64], state_n;
+    uint8_t state[96], state_n;
     int val[256];
     uint8_t seen[256];
     char text[256][24];

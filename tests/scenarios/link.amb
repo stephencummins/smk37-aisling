@@ -37,7 +37,7 @@ said EDITOR
 wait 700
 expect linkstates >3
 expect linkvals 147
-expect lstatelen 34
+expect lstatelen 35
 expect lfx 0
 expect lview 0
 expect lpiece 0

@@ -145,6 +145,8 @@ enum { EN_M_CHORD = 1, EN_M_PINGS = 2, EN_M_BASS = 4, EN_M_KICK = 8, EN_M_HATS =
                                                 * OCT- + OCT+ on its page; its level kept) */
 enum { EN_PF_SWEEP = 1, EN_PF_OPEN = 2, EN_PF_CLOSE = 4, EN_PF_DROP = 8, EN_PF_ECHO = 16 };   /* (KICKDROP: Drop, the kick and the bass) */
 void en_mute(uint32_t mask);
+void en_day(int p, int o);                      /* (1.4) the day's offset on parameter p (0: none; never saved) */
+void en_thin(uint32_t mask);                    /* (1.4) the Drone and the Atmosphere eased out (EN_M_CHORD, EN_M_NOISE) */
 void en_perf(uint32_t flags);
 /* the master actions (HOME's and PERFORM's knobs), -50..50 each, 0: the piece as it is; for playing, never saved.
  * Filter: down a low-pass on the music (Shut's), up a resonant high-pass (Open's), the kick left out; Dub: the
@@ -178,6 +180,7 @@ enum { EN_FX_REPEAT, EN_FX_TIME, EN_FX_TAPESTOP, EN_FX_SHIMMER, EN_FX_LOWPASS, E
        EN_NFX_ALL };
 extern const char *const EN_FX_NAME[EN_NFX];
 void en_fx(uint32_t mask);
+void en_amt(int e, int cc);                     /* (1.4) an effect's amount, as its CC (64..127; 127 full): before en_fx */
 void en_chorus(int v);                          /* (1.3) PERFORM's Chorus: 0 off .. 100; the whole output, never saved */
 /* (BERLIN) the black keys' moves, held: every layer's filter opened together (Rise, +2 octaves), closed (Close, -4),
  * both sequences three scale steps up (Transpose) */

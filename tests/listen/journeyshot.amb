@@ -1,0 +1,16 @@
+# the manual's Journey page (as docshots.amb, on its own so the day it turns on colours no other shot):
+# build/host/amb_host tests/listen/journeyshot.amb docs/img
+wait 300
+turn PRESET 3
+wait 20000
+tap GLO
+wait 1000
+tap GLO
+wait 1000
+tap GLO
+wait 1000
+turn SELECT 3
+wait 300
+turn K4 2
+wait 2500
+shot screen-journey.png

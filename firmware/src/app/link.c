@@ -622,6 +622,15 @@ static void link_state(void)
     f[n++] = link_gen & 0x7Fu;
     put14(f + n, (int)(ui.pnow & 0x3FFFu)), n += 2u;   /* (1.3) the effects sounding, a bit a key (PKEY's) */
     put14(f + n, (int)(ui.pnow >> 14 & 0x3FFFu)), n += 2u;
+    {                                            /* (1.4) those under full: how many, then a key and its amount
+                                                  * (1..63 of 64) each. None, at full: a 1.3 frame and a 0 */
+        const uint32_t cnt = n++;
+        int k;
+        f[cnt] = 0;
+        for (k = 0; k < 27; k++)
+            if (pk_under(k))
+                f[n++] = (uint8_t)k, f[n++] = (uint8_t)pk_under(k), f[cnt]++;
+    }
     lk_send(f, n);
 }
 

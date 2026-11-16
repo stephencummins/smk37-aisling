@@ -1,0 +1,62 @@
+# 1.4: the journey's glide, begun by hand. Sixteen bars: the layers thin out (the Lead, Sequence 2, Sequence 1, the
+# Drone and the Atmosphere), the piece changes under the tail, the new one's layers come in. It never saves; a touch
+# before the change keeps the piece, after it brings the new one in whole
+wait 500
+expect playing 1
+expect piece 0
+expect dirty 0
+expect jr 0
+bar 8
+journey 1
+wait 100
+expect jr 1
+# the Lead out first (4), then Sequence 2 (8|16), Sequence 1 (2), the Drone and the Atmosphere (1|32)
+expect jrmask 4
+bar 10
+wait 200
+expect jrmask 28
+bar 12
+wait 200
+expect jrmask 30
+bar 14
+wait 200
+expect jrmask 63
+expect piece 0
+bar 16
+wait 200
+# the piece changed; the Drone and the Atmosphere back
+expect piece 1
+expect jrmask 30
+expect dirty 0
+bar 24
+wait 300
+expect jr 0
+expect jrmask 0
+expect piece 1
+expect dirty 0
+expect store_writes 0
+# a touch before the change: the piece stays, nothing held out
+journey 2
+wait 100
+expect jr 1
+bar 27
+turn K2 1
+wait 100
+expect jr 0
+expect jrmask 0
+expect piece 1
+# a touch after the change: the new piece, whole
+bar 32
+journey 2
+bar 42
+wait 300
+expect piece 2
+expect jr >0
+tapkey 5
+wait 100
+expect jr 0
+expect jrmask 0
+expect piece 2
+# to the piece playing: not begun, nothing changes
+wait 12000
+expect store_writes <2

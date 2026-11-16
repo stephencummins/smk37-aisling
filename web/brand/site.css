@@ -9,6 +9,7 @@
              src: url(fonts/IBMPlexMono-Regular.woff2) format("woff2"); }
 :root { --brand-ground: #f3ead7; --brand-strip: #ece2cb; --brand-ink: #2b2219; --brand-muted: #5b4a3a; --brand-rule: #d9ccb1;
         --brand-soft: #e4d8c0; --brand-green: #146c41; --brand-rust: #8c3510; --brand-bench: 1148px;
+        --brand-bar: 5rem;
         --brand-display: "Barlow Semi Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
         --brand-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; color-scheme: light; }
 body { margin: 0; padding: 0 16px 48px; background: var(--brand-ground); color: var(--brand-ink);
@@ -39,15 +40,25 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .sitebar-name { font: 600 1.3rem/1 var(--brand-display); letter-spacing: .14em; }
 .sitebar-by { font: 400 .78rem/1 var(--brand-mono); color: var(--brand-green); white-space: nowrap; }
 .sitebar-home:hover .sitebar-name { color: var(--brand-green); }
+/* the switch between the three parts: a hairline box, the page's own part filled green */
+.sitebar-kit { display: flex; border: 1px solid var(--brand-rule); font: 600 .95rem/1 var(--brand-display); letter-spacing: .06em; }
+.sitebar-kit a { padding: 7px 11px 6px; text-decoration: none; white-space: nowrap; }
+.sitebar-kit a + a { border-left: 1px solid var(--brand-rule); }
+.sitebar-kit a:hover { background: var(--brand-strip); color: var(--brand-green); }
+.sitebar-kit a[aria-current] { background: var(--brand-green); color: var(--brand-ground); }
+.sitebar-kit a:focus-visible { outline-offset: -4px; }
+.sitebar-kit a[aria-current]:focus-visible { outline-color: var(--brand-ground); }
 .sitebar-nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: 0 14px; font: 400 .8rem/1 var(--brand-mono); }
 .sitebar-nav a { display: inline-block; padding: 8px 0; text-decoration: underline; text-decoration-thickness: 1px;
                  text-decoration-color: var(--brand-rule); text-underline-offset: 3px; white-space: nowrap; }
 .sitebar-nav a:hover { text-decoration-color: currentColor; color: var(--brand-green); }
 .sitebar-nav a[aria-current] { color: var(--brand-green); text-decoration: none; }
 @media (max-width: 47.99rem) { .sitebar-nav { margin-left: 0; width: 100%; } }
-/* one row from here up, so it can stay at the top, and a jump to a heading stops clear of it */
+/* it stays at the top from here up, and a jump to a heading stops clear of it. Its height, --brand-bar, is one row for
+   most parts and two for the FM-1's, which has the most pages (three on a narrow screen): wall.js keeps it exact, and
+   5rem stands in until it has */
 @media (min-width: 48rem) and (min-height: 32rem) {
-  html { scroll-padding-top: 4.5rem; }
+  html { scroll-padding-top: calc(var(--brand-bar) + 1.5rem); }
   .sitebar { position: sticky; top: 0; z-index: 20; }
 }
 
@@ -133,6 +144,7 @@ a.btn.big { min-height: 48px; padding: 10px 20px; font: 600 19px/1 var(--brand-d
 .mg-three .mg-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .mg-three .mg-tile.type { display: grid; place-items: center; background: #1c1610; color: #e9a23b; text-decoration: none;
                           font: 600 clamp(34px, 5vw, 62px)/.9 var(--brand-display); text-transform: uppercase; text-align: center; }
+.mg-three .mg-tile.type small { display: block; padding: .35em 0; font: 400 clamp(11px, 1.1vw, 13px)/1.2 var(--brand-mono); letter-spacing: .1em; text-transform: none; color: #c9b99a; }
 .mg-three .mg-go { margin: auto 0 0; }
 .mg-also { display: flex; flex-wrap: wrap; gap: 6px 22px; padding: 14px 22px; font: 600 17px/1.3 var(--brand-display); letter-spacing: .04em; text-transform: uppercase; }
 .mg-also span { color: var(--brand-rust); font: 400 12px/1.9 var(--brand-mono); letter-spacing: .12em; }

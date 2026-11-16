@@ -45,3 +45,13 @@
     wall.classList.add('on')
   }
 }
+// the bar's height, for what stops clear of it (site.css's --brand-bar): one row, or two or three where a part's pages
+// don't fit beside the switch
+{
+  const bar = document.querySelector('.sitebar')
+  if (bar) {
+    const set = () => document.documentElement.style.setProperty('--brand-bar', `${bar.offsetHeight}px`)
+    set()
+    if ('ResizeObserver' in window) new ResizeObserver(set).observe(bar)
+  }
+}

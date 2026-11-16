@@ -93,7 +93,7 @@ remembers and answers) and changes what it plays:
   **Fras** (FRASS, a burst of rain);
 - a green triskele on the launch screen and the main page.
 
-**Status: 1.3.1** (see [the releases](https://github.com/stephencummins/fm1-aisling/releases)).
+**Status: 1.4.1** (see [the releases](https://github.com/stephencummins/fm1-aisling/releases)).
 It runs on the FM-1, installed from the [web installer](https://aisling.stephen8n.com/install/), and
 in the [browser emulator](https://aisling.stephen8n.com/emu/), from the same code.
 
@@ -125,6 +125,18 @@ AMB-1. It doesn't read what they saved (it starts with its own eight recipes), a
 after you change something, replaces theirs; they ignore AISLING's in the same way and replace it when they save.
 Installing another firmware may lose what AISLING saved. AISLING uses no samples.
 
+## What's new in 1.4.1
+
+- **The screen, dark or light.** KNOB 3 on the Journey page (GLO, three times), **Screen**, sets the whole screen: Dark, the colours on black, as it was; or Light, the same colours deeper, on white, for a bright room or daylight. It's saved with the pieces, and changes nothing in the sound.
+- **The main page says more.** The five meters have their layers' letters under them (D 1 L 2 A), the two sequences' lanes are numbered, the chord's count sits clear of the orbits, and the dividers between the knobs start under their names.
+- Nothing else changed: the sound, the pieces and what you saved are 1.4's.
+
+## What's new in 1.4
+
+- **The journey.** Left alone, AISLING walks through its pieces. SELECT on GLO's Setup page sets a stay (5, 10, 20 or 40 minutes a piece); then the piece glides into the next over sixteen bars, layer by layer, the tempo moving across under the Drone, with nothing stopped. A touch starts the stay again. GLO a third time is the **Journey** page: which pieces are in the set.
+- **The day and the weather.** KNOB 4 on the Journey page lays a slow day over whatever plays, a whole one in 20 minutes, 1 hour or 3 hours: brighter and wider by day, darker and closer at night, the Atmosphere rising with three fronts of weather and a light shower in the worst of the evening's. A sun or a moon crosses the top of the Aisling page. It moves none of the piece's values and saves nothing.
+- **An effect's CC is its amount.** From 64 to 127 the value is how much of the effect there is (127 all of it, as its key gives), so a fader or a pedal fades an effect in. PERFORM's flash shows an amount under full as a bar.
+
 ## What's new in 1.3.2
 
 - **Not yet on an Elite.** 1.3.2 passes the simulator's tests; its package has not been installed on an Elite. 1.3.1,
@@ -141,7 +153,7 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 
 - **The effects grid in PERFORM's look.** Hold REC and the grid has a colour for each group (Echo, Filter, Space, Moves), its name in the uncial hand and a plaited rule under each group's name; a held effect's cell fills with its colour. Only the drawing changed: the keys, the effects and the sound are 1.3's.
 - **PERFORM, from 1.3, played:** every key an effect on the whole music for as long as you hold it, with the screen flashing its colour and name. [Watch a short demo](https://youtube.com/shorts/WtvuUBjDFCo).
-- **[Photos and videos](https://aisling.stephen8n.com/screen/)** are on the touch screen's page: AISLING playing, PERFORM's flash, and the box that gives the FM-1 a second, bigger screen.
+- **[Photos and videos](https://aisling.stephen8n.com/screen/)** are on the touch screen's page: AISLING playing, PERFORM's flash, and the VOXBOX, the box that gives the FM-1 a second, bigger screen.
 - Everything else 1.3 brought is in [its release notes](https://github.com/stephencummins/fm1-aisling/releases/tag/v1.3), and listed below.
 
 ## What's new in 1.3
@@ -153,7 +165,7 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 - **Effects over MIDI.** Each effect has a CC (20 to 31 and 102 to 116), on any channel: 64 or more holds it, less lets it go, on any page. An effect played by hand sends its CC on channel 16, so a DAW can record a performance and play it back. CC 80 is Chorus.
 - **A more Celtic screen.** A plaited rule over the knobs on every page, page names in the uncial hand, and a small green triskele in PERFORM's map that turns with the music.
 - **Gone from PERFORM:** the mutes and solos (a layer's level is SELECT on its own page), and SAVE tapped there is now Forget, which clears what the Lead remembers.
-- **[The touch screen](https://aisling.stephen8n.com/screen/)** build for 1.3 follows all of this: Chorus under your finger, the flash of a held effect, and it now shows as a serial port on a Mac, so it can be reloaded without its BOOT button.
+- **[The touch screen](https://aisling.stephen8n.com/screen/)** (the VOXBOX) build for 1.3 follows all of this: Chorus under your finger, the flash of a held effect, and it now shows as a serial port on a Mac, so it can be reloaded without its BOOT button.
 
 ## What's new in 1.2
 
@@ -227,7 +239,7 @@ The eight are listed in the manual's [The pieces](docs/MANUAL.md#7-the-pieces).
 | SEQ | Sequence 2 (Chance, Octave, Length, Level); again, its sound; again, the Pattern page (write the steps on the keys); again, its Move page |
 | SAVE | The Atmosphere (Density, Width, Drift, Air); again, its sound (Colour, Ring, Reverb, Echo); again, its Move page. Held: save |
 | FX | Space (Echo, Echo time, Feedback, Reverb); again, the Echo page (Blur, Tone, Width, Size) |
-| GLO | Setup (Tune, MIDI out, Lights, Screen; ALGORITHM, the sleep timer); again, the Arc (Lead in, Bridge, Arc, Memory). Held: save; held on: the piece back to its recipe |
+| GLO | Setup (Tune, MIDI out, Lights, Screen; ALGORITHM, the sleep timer); again, the Arc (Lead in, Bridge, Arc, Memory); again, the Journey (Piece, In set, Screen, Day; SELECT, the stay on each piece). Held: save; held on: the piece back to its recipe |
 | ALGORITHM | On a layer's page, its voice (the Atmosphere: its character); on the Aisling page, Evolve's timing; on the Setup page, the sleep timer |
 | PRESETS | The piece |
 | SELECT | On a layer's pages, its level; on the Aisling page, Energy (elsewhere nothing) |

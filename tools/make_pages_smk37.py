@@ -536,7 +536,7 @@ def shots(out):
 
 def main(out, marks=False):
     out = Path(out)
-    st = (lambda p, root, current: p) if marks else (lambda p, root, current: stamp(p, root, current, NAV, SITE))
+    st = (lambda p, root, current: p) if marks else (lambda p, root, current: stamp(p, root, current, "smk37", NAV, SITE))
     if out.exists():
         shutil.rmtree(out)
     (out / "img").mkdir(parents=True)

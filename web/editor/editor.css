@@ -25,6 +25,13 @@
 .ed button:focus-visible, .ed select:focus-visible, .ed input:focus-visible, .ed [tabindex]:focus-visible, .ed textarea:focus-visible {
   outline: 2px solid var(--vellum); outline-offset: 1px; }
 .ed [hidden] { display: none !important; }
+/* the headline over the panel */
+.ed-cover { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 6px 26px;
+            box-sizing: border-box; max-width: var(--brand-bench); margin: 18px auto 0; padding: 0 12px; }
+.ed-cover h1 { margin: 0; font: 700 clamp(40px, 7vw, 80px)/.86 var(--brand-display); letter-spacing: .01em; text-transform: uppercase; color: var(--brand-ink); }
+.ed-cover h1 span { color: var(--brand-rust); }
+.ed-cover p { margin: 0 0 3px; max-width: 40ch; font: 600 clamp(16px, 1.8vw, 20px)/1.3 var(--brand-display); letter-spacing: .01em; color: var(--brand-ink); }
+@media (max-width: 47.99rem) { .ed-cover { grid-template-columns: minmax(0, 1fr); } }
 .ed-foot { max-width: var(--brand-bench); margin: 10px auto 0; font: 400 12px/1.5 var(--brand-mono); color: var(--brand-muted); }
 
 /* the head */

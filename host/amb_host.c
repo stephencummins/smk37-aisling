@@ -676,6 +676,20 @@ static int expect(const char *what, const char *val)
         got = proj.pool;
     else if (!strcmp(what, "evbars"))             /* (1.2) Evolve's timing: 0 now and then, 1..4 every 4, 8, 16, 32 bars */
         got = proj.evbars;
+    else if (!strcmp(what, "jr"))                 /* (1.4) the journey's glide: bars into it + 1, 0 none */
+        got = jr.on ? jr.n + 1 : 0;
+    else if (!strcmp(what, "jrmask"))
+        got = (int)jr.mask;
+    else if (!strcmp(what, "day"))
+        got = ui.day;
+    else if (!strcmp(what, "shower"))
+        got = ui.shower;
+    else if (!strncmp(what, "dayofs", 6))        /* dayofsN: the day's offset as sent, N of DAY_P (4: the weather) */
+        got = dy.sent[atoi(what + 6) % DAY_NP];
+    else if (!strcmp(what, "jrout"))              /* the set list: the pieces left out, a bit each */
+        got = ui.jr_out;
+    else if (!strcmp(what, "jrstay"))             /* the stay, in minutes (0: the journey's off) */
+        got = JR_MIN[jr.stay];
     else if (!strcmp(what, "evolves"))            /* (1.2) Evolve's nudges so far */
         got = (int)ui_evolve_n;
     else if (!strcmp(what, "evolvebar"))          /* (1.2) the bar of the last (from 0 at the top) */
@@ -742,6 +756,12 @@ static int expect(const char *what, const char *val)
     else if (!strncmp(what, "level", 5) && what[5] >= '0' && what[5] < '4' && !what[6])
         got = proj.par[LAYER_LEVEL[what[5] - '0']];   /* a layer's level: Drone, Sequence, Lead, Sequence 2 */
 #endif
+    else if (!strncmp(what, "amt", 3) && what[3] >= '0' && what[3] <= '9') {   /* (1.4) "amtK": key K's amount in the
+                                                  * engine, as its CC (127 full); -1 a switch */
+        const int d = PKEY[atoi(what + 3)].d;
+        extern int en_test_amt(int e);
+        got = d < 100 ? en_test_amt(d) : d == 100 + EN_MV_RISE ? en_test_amt(32) : d == 100 + EN_MV_CLOSE ? en_test_amt(33) : -1;
+    }
     else if (!strcmp(what, "pcc"))                /* (1.3) the effects a CC holds */
         got = (int)ui.pcc;
     else if (!strcmp(what, "ptrisk"))             /* (1.3) the map's triskele: its angle within 2 sixteenths of the music's */
@@ -958,6 +978,20 @@ static int expect(const char *what, const char *val)
         got = ui.chorus;
     else if (!strcmp(what, "lfx"))                /* (1.3) the effects sounding, as STATE tells them */
         got = lc.state_n >= 34 ? lc.state[30] | lc.state[31] << 7 | lc.state[32] << 14 | lc.state[33] << 21 : -1;
+    else if (!strncmp(what, "lamt", 4)) {         /* (1.4) "lamtK": key K's amount as STATE tells it (64: full) */
+        int i, k = atoi(what + 4);
+        got = 64;
+        for (i = 0; lc.state_n >= 35 && i < lc.state[34]; i++)
+            if (lc.state[35 + 2 * i] == k)
+                got = lc.state[36 + 2 * i];
+    }
+    else if (!strcmp(what, "pbar"))               /* (1.4) the flash's bands that show an amount's bar */
+    {
+        int k;
+        got = 0;
+        for (k = 0; k < PERF_N; k++)
+            got += pflash_up() && pk_under(k) != 0;
+    }
     else if (!strcmp(what, "lstatelen"))
         got = lc.state_n;
     else if (!strncmp(what, "lval", 4))           /* a knob as VALS told it */
@@ -1312,6 +1346,19 @@ int main(int argc, char **argv)
 #endif
         } else if (!strcmp(cmd, "battery"))
             sim_batt_set = 1, sim_batt = atoi(a);
+        else if (!strcmp(cmd, "journey")) {      /* (1.4) journey N: the glide to piece N begun by hand */
+            if (!jr_go(atoi(a)))
+                printf("FAIL line %d: %s\n", lineno, line), fails++;
+        }
+        else if (!strcmp(cmd, "day")) {          /* (1.4) day N [SPAN_MS [PERMILLE]]: the day set; its length; the hour */
+            dy_set(atoi(a));
+            if (b[0])
+                dy.span = (uint32_t)strtoul(b, 0, 0);
+            if (c[0])
+                dy.t = (uint32_t)((uint64_t)dy.span * strtoul(c, 0, 0) / 1000u), dy.calc = 0;
+        }
+        else if (!strcmp(cmd, "setlist"))        /* (1.4) setlist MASK: the pieces left out, a bit each */
+            ui.jr_out = (uint8_t)strtoul(a, 0, 0);
         else if (!strcmp(cmd, "midi")) {
             uint32_t s = (uint32_t)strtoul(a, 0, 16), d1 = (uint32_t)strtoul(b, 0, 16), d2 = (uint32_t)strtoul(c, 0, 16);
             uint32_t cin = s >= 0xF0 ? 0x0F : s >> 4;
@@ -1419,7 +1466,7 @@ int main(int argc, char **argv)
             static const uint8_t REACH[] = {V_DUB, V_KEY, V_CHORD, V_CSND, V_TEXTURE, V_PSND, V_PFM, V_BASS, V_BSND,
                                             V_DRUMS, V_DSND, V_PAT, V_SPACE, V_ESND, V_SETUP, V_MIX, V_PERF, V_NSND,
                                             V_NSND2, V_ARC, V_CFM, V_BFM, V_SMOVE, V_S2MOVE, V_AMOVE,
-                                            V_LSTYLE};
+                                            V_LSTYLE};   /* (the Set list: no sound of its own) */
             float e0[16], e1[16];
             uint32_t m0, m1;
             unsigned k;

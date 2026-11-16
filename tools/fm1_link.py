@@ -117,7 +117,9 @@ def parse_state(a):
                 saving=bool(f & 16), piece=a[2], moves=get14u(a, 3), act=list(a[5:10]), muted=a[10], solo=a[11],
                 sounds=a[12], un=a[13], rn=a[14], cpu=a[15], peak=a[16], xruns=get14u(a, 17), master=get14u(a, 19),
                 raw=get14u(a, 21), lit=get14u(a, 23), keys=get14u(a, 25) | get14u(a, 27) << 14, gen=a[29],
-                fx=get14u(a, 30) | get14u(a, 32) << 14 if len(a) >= 34 else 0)   # (1.3: the effects sounding)
+                fx=get14u(a, 30) | get14u(a, 32) << 14 if len(a) >= 34 else 0,   # (1.3: the effects sounding)
+                # (1.4) those under full: {key: amount, 1..63 of 64}; full ones aren't listed
+                amt={a[35 + 2 * i]: a[36 + 2 * i] for i in range(a[34])} if len(a) >= 35 else {})
 
 
 def pars_of(project):

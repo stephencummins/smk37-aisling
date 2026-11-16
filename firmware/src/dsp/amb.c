@@ -490,7 +490,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 
 /* ------------------------------------------------------------ commands --- */
 static float cho_t;                              /* (1.3) the Chorus knob, 0..1 */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_SEQ, C_MACRO, C_PROT, C_REWALK, C_LOCK, C_SEQSET, C_LKEY, C_LMIDI, C_MOVE, C_LFORGET, C_FX2, C_CHORUS };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_SEQ, C_MACRO, C_PROT, C_REWALK, C_LOCK, C_SEQSET, C_LKEY, C_LMIDI, C_MOVE, C_LFORGET, C_FX2, C_CHORUS, C_AMT, C_THIN, C_DAY };
 #define QN 512u                                 /* (a piece is every parameter at once: room for twice over and more) */
 _Static_assert(QN >= 2u * (P_NPARAMS + 8), "the command queue can't hold a piece's parameters twice over");
 static uint32_t q[QN];
@@ -515,6 +515,8 @@ void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
 void en_mute(uint32_t m) { post(C_MUTE, (int)(m & 0xFFu), 0); }
 void en_perf(uint32_t f) { post(C_PERF, (int)(f & 0xFFu), 0); }
+void en_day(int p, int o) { post(C_DAY, p, o); }
+void en_thin(uint32_t m) { post(C_THIN, (int)(m & 0xFFu), 0); }
 void en_fx(uint32_t m)                           /* (1.3: all 32, in two: the top eight after) */
 {
     post(C_FX, (int)(m >> 16 & 0xFFu), (int)(m & 0xFFFFu));
@@ -530,6 +532,13 @@ void en_macro(int i, int v)                      /* (sent as 0..100) */
 }
 int en_macro_now(int i) { return en_mac_got == mac_sent ? en_mac[i] : EN_MAC_BUSY; }
 void en_lock(int on) { post(C_LOCK, on != 0, 0); }
+/* (1.4) an effect's amount: e an EN_FX_* (or 32 Rise, 33 Close), cc 64..127 as its CC: 127 full (as 1.3), 64 the
+ * least. Sent before the effect is held (en_fx, en_move): the queue keeps the order */
+void en_amt(int e, int cc)
+{
+    if (e >= 0 && e < 34)
+        post(C_AMT, e, 127 - (cc < 64 ? 64 : cc > 127 ? 127 : cc));
+}
 void en_chorus(int v) { post(C_CHORUS, v < 0 ? 0 : v > 100 ? 100 : v, 0); }
 void en_prog_rotate(void) { post(C_PROT, 0, 0); }
 void en_prog_rewalk(void) { post(C_REWALK, 0, 0); }
@@ -586,6 +595,17 @@ static void nev(int k, float s, float p)         /* a noise event, for the scree
 static void hit(int l, float vel) { en_hit_vel[l] = vel; en_hits[l]++; }
 static float scope_acc;
 static uint32_t scope_ph;
+/* (1.4) the journey's glide: the Drone and the Atmosphere eased out and in (EN_M_CHORD, EN_M_NOISE: a mute cuts; this
+ * takes TH_OUT seconds down, most of the two bars before the piece changes, and TH_IN up). Their gains exactly 1 with
+ * none thinned: the sums as they were */
+#define TH_OUT 5.0f
+#define TH_IN 1.5f
+uint32_t en14_thin;
+float en14_chord_set;                            /* the Drone's level as the piece sets it: chord_vol is it thinned */
+float en14_th_dr = 1.0f, en14_th_at = 1.0f;
+#define thin en14_thin
+#define th_dr en14_th_dr
+#define th_at en14_th_at
 static uint32_t mutes, perf, fxm, fxm_was;      /* performance: the layers muted, the moves held; the effects held */
 static float perf_sw, perf_echo, mb_c[4], mb_s[4], mb_in;   /* the filter pushed open (+) or shut (-), the echo
                                                  * pushed (mb: Open's and Shut's filter on the music, the kick left
@@ -607,8 +627,24 @@ static float ec_g = 0.6f, ec_lpc = 0.68f, ec_wide = 1.0f;   /* the echo's Blur, 
 static int8_t mac[EN_NMAC];                     /* the master actions, -50..50 */
 volatile int8_t en_mac[EN_NMAC];
 static int8_t pofs[P_NPARAMS];
+int8_t en14_dofs[P_NPARAMS];
+#define dofs en14_dofs
+                  /* (1.4) the day's and the weather's offsets: all 0 with the day off */
+#ifdef EN_HOST
+int en_test_dofs(int p) { return dofs[p]; }
+#endif
 static int dd_off;                              /* (Density's slow drift, below: added to Density as heard) */
 static float dub_up;                            /* Dub turned up, 0..1: the echo darker, feeding back past its knob */                  /* what they add to the piece's parameters */
+int8_t en14_mofs[P_NPARAMS];
+#define mofs en14_mofs
+                  /* (1.4) the master actions' own; pofs their sum with the day's, made
+                                                 * here and not in pe(): pe() is in every loop's setting-up */
+static __attribute__((noinline)) void ofs_sum(int p)
+{
+    int o = mofs[p] + (par[p] || p != P_CRACKLE ? dofs[p] : 0);   /* (an Atmosphere the piece keeps silent stays
+                                                                   * silent) */
+    pofs[p] = (int8_t)(o < -127 ? -127 : o > 127 ? 127 : o);
+}
 static int pe(int p)                            /* a parameter as heard: the piece's, moved by the master actions */
 {
     int v = par[p] + (par[p] || (p != P_SEQ && p != P_SEQ2) ? pofs[p] : 0);   /* (a sequence the piece keeps silent,
@@ -808,7 +844,7 @@ static uint32_t dr_rng = 0x6A09E667u;
 static float dr_pedal = 0.7f, dr_rev = 1.0f, dr_echo = 1.0f;   /* (the pedal's level; the sends, x1 at 50) */          /* (its own: the voices' phases leave the music's draws alone) */
 
 static uint8_t dr_midi[2];                        /* the banks whose notes went out on MIDI: their note-offs owed */
-static int dr_heard(void) { return !(mutes & EN_M_CHORD) && par[P_CHORD] > 0; }   /* (its MIDI only while heard) */
+static int dr_heard(void) { return !((mutes | thin) & EN_M_CHORD) && par[P_CHORD] > 0; }   /* (its MIDI only while heard) */
 static void dr_midi_off(int b)                   /* a bank's MIDI notes let go (muted, level 0, or dying away) */
 {
     int i;
@@ -1162,6 +1198,18 @@ static float fo_ib;                              /* bars since the piece started
 static int16_t fo_in[NFO];                       /* the intros as they were at the start (turned down: sooner) */
 static uint32_t mvm;                             /* (BERLIN) the black keys' moves held: EN_MV_* */
 static float mv_rise, mv_close;                  /* Rise and Close, eased (0..1) */
+/* (1.4) each effect's amount, kept as what is taken off full (0: full, as 1.3, and the sums come out the same to
+ * the bit; 63/64: the least). 32 and 33: Rise and Close */
+float en14_fx_dim[34];
+#define fx_dim en14_fx_dim
+#define FX_A(e) (1.0f - fx_dim[e])
+#ifdef EN_HOST
+int en_test_amt(int e) { return 127 - (int)(fx_dim[e] * 64.0f + 0.5f); }   /* (the tests: as its CC) */
+#endif
+static inline float amt_ramp(float x, float tgt, float up, float dn)   /* a straight line to tgt, either way */
+{
+    return x < tgt ? fm_minf(x + up, tgt) : fm_maxf(x - dn, tgt);
+}
 static uint32_t fo_rng[NFO], fo_pulses, fo_pp;   /* (the clock: pulses so far, the last counted, how far through the */
 static float fo_f = 1.0f;                        /* pulse after it) */
 static float fo_u(int l) { return (float)(seq_rand(&fo_rng[l]) >> 8) * (1.0f / 16777216.0f); }
@@ -1265,8 +1313,8 @@ static void fo_step(uint32_t n)                  /* once a chunk: the clock on, 
     be = fo_ease(fo_be) * 3.0f * (float)pe(P_BRIDGE) * 0.01f;
     {   /* the black keys' Rise and Close: in over about a second, out over about three */
         const float up = (float)n / EN_SR, dn = (float)n / (3.0f * EN_SR);
-        mv_rise = mvm & EN_MV_RISE ? fm_minf(mv_rise + up, 1.0f) : fm_maxf(mv_rise - dn, 0.0f);
-        mv_close = mvm & EN_MV_CLOSE ? fm_minf(mv_close + up, 1.0f) : fm_maxf(mv_close - dn, 0.0f);
+        mv_rise = amt_ramp(mv_rise, mvm & EN_MV_RISE ? FX_A(32) : 0.0f, up, dn);
+        mv_close = amt_ramp(mv_close, mvm & EN_MV_CLOSE ? FX_A(33) : 0.0f, up, dn);
     }
     for (l = 0; l < NFO; l++) {
         const int lead = l == FO_LEAD, r = pe(FO_R[l]), in = pe(FO_I[l]) < fo_in[l] ? pe(FO_I[l]) : fo_in[l];
@@ -1944,7 +1992,7 @@ static void roll_hit(void)
         return;
     for (l = 0; l < 2; l++)
         if (roll_n[l] >= 0)
-            pluck_voice(l, roll_n[l], roll_v[l] / 2, 0);
+            pluck_voice(l, roll_n[l], (int)((float)(roll_v[l] / 2) * FX_A(EN_FX_ROLL)), 0);
 }
 static void seq_tick(void)                       /* a sixteenth: the sequences' steps, the repeats */
 {
@@ -4141,10 +4189,13 @@ static void apply(int p, int v)
     if (v > pi->hi)
         v = pi->hi;
     par[p] = (int16_t)v;
+    if (p == P_CRACKLE)
+        ofs_sum(p);
     v = pe(p);                                   /* (as the master actions move it) */
     switch (p) {
     case P_CHORD:
-        chord_vol = (float)(v * v) * 0.0001f;
+        en14_chord_set = (float)(v * v) * 0.0001f;
+        chord_vol = en14_chord_set * en14_th_dr;
         if (!v)                                  /* (at 0, as muted: its MIDI notes let go) */
             dr_midi_off(0), dr_midi_off(1);
         break;
@@ -4431,7 +4482,7 @@ void en_init(void)
         am_off[i] = 0.0f;
     en_mac_got = mac_sent;
     for (i = 0; i < P_NPARAMS; i++)
-        pofs[i] = 0;
+        mofs[i] = 0, ofs_sum(i);
     for (i = 0; i < P_NPARAMS; i++)
         apply(i, PARAMS[i].def);
     pool_set(EN_MODE_POOL[par[P_MODE]]);
@@ -4527,7 +4578,8 @@ static void macro(int i, int v)
     for (k = 0; k < sizeof OF; k++)
         if (OF[k] == i) {
             int o = MOVE[k].at50 * v / 50, before = pe(MOVE[k].p);
-            pofs[MOVE[k].p] = (int8_t)o;
+            mofs[MOVE[k].p] = (int8_t)o;
+            ofs_sum(MOVE[k].p);
             if (pe(MOVE[k].p) != before)
                 apply(MOVE[k].p, par[MOVE[k].p]);
         }
@@ -4632,6 +4684,20 @@ static void drain(void)
             mutes = (uint32_t)a;
             break;
         case C_PERF: perf = (uint32_t)a; break;
+        case C_DAY:
+            if (a < P_NPARAMS && dofs[a] != (int8_t)b) {
+                const int before = pe(a);
+                dofs[a] = (int8_t)b;
+                ofs_sum(a);
+                if (pe(a) != before)
+                    apply(a, par[a]);
+            }
+            break;
+        case C_THIN:
+            if (a & ~thin & EN_M_CHORD)          /* (the Drone thinned out: its notes off on MIDI, as muted) */
+                dr_midi_off(0), dr_midi_off(1);
+            thin = (uint32_t)a;
+            break;
         case C_FX: fxm = (fxm & 0xFF000000u) | (c & 0xFFFFFFu); break;
         case C_FX2: fxm = (fxm & 0xFFFFFFu) | (uint32_t)a << 24; break;
         case C_MOVE: mvm = c & 0xFFu; break;
@@ -4666,6 +4732,7 @@ static void drain(void)
         }
         case C_LOCK: lock = (uint8_t)a; break;
         case C_CHORUS: cho_t = (float)a * 0.01f; break;
+        case C_AMT: fx_dim[a] = (float)(c & 0xFFFFu) * (1.0f / 64.0f); break;
         case C_PROT:                             /* Loop to Endless: the one playing up to slot 1, all turned round */
             if (prog_pos > 0) {
                 int16_t t[3][EN_NPROG];
@@ -5088,6 +5155,17 @@ static void curlew_call(float col, float ring, float busy)
     cw_gl = fm_cosf(p), cw_gr = fm_sinf(p);
     cw_start();
 }
+float en14_crackle_th;
+#define crackle_th en14_crackle_th
+               /* (1.4) the Drone's and the Atmosphere's levels as thinned */
+static __attribute__((noinline)) void th_step(uint32_t n)   /* once a chunk, before the renders */
+{
+    const float up = (float)n * (1.0f / (TH_IN * EN_SR)), dn = (float)n * (1.0f / (TH_OUT * EN_SR));
+    th_dr = amt_ramp(th_dr, thin & EN_M_CHORD ? 0.0f : 1.0f, up, dn);
+    th_at = amt_ramp(th_at, thin & EN_M_NOISE ? 0.0f : 1.0f, up, dn);
+    chord_vol = en14_chord_set * th_dr;                /* (1 exactly with none thinned: the sums as they were) */
+    crackle_th = crackle_vol * th_at;
+}
 static void render_atmos(uint32_t n)
 {
     const int c = atm_char;
@@ -5101,7 +5179,7 @@ static void render_atmos(uint32_t n)
     uint32_t j;
     int ch, k;
     atm_gate += ((en_playing ? 1.0f : 0.0f) - atm_gate) * fm_minf((float)n / (0.5f * EN_SR), 1.0f);
-    g = mutes & EN_M_NOISE || c == ATM_NONE ? 0.0f : crackle_vol * atm_gate;   /* (its level: nothing more) */
+    g = mutes & EN_M_NOISE || c == ATM_NONE ? 0.0f : crackle_th * atm_gate;   /* (its level: nothing more) */
     atm_g_out = g;
     en_atm_gain = g;
     if (g < 1e-5f) {
@@ -5403,7 +5481,7 @@ static void render_crackle(uint32_t n)
     cr_gate += ((en_playing ? 1.0f : 0.0f) - cr_gate) * fm_minf((float)n / (0.5f * EN_SR), 1.0f);
     if (cr_gate < 1e-4f)
         cr_gate = 0.0f;
-    g = mutes & EN_M_NOISE ? 0.0f : crackle_vol * cr_gate;   /* (muted: its level kept) */
+    g = mutes & EN_M_NOISE ? 0.0f : crackle_th * cr_gate;   /* (muted: its level kept) */
     atm_g_out = g;
     en_atm_gain = g;
     if (g <= 0.0f) {
@@ -5602,7 +5680,7 @@ static inline float cho_tap(float d)
                 b = (float)cho_buf[(cho_w - (uint32_t)i - 1u) & (CHO_N - 1u)];
     return (a + (b - a) * f) * (1.0f / 8192.0f);
 }
-static inline float ease1(float x, int on, float t, float up, float down);
+static inline float ease1(float x, uint32_t on, int e, float t, float up, float down);
 /* (1.3) the buffered effects: BF_N samples of the output's middle, 16 bits (4 full scale), at half the rate
  * (0.74 s). bf_mode the one sounding (BF_*), bf_want the one asked for: the change made through silence (bf_mix
  * down, the line cleared, up again). bf_play: what the mode has to play yet (Stutter and Reverse: 0 while the first
@@ -5613,6 +5691,9 @@ enum { BF_OFF, BF_STUTTER, BF_FLANGE, BF_COMB, BF_REVERSE };
 static int16_t bf[BF_N] EN_POOL;
 static int bf_mode, bf_want, bf_w, bf_len, bf_half, bf_ph;
 static float bf_mix, bf_play, bf_acc, bf_y0, bf_y1, bf_lfo, bf_d, bf_damp;
+float en14_bf_amt = 1.0f, en14_bf_mx;           /* (en14_bf_mx: the ramp; bf_mix is it by the amount) */
+#define bf_amt en14_bf_amt
+                                                 /* (1.4) en14_bf_amt: the amount of the one sounding, eased */
 static float fx_crush, cr_hl, cr_hr;
 static int cr_n;
 static inline int16_t bf_q(float x) { return (int16_t)(fm_clampf(x, -3.99f, 3.99f) * BF_K); }
@@ -5632,6 +5713,13 @@ static void bf_start(int mode)                   /* the line cleared, the slice'
     if (bf_len < 64)
         bf_len = 64;
 }
+/* (1.4: e's amount the target while it is held) */
+static inline float ease1(float x, uint32_t on, int e, float t, float up, float down)
+{
+    const int h = (int)(on >> e & 1u);
+    x += ((h ? FX_A(e) : 0.0f) - x) * fm_minf(t / (h ? up : down), 1.0f);
+    return !h && x < 0.0005f ? 0.0f : x;
+}
 static void bf_ctl(uint32_t on, uint32_t rise, float t)
 {
     static const uint8_t BIT[5] = {0, EN_FX_STUTTER, EN_FX_FLANGE, EN_FX_COMB, EN_FX_REVERSE};
@@ -5646,23 +5734,26 @@ static void bf_ctl(uint32_t on, uint32_t rise, float t)
                 bf_want = m;
     }
     if (bf_mode != bf_want) {
-        bf_mix -= fm_minf(t / 0.006f, bf_mix);
-        if (bf_mix <= 0.0f) {
-            bf_mix = 0.0f;
+        en14_bf_mx -= fm_minf(t / 0.006f, en14_bf_mx);
+        if (en14_bf_mx <= 0.0f) {
+            en14_bf_mx = 0.0f;
             if (bf_want)
-                bf_start(bf_want);
+                bf_start(bf_want), bf_amt = FX_A(BIT[bf_want]);
             else
                 bf_mode = 0;
         }
     } else if (bf_mode)
-        bf_mix = fm_minf(bf_mix + t / 0.006f, 1.0f);
+        en14_bf_mx = fm_minf(en14_bf_mx + t / 0.006f, 1.0f);
+    if (bf_mode)                                 /* (1.4) its amount, eased (20 ms: a CC swept makes no steps) */
+        bf_amt += (FX_A(BIT[bf_mode]) - bf_amt) * fm_minf(t / 0.02f, 1.0f);
     if (bf_mode == BF_FLANGE) {                  /* 1 - 7 ms, a turn in five seconds */
         if ((bf_lfo += t * 0.2f) >= 1.0f)
             bf_lfo -= 1.0f;
         bf_d = (0.004f + 0.003f * sine(bf_lfo)) * (0.5f * EN_SR);
     } else if (bf_mode == BF_COMB)               /* the key's note, the octave under middle C */
         bf_d = fm_clampf(0.5f * EN_SR / mtof((float)(48 + par[P_ROOT] % 12)), 8.0f, (float)(BF_N - 4));
-    fx_crush = ease1(fx_crush, (int)(on >> EN_FX_CRUSH & 1u), t, 0.01f, 0.03f);
+    bf_mix = en14_bf_mx * bf_amt;               /* (what bf_fx reads: the ramp by the amount) */
+    fx_crush = ease1(fx_crush, on, EN_FX_CRUSH, t, 0.01f, 0.03f);
 }
 static inline float bf_edge(int i, int n)        /* a slice's ends, eased over 48 samples (2 ms) */
 {
@@ -5729,30 +5820,28 @@ static inline void bf_fx(float *lp, float *rp)
     *lp = *lp * (1.0f - w * (1.0f - DRY[bf_mode])) + w * WET[bf_mode] * y;
     *rp = *rp * (1.0f - w * (1.0f - DRY[bf_mode])) + w * WET[bf_mode] * y;
 }
-static inline float ease1(float x, int on, float t, float up, float down)
-{
-    x += ((on ? 1.0f : 0.0f) - x) * fm_minf(t / (on ? up : down), 1.0f);
-    return !on && x < 0.0005f ? 0.0f : x;
-}
 static void mast_ctl(uint32_t on, uint32_t rise, float t)
 {
     const int dive = (int)(on >> EN_FX_DIVE & 1u);
-    fx_gate = ease1(fx_gate, (int)(on >> EN_FX_GATE & 1u), t, 0.005f, 0.03f);
-    fx_drvw = ease1(fx_drvw, (int)(on >> EN_FX_DRIVE & 1u), t, 0.03f, 0.08f);
-    if (on >> EN_FX_DRIVE & 1u)                  /* (it grows, a straight line: 3 s to the top) */
-        fx_drv = fm_minf(fx_drv + t * (1.0f / 3.0f), 1.0f);
+    fx_gate = ease1(fx_gate, on, EN_FX_GATE, t, 0.005f, 0.03f);
+    fx_drvw += ((on >> EN_FX_DRIVE & 1u ? 1.0f : 0.0f) - fx_drvw) * fm_minf(t / (on >> EN_FX_DRIVE & 1u ? 0.03f : 0.08f), 1.0f);
+    if (!(on >> EN_FX_DRIVE & 1u) && fx_drvw < 0.0005f)
+        fx_drvw = 0.0f;
+    if (on >> EN_FX_DRIVE & 1u)                  /* (it grows, a straight line: 3 s to the top; 1.4: the top its
+                                                  * amount, and down to it in a quarter of a second) */
+        fx_drv = amt_ramp(fx_drv, FX_A(EN_FX_DRIVE), t * (1.0f / 3.0f), t * 4.0f);
     else if (fx_drvw == 0.0f)
         fx_drv = 0.0f, dr_lp[0] = dr_lp[1] = 0.0f, dr_ein = dr_eout = 0.0f, dr_match = 1.0f;
     if (fx_drvw > 0.0f) {
         const float m = dr_eout > 1e-9f ? fm_clampf(fm_sqrtf(dr_ein / dr_eout), 0.05f, 1.0f) : 1.0f;
         dr_match += (m - dr_match) * fm_minf(t / 0.02f, 1.0f);
     }
-    fx_ring = ease1(fx_ring, (int)(on >> EN_FX_RING & 1u), t, 0.02f, 0.05f);
+    fx_ring = ease1(fx_ring, on, EN_FX_RING, t, 0.02f, 0.05f);
     if (fx_ring > 0.0f)
         rg_dt = mtof((float)(84 + par[P_ROOT] % 12)) * (1.0f / EN_SR);
     else
         rg_ph = 0.0f;
-    fx_vin = ease1(fx_vin, (int)(on >> EN_FX_VINYL & 1u), t, 0.05f, 0.1f);
+    fx_vin = ease1(fx_vin, on, EN_FX_VINYL, t, 0.05f, 0.1f);
     if (fx_vin == 0.0f)
         vn_lp[0] = vn_lp[1] = vn_hp[0] = vn_hp[1] = vn_pop = vn_pop2 = 0.0f;
     /* Dive: an octave down over ~1.6 s, back in a tenth; the notes take it as they start, the Lead as it sounds,
@@ -5760,7 +5849,7 @@ static void mast_ctl(uint32_t on, uint32_t rise, float t)
     if (dive || dive_st > 0.0f) {
         const float was = divefac;
         int i;
-        dive_st += ((dive ? 12.0f : 0.0f) - dive_st) * fm_minf(t / (dive ? 0.55f : 0.035f), 1.0f);
+        dive_st += ((dive ? 12.0f * FX_A(EN_FX_DIVE) : 0.0f) - dive_st) * fm_minf(t / (dive ? 0.55f : 0.035f), 1.0f);
         if (!dive && dive_st < 0.02f)
             dive_st = 0.0f;
         divefac = dive_st > 0.0f ? fm_exp2f(dive_st * (-1.0f / 12.0f)) : 1.0f;
@@ -5861,15 +5950,15 @@ static void fx_ctl(uint32_t n)                   /* once a chunk: the effects' e
     fxm_was = fxm;
     mast_ctl(on, rise, t);
     /* the echo: Time doubles it (halves it, if the tape is too short), Tape stop slows the tape to a quarter */
-    fx_ts += ((on >> EN_FX_TAPESTOP & 1u ? 4.0f : 1.0f) - fx_ts) * fm_minf(t / (on >> EN_FX_TAPESTOP & 1u ? 0.7f : 0.25f), 1.0f);
+    fx_ts += ((on >> EN_FX_TAPESTOP & 1u ? 1.0f + 3.0f * FX_A(EN_FX_TAPESTOP) : 1.0f) - fx_ts) * fm_minf(t / (on >> EN_FX_TAPESTOP & 1u ? 0.7f : 0.25f), 1.0f);
     ec = on >> EN_FX_TIME & 1u ? (echo_len_t * 2.0f <= (float)(TAPE_N - 8) ? 2.0f : 0.5f) : 1.0f;
     fx_em = ec * fx_ts;
     fx_ek = fx_ts > 1.01f ? 0.004f : 0.001f;
-    fx_rep += ((on >> EN_FX_REPEAT & 1u ? 1.0f : 0.0f) - fx_rep) * fm_minf(t / 0.03f, 1.0f);
-    fx_nova += ((on >> EN_FX_SUPERNOVA & 1u ? 1.0f : 0.0f) - fx_nova) * fm_minf(t / (on >> EN_FX_SUPERNOVA & 1u ? 0.5f : 0.2f), 1.0f);
+    fx_rep += ((on >> EN_FX_REPEAT & 1u ? FX_A(EN_FX_REPEAT) : 0.0f) - fx_rep) * fm_minf(t / 0.03f, 1.0f);
+    fx_nova += ((on >> EN_FX_SUPERNOVA & 1u ? FX_A(EN_FX_SUPERNOVA) : 0.0f) - fx_nova) * fm_minf(t / (on >> EN_FX_SUPERNOVA & 1u ? 0.5f : 0.2f), 1.0f);
     /* the master filter's targets: Low-pass down to 350 Hz, High-pass up to 1.3 kHz */
-    lpt = on >> EN_FX_LOWPASS & 1u ? 8.45f : 14.2f;
-    hpt = on >> EN_FX_HIGHPASS & 1u ? 10.35f : 4.3f;
+    lpt = !(on >> EN_FX_LOWPASS & 1u) ? 14.2f : fx_dim[EN_FX_LOWPASS] == 0.0f ? 8.45f : 14.2f - 5.75f * FX_A(EN_FX_LOWPASS);
+    hpt = !(on >> EN_FX_HIGHPASS & 1u) ? 4.3f : fx_dim[EN_FX_HIGHPASS] == 0.0f ? 10.35f : 4.3f + 6.05f * FX_A(EN_FX_HIGHPASS);
     mf_lp += (lpt - mf_lp) * fm_minf(t / (lpt < mf_lp ? 0.5f : 0.3f), 1.0f);
     mf_hp += (hpt - mf_hp) * fm_minf(t / (hpt > mf_hp ? 0.5f : 0.3f), 1.0f);
     if (mf_lp < 14.15f || mf_hp > 4.35f) {
@@ -5877,7 +5966,7 @@ static void fx_ctl(uint32_t n)                   /* once a chunk: the effects' e
         svf_coefs(mf_c[1], fm_exp2f(mf_hp), 1.2f);
     }
     /* Sweep: the Sequence's filter swept two octaves either way, a turn in ~3 s (from where it is: down first) */
-    fx_sw += ((on >> EN_FX_SWEEP & 1u ? 1.0f : 0.0f) - fx_sw) * fm_minf(t / 0.2f, 1.0f);
+    fx_sw += ((on >> EN_FX_SWEEP & 1u ? FX_A(EN_FX_SWEEP) : 0.0f) - fx_sw) * fm_minf(t / 0.2f, 1.0f);
     if (fx_sw > 0.001f) {
         fx_swl += t * 0.33f;
         if (fx_swl >= 1.0f)
@@ -5886,17 +5975,17 @@ static void fx_ctl(uint32_t n)                   /* once a chunk: the effects' e
         fx_swl = 0.5f;
     }
     fx_swm = fm_exp2f(2.0f * fx_sw * sine(fx_swl));
-    fx_ph += ((on >> EN_FX_PHASER & 1u ? 1.0f : 0.0f) - fx_ph) * fm_minf(t / 0.1f, 1.0f);
-    fx_vt += ((on >> EN_FX_REVERB & 1u ? 1.0f : 0.0f) - fx_vt) * fm_minf(t / 0.03f, 1.0f);
+    fx_ph += ((on >> EN_FX_PHASER & 1u ? FX_A(EN_FX_PHASER) : 0.0f) - fx_ph) * fm_minf(t / 0.1f, 1.0f);
+    fx_vt += ((on >> EN_FX_REVERB & 1u ? FX_A(EN_FX_REVERB) : 0.0f) - fx_vt) * fm_minf(t / 0.03f, 1.0f);
     fx_cf += ((on >> EN_FX_FREEZE & 1u ? 1.0f : 0.0f) - fx_cf) * fm_minf(t / 0.1f, 1.0f);
-    fx_wash += ((on >> EN_FX_WASH & 1u ? 1.0f : 0.0f) - fx_wash) * fm_minf(t / (on >> EN_FX_WASH & 1u ? 0.4f : 0.8f), 1.0f);
+    fx_wash += ((on >> EN_FX_WASH & 1u ? FX_A(EN_FX_WASH) : 0.0f) - fx_wash) * fm_minf(t / (on >> EN_FX_WASH & 1u ? 0.4f : 0.8f), 1.0f);
     if (rise >> EN_FX_TAKEOFF & 1u)              /* Take-off: the arc's Crash, now (-9 dB: over any music, not only
                                                   * the ending's full) */
-        ar_cr_env = 1.0f, ar_cr_f = 5000.0f, ar_cr_g = 0.35f;
-    tw_amp += ((on >> EN_FX_TWITTER & 1u ? 1.0f : 0.0f) - tw_amp) * fm_minf(t / (on >> EN_FX_TWITTER & 1u ? 0.02f : 0.3f), 1.0f);
+        ar_cr_env = 1.0f, ar_cr_f = 5000.0f, ar_cr_g = 0.35f * FX_A(EN_FX_TAKEOFF);
+    tw_amp += ((on >> EN_FX_TWITTER & 1u ? FX_A(EN_FX_TWITTER) : 0.0f) - tw_amp) * fm_minf(t / (on >> EN_FX_TWITTER & 1u ? 0.02f : 0.3f), 1.0f);
     /* Shimmer: its feedback in over ~50 ms, out over ~0.15 s; once out (~1 s after it is let go), the shifter stops */
     if (on >> EN_FX_SHIMMER & 1u || fx_shm > 0.0f) {
-        fx_shm += ((on >> EN_FX_SHIMMER & 1u ? 1.0f : 0.0f) - fx_shm) * fm_minf(t / (on >> EN_FX_SHIMMER & 1u ? 0.05f : 0.15f), 1.0f);
+        fx_shm += ((on >> EN_FX_SHIMMER & 1u ? FX_A(EN_FX_SHIMMER) : 0.0f) - fx_shm) * fm_minf(t / (on >> EN_FX_SHIMMER & 1u ? 0.05f : 0.15f), 1.0f);
         if (!(on >> EN_FX_SHIMMER & 1u) && fx_shm < 0.001f)
             shm_stop();
         else
@@ -7033,6 +7122,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         if (timed)
             pulse_left -= (float)k;
         control(k);
+        th_step(k);
         render_chunk(out, k, gain);
         if (roll_wait > 0 && (roll_wait -= (int32_t)k) <= 0) {
             roll_wait = 0;

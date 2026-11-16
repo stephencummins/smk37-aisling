@@ -2,3 +2,6 @@
 # page's to forward (_redirects can't match those). GitHub Pages ignores this file.
 /share.jpg /visualiser/share.jpg 301
 /skellig.mp3 /visualiser/skellig.mp3 301
+# The SMK-37 Elite's docs became its manual (16 Nov 2026); a section's #s11 follows by itself.
+/smk37/docs /smk37/manual/ 301
+/smk37/docs/* /smk37/manual/:splat 301

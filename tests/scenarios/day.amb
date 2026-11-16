@@ -1,0 +1,56 @@
+# (1.4) the day and the weather: offsets in the engine, nothing saved. A day in 60 s here
+listen
+wait 2000
+expect day 0
+day 1 60000
+expect day 1
+wait 15000
+# noon: open
+expect dayofs0 8
+expect dayofs1 6
+expect dayofs2 8
+expect dayofs3 4
+wait 30000
+# midnight: darker and closer
+expect dayofs0 -12
+expect dayofs2 -10
+expect dayofs3 -6
+expect dirty 0
+expect store_writes <1
+# the heavy front, at about seven tenths of the day: the shower falls, 40 s at most
+day 1 600000 700
+wait 1500
+expect shower 1
+expect dayofs4 >10
+shot day_night.png
+wait 45000
+expect shower 0
+# off: everything back
+day 0
+wait 500
+expect day 0
+expect shower 0
+expect dayofs0 0
+expect dayofs4 0
+# by day, the sun
+day 2 600000 250
+wait 1000
+shot day_noon.png
+# the Journey page's fourth knob
+day 0
+tap GLO
+wait 300
+tap GLO
+wait 300
+tap GLO
+wait 300
+expect view 27
+turn K4 2
+wait 300
+expect day 2
+shot day_page.png
+turn K4 -3
+wait 300
+expect day 0
+expect dayofs0 0
+expect dirty 0

@@ -91,11 +91,15 @@ wait 40
 expect pagedot 1
 tap GLO
 wait 40
-expect pagedots 2
+expect pagedots 3
 expect pagedot 0
 tap GLO
 wait 40
 expect pagedot 1
+# (1.4) and the journey's Set list
+tap GLO
+wait 40
+expect pagedot 2
 tap SAVE
 wait 40
 expect pagedots 3

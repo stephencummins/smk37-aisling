@@ -26,18 +26,18 @@
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_ARC, V_SMOVE, V_S2MOVE, V_AMOVE,
-       V_LSTYLE, NVIEWS };
+       V_LSTYLE, V_SET, NVIEWS };            /* (1.4) V_SET: the journey's set list, GLO a third time */
 /* (V_PERF: PERFORM's knobs, the master actions; V_MIX while white 6 is held. V_KEY: HOME again, the key and the
  * tempo, the Dub page's second) */
 static const char *const VIEW_NAME[NVIEWS] = {"Aisling", "Drone", "Sequence", "Lead", "Sequence 2", "Space", "Setup",
                                               "Mix", "Drone sound", "Seq sound", "Lead sound", "Seq2 sound",
                                               "Drone move", "Repeats", "Lead move", "Chords", "Pattern", "Perform", "Key",
                                               "Atmosphere", "Echo", "Atmos sound", "Arc", "Seq move", "Seq2 move",
-                                              "Atmos move", "Lead style"};
+                                              "Atmos move", "Lead style", "Journey"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
                                          B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
-                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
+                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
 static int sound_of(int v) { return v == V_CHORD ? V_CSND : v == V_TEXTURE ? V_PSND : v == V_BASS ? V_BSND : v == V_DRUMS ? V_DSND : -1; }
 static int fm_of(int v) { return v == V_TEXTURE ? V_PFM : -1; }   /* (BERLIN: no FM pages; the Sequence's third, its
                                                                    * Repeats, in the Ping FM page's place) */
@@ -63,7 +63,7 @@ static int next_page(int v)                      /* (BERLIN) a layer's button ag
 static int atm_view(int v) { return v == V_NSND || v == V_NSND2 || v == V_AMOVE; }   /* (the Atmosphere's pages) */
 static int page_of(int v)                        /* a sound page: its layer's; the Echo page: Space's */
 {
-    return v == V_KEY ? V_DUB : v == V_ESND ? V_SPACE : v == V_NSND2 || v == V_AMOVE ? V_NSND : v == V_ARC ? V_SETUP
+    return v == V_KEY ? V_DUB : v == V_ESND ? V_SPACE : v == V_NSND2 || v == V_AMOVE ? V_NSND : v == V_ARC || v == V_SET ? V_SETUP
          : parent_of(v) >= 0 ? parent_of(v) : v;
 }
 /* the header's dots, as the buttons sit on the panel: FX ENV LFO GLO, then HOME SAVE ARP SEQ (SELECT's round once) */
@@ -73,7 +73,7 @@ static const uint8_t PAGE_ORDER[NROUND] = {V_SPACE, V_CHORD, V_BASS, V_SETUP, V_
 #define NO_PAGE 0xFFu
 static const uint8_t PAGE_RUN[NROUND][4] = {
     {V_SPACE, V_ESND, NO_PAGE, NO_PAGE},   {V_CHORD, V_CSND, V_CFM, NO_PAGE},
-    {V_BASS, V_BSND, V_LSTYLE, V_BFM},     {V_SETUP, V_ARC, NO_PAGE, NO_PAGE},
+    {V_BASS, V_BSND, V_LSTYLE, V_BFM},     {V_SETUP, V_ARC, V_SET, NO_PAGE},
     {V_DUB, V_KEY, NO_PAGE, NO_PAGE},      {V_NSND, V_NSND2, V_AMOVE, NO_PAGE},
     {V_TEXTURE, V_PSND, V_PFM, V_SMOVE},   {V_DRUMS, V_DSND, V_PAT, V_S2MOVE},
 };
@@ -109,7 +109,12 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_PLAY,                                               /* (the Chords page: Endless or Loop, P_PMODE's bit 2) */
        K_SAVE,                                               /* (Setup: a turn saves; it shows whether it's saved) */
        K_CHORUS,
-       K_SCR };                                              /* (1.3, PERFORM: the output's chorus, never saved) */
+       K_JRP, K_JRIN, K_DAY,
+       K_SCR };                                              /* (1.4.1) the screen, dark or light: saved, as Lights */
+#define NDAY 4                                   /* (1.4) the day: off, or a whole day in 20 minutes, 1 hour, 3 hours */
+static const char *const DAY_NAME[NDAY] = {"Off", "20 min", "1 hour", "3 hours"};
+static void dy_set(int v);
+enum { DUMMY_K_END = 0 };                                      /* (1.4, the Set list page: the piece, and whether it's in) */                                           /* (1.3, PERFORM: the output's chorus, never saved) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Steps", "Steps 2", "Octaves", "Octaves 2", "Skips"};   /* (BERLIN:
                                                   * the Sequence's and Sequence 2's) */
 static int lane_seq(int d) { return d == 1 || d == 3; }   /* (a lane's sequence: its accents, its chance) */
@@ -121,7 +126,11 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_LDENS, P_LOCT, P_ORN, P_VIB},             /* (the Lead; AISLING: Ornament for Glide, on Lead style) */
     {P_SCH1, P_SEQ2OCT, P_SEQ2LEN, P_SEQ2},      /* (Sequence 2) */
     {P_ECHO, P_ETIME, P_FEEDBACK, P_REVERB},
-    {P_TUNE, P_MIDI, K_LEDS, K_SCR},              /* (1.4.1: Screen where Save was; SAVE saves. Stephen, 2026-11-16) */
+#if AISLING_BOARD_SMK37
+    {P_TUNE, P_MIDI, K_LEDS, K_SCR},              /* (the SMK-37: Screen where Save was; SAVE saves. Stephen, 2026-11-16) */
+#else
+    {P_TUNE, P_MIDI, K_LEDS, K_SAVE},
+#endif
     {P_CHORD, P_SEQ, P_LEAD, P_SEQ2},
     {P_CCOL, P_DREL, P_DRREV, P_DRECHO},        /* the Drone's sound */
     {P_CUTOFF, P_DECAY, P_SQREV, P_SQECHO},      /* the Sequence's sound */
@@ -145,6 +154,7 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_MW4, P_MT4, P_MR4, P_MI4},                /* the Atmosphere's Move (SAVE, a third time) */
     {P_ORN, P_GLIDE, P_VIB, P_LMEM},             /* (AISLING) Lead style (LFO, a third time): how it plays; Memory
                                                   * as on the Arc page */
+    {K_JRP, K_JRIN, K_SCR, K_DAY},              /* (1.4) the Journey (GLO, a third time): its pieces; the day */
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Filter", "Evolve", "Motion", "Drift"},
@@ -153,7 +163,11 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Phrases", "Octave", "Ornament", "Vibrato"},
     {"Chance", "Octave", "Length", "Level"},
     {"Echo", "Echo time", "Feedback", "Reverb"},
+#if AISLING_BOARD_SMK37
     {"Tune", "MIDI out", "Lights", "Screen"},
+#else
+    {"Tune", "MIDI out", "Lights", "Save"},
+#endif
     {"Drone", "Seq", "Lead", "Seq 2"},
     {"Colour", "Release", "Reverb", "Echo"},
     {"Cutoff", "Decay", "Reverb", "Echo"},
@@ -174,10 +188,11 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Width", "Time", "Rate", "Intro"},
     {"Width", "Time", "Rate", "Intro"},
     {"Ornament", "Glide", "Vibrato", "Memory"},
+    {"Piece", "In set", "Screen", "Day"},
 };
 /* what each knob does, a line: on the rule above the knobs while it's being turned (in capitals; each fits the
  * rule's 228 px, and every view has its row: the host's expect helpfit) */
-_Static_assert(NVIEWS == 27, "a view added: its KNOB_HELP row too");
+_Static_assert(NVIEWS == 28, "a view added: its KNOB_HELP row too");
 static const char *const KNOB_HELP[NVIEWS][4] = {   /* (BERLIN's, a row a view, V_DUB .. V_ARC) */
     {"Down shuts, up opens; Off mid", "How often a step changes", "How much, and the sections' pace", "Bars before the chord moves on"},
     {"The root an octave under", "The filter's resonance", "The slow phaser's depth", "How slowly the chord swells in"},
@@ -185,7 +200,11 @@ static const char *const KNOB_HELP[NVIEWS][4] = {   /* (BERLIN's, a row a view, 
     {"How often it plays a phrase", "Two octaves down to one up", "Cuts, rolls, slides: how often", "How deep the late vibrato"},
     {"How likely each note plays", "Its octave (Motion moves it a while)", "Steps: a step short, it drifts", "Its level"},
     {"How much goes into the echo", "The echo's time: 1/8 to a bar", "How long the repeats go on", "How much goes into the plate"},
+#if AISLING_BOARD_SMK37
     {"Fine tuning, in cents", "Notes and clock out over MIDI", "The keys' and buttons' lights", "Dark, on black; or light, on white"},
+#else
+    {"Fine tuning, in cents", "Notes and clock out over MIDI", "The keys' and buttons' lights", "A turn saves all eight pieces"},
+#endif
     {"The Drone's level", "The Sequence's level", "The Lead's level", "Sequence 2's level"},
     {"Darker, or brighter and wider", "How long it fades at a change", "How much goes into the plate", "How much goes into the echo"},
     {"The filter: dark to bright", "How long each note rings", "How much goes into the plate", "How much goes into the echo"},
@@ -206,6 +225,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {   /* (BERLIN's, a row a view, 
     {"How far its filter wanders", "How long one move takes", "How often a new move starts", "Bars its filter takes to open"},
     {"How far its filter wanders", "How long one move takes", "How often a new move starts", "Bars its filter takes to open"},
     {"Cuts, rolls, slides: how often", "How long it slides, note to note", "How deep the late vibrato", "How much the Lead keeps its ideas"},
+    {"Which piece: the journey's list", "The journey plays it, or passes", "Dark, on black; or light, on white", "Dawn to night: light and weather"},
 };
 
 /* (BERLIN) the screen's colours: Cosmic, on black (spec 15): lavender text, a cyan accent; the layers in their own
@@ -213,7 +233,8 @@ static const char *const KNOB_HELP[NVIEWS][4] = {   /* (BERLIN's, a row a view, 
  * dark tint for the shapes at rest. (The names stay DUB-1's: K_PAD the Drone, K_BELL the Sequence, K_BASS the Lead,
  * K_PULSE Sequence 2, K_NOISE the Atmosphere.) */
 /* (1.4.1) the colours by night (as they were, on black) and by day (on bainin white: the same hues, darker, so
- * each reads on it; a tint is pale, not dark). Setup's Screen sets which; proj.light keeps it. */
+ * each reads on it; a tint is pale, not dark). the Journey page's Screen sets which (and, on the
+ * SMK-37, Setup's); proj.light keeps it. */
 enum { KC_BG, KC_PANEL, KC_LINE, KC_DIM, KC_TEXT, KC_ACC, KC_BELL, KC_BELL_T, KC_PAD, KC_PAD_T, KC_PULSE, KC_PULSE_T, KC_BASS, KC_BASS_T, KC_FROST, KC_FROST_T, KC_RIM, KC_RIM_T, KC_CLAP, KC_CLAP_T, KC_EIRE, KC_EIRE_O, KC_NOISE, KC_SEA, KC_HEATHER, KC_GORSE, KC_BAININ, KC_N };
 static const uint16_t KPAL[2][KC_N] = {
     {RGB(0, 0, 0), RGB(26, 23, 38), RGB(46, 41, 66), RGB(141, 127, 184), RGB(239, 231, 255), RGB(127, 216, 255), RGB(255, 106, 213), RGB(96, 36, 82), RGB(180, 140, 255), RGB(58, 44, 96), RGB(127, 216, 255), RGB(36, 66, 84), RGB(255, 210, 127), RGB(98, 80, 44), RGB(232, 92, 84), RGB(128, 56, 52), RGB(214, 124, 176), RGB(108, 58, 86), RGB(232, 206, 98), RGB(108, 98, 48), RGB(52, 196, 116), RGB(255, 146, 72), RGB(186, 174, 156), RGB(72, 188, 176), RGB(198, 150, 210), RGB(244, 200, 56), RGB(246, 238, 214)},
@@ -255,10 +276,14 @@ static struct {
     int8_t mac[EN_NMAC];               /* the master actions (HOME's Filter, PERFORM's knobs): -50..50, never saved */
     uint32_t pheld, platch;            /* (1.3) PERFORM's keys held, and latched (a bit a key, PKEY's) */
     uint32_t pcc;                      /* (1.3) the effects a CC holds, on any page (a bit a key, PKEY's) */
+    uint8_t pamt[32], psent[34];       /* (1.4) each key's amount as its CC last had it (64..127), and what the
+                                        * engine was last sent (by the engine's numbers; 0: nothing yet, full) */
     uint32_t pnow, pout;               /* every effect sounding (the link's STATE); those by hand, as last sent out */
     uint32_t fx;                       /* the effects held (EN_FX_*), REC's grid */
     uint32_t bfx;                      /* (BERLIN) the grid's effects held on the black keys (EN_FX_*) */
     uint8_t mv;                        /* (BERLIN) the black keys' moves held (EN_MV_*) */
+    uint8_t day, shower;               /* (1.4) the day (DAY_NAME's); its shower falling (Fras, lightly) */
+    uint8_t jr_out, jr_cur;            /* (1.4) the Set list: the pieces left out (a bit each), the one looked at */
     uint8_t slot, chords_from;         /* the Chords page: the slot edited; the page it was opened from */
     uint8_t noise_from;                /* the Noise page (SAVE): the page it was opened from */
     int8_t oct_home[NLAYER];           /* each layer's octave as its piece was loaded (OCT- / OCT+ lit away from it) */
@@ -570,6 +595,12 @@ static int knob_get(int k)
         return ui.dirty ? 1 : 0;
     if (k == K_CHORUS)
         return ui.chorus;
+    if (k == K_DAY)
+        return ui.day;
+    if (k == K_JRP)
+        return ui.jr_cur;
+    if (k == K_JRIN)
+        return !(ui.jr_out >> ui.jr_cur & 1u);
     return 0;
 }
 static void knob_range(int k, int *lo, int *hi)
@@ -582,7 +613,7 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = 50;
     } else {
         *lo = 0;
-        *hi = k == K_SCR ? 1 : k == K_CHORUS ? 100 : k == K_PLAY ? 1 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
+        *hi = k == K_SCR ? 1 : k == K_DAY ? NDAY - 1 : k == K_JRP ? NPIECES - 1 : k == K_JRIN ? 1 : k == K_CHORUS ? 100 : k == K_PLAY ? 1 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
             : k == K_LANE ? EN_NDRUM - 1 : k == K_LCH ? 100 : 0;
     }
 }
@@ -590,17 +621,17 @@ static const char *knob_name(int k)
 {
     if (k < P_NPARAMS)
         return en_param_info(k)->name;
-    return k == K_SCR ? "Screen" : k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
+    return k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
          : k == K_LANE ? "Lane" : k == K_LCH ? "Chance" : k == K_FILTER ? "Filter" : k == K_DUB ? "Wet"
-         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_PLAY ? "Play" : k == K_SAVE ? "Save" : k == K_CHORUS ? "Chorus" : "";
+         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_PLAY ? "Play" : k == K_SAVE ? "Save" : k == K_CHORUS ? "Chorus" : k == K_DAY ? "Day" : k == K_SCR ? "Screen" : k == K_JRP ? "Piece" : k == K_JRIN ? "In set" : "";
 }
 static void knob_text(int k, char *b)
 {
     int v = knob_get(k);
     if (k < P_NPARAMS) {
         en_param_text(k, v, b);
-    } else if (k == K_LEDS || k == K_SCR) {      /* On: the keys, and the unlit buttons glow; Keys: no glow */
-        const char *n = k == K_SCR ? (v ? "Light" : "Dark") : v == 2 ? "Keys" : v ? "On" : "Off";
+    } else if (k == K_LEDS) {                    /* On: the keys, and the unlit buttons glow; Keys: no glow */
+        const char *n = v == 2 ? "Keys" : v ? "On" : "Off";
         while ((*b++ = *n++))
             ;
     } else if (k == K_CPU) {
@@ -609,6 +640,10 @@ static void knob_text(int k, char *b)
             b++;
         *b++ = '%';
         *b = 0;
+    } else if (k == K_JRP || k == K_JRIN || k == K_DAY || k == K_SCR) {
+        const char *n = k == K_SCR ? (v ? "Light" : "Dark") : k == K_DAY ? DAY_NAME[v] : k == K_JRP ? piece_name(v) : v ? "In" : "Out";
+        while ((*b++ = *n++))
+            ;
     } else if (k == K_SLOT) {
         itoa_u((uint32_t)v + 1u, b);
     } else if (k == K_CQ || k == K_CX) {
@@ -695,6 +730,17 @@ static void knob_set(int k, int v)
     } else if (k == K_SLOT) {
         ui.slot = (uint8_t)v;
         return;                                  /* (only where the page looks: nothing saved) */
+    } else if (k == K_DAY) {                     /* (not saved: off at every start) */
+        dy_set(v);
+        return;
+    } else if (k == K_JRP) {
+        ui.jr_cur = (uint8_t)v;
+        return;
+    } else if (k == K_JRIN) {                    /* (not saved, as the stay. The last one in stays in) */
+        const uint8_t o = v ? ui.jr_out & (uint8_t)~(1u << ui.jr_cur) : ui.jr_out | (uint8_t)(1u << ui.jr_cur);
+        if (o != (uint8_t)((1u << NPIECES) - 1u))
+            ui.jr_out = o;
+        return;
     } else if (k == K_CQ || k == K_CX) {
         slot_write(ui.slot);
         knob_set((k == K_CQ ? P_CQ0 : P_CX0) + ui.slot, v);
@@ -910,6 +956,7 @@ static const char *const LPERF_NAME[LPERF_N] = {"DRONE", "SEQ", "LEAD", "SEQ 2",
                                                 "DROP", "ECHO", "DRONE", "SEQ", "LEAD", "SEQ 2", "ATMOS"};
 /* each layer's mute (EN_M_*), in the meters' order: Sequence 2 is two of the engine's bits (DUB-1's kick and hats) */
 static const uint32_t LAYER_MUTE[NLAYER] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK | EN_M_HATS, EN_M_NOISE};
+#define DAY_SHOWER 84                            /* (the shower's amount, as a CC) */
 #define ALL_MUTE (EN_M_CHORD | EN_M_PINGS | EN_M_BASS | EN_M_KICK | EN_M_HATS | EN_M_NOISE)
 static void fx_send(void)                        /* all that is held, to the engine: the grid's (ui.fx), the black
                                                   * keys' (ui.bfx, ui.mv), the link's moves, and PERFORM's keys,
@@ -932,8 +979,17 @@ static void fx_send(void)                        /* all that is held, to the eng
     for (i = 0; i < PERF_N; i++)
         if (on >> i & 1u) {
             const int d = PKEY[i].d;
+            /* (1.4) its amount, sent before it is held: full by hand (a key, the grid, a black key), a CC's by its
+             * value. Half time, Freeze and Octave are switches: the engine makes nothing of theirs; Drop has none */
+            const int e = d < 100 ? d : d == 100 + EN_MV_RISE ? 32 : d == 100 + EN_MV_CLOSE ? 33 : -1;
+            const int byhand = (hand >> i & 1u) || (e == 32 && ui.mv & EN_MV_RISE) || (e == 33 && ui.mv & EN_MV_CLOSE);
+            const int want = byhand || ui.pamt[i] < 64 ? 127 : ui.pamt[i];
             if (d == PK_SOON)
                 continue;
+            if (e >= 0 && want != (ui.psent[e] ? ui.psent[e] : 127)) {
+                ui.psent[e] = (uint8_t)want;
+                en_amt(e, want);
+            }
             if (d < 100)
                 fx |= 1u << d;
             else if (d < 200)
@@ -941,13 +997,37 @@ static void fx_send(void)                        /* all that is held, to the eng
             else
                 pf |= (uint32_t)(d - 200);
         }
+    if (ui.shower && !((ui.fx | ui.bfx | fx) >> EN_FX_TWITTER & 1u)) {   /* (1.4) the day's shower: Fras, lightly,
+                                                  * unless a hand or a CC has it */
+        if (ui.psent[EN_FX_TWITTER] != DAY_SHOWER)
+            ui.psent[EN_FX_TWITTER] = DAY_SHOWER, en_amt(EN_FX_TWITTER, DAY_SHOWER);
+        fx |= 1u << EN_FX_TWITTER;
+    }
     en_fx(ui.fx | ui.bfx | fx);
     en_move(ui.mv | mv);
     en_perf(ui.moves | pf);
 }
+/* (1.4) THE JOURNEY's glide: one piece into the next without two playing at once (there isn't the load for a
+ * crossfade). Over 16 bars the layers thin out into the echo and the plate (the Lead, Sequence 2, Sequence 1, then the
+ * Drone and the Atmosphere eased), the tempo eases across under the tail, the piece changes with nothing sounding but
+ * that tail, and the new piece's layers come in: the Drone and the Atmosphere, Sequence 1, Sequence 2, the Lead. The
+ * layers held out are laid over the hand's mutes, never stored in them. A touch ends it: before the change, the piece
+ * stays; after, the new one whole at once. The change is set_piece's without its save: nothing is marked to be
+ * saved, so a journey never writes the flash */
+#define JR_THIN (EN_M_CHORD | EN_M_NOISE)        /* (eased by the engine: en_thin; the rest stop sounding new notes) */
+static struct {
+    uint8_t on, to, changed, n;                  /* gliding; the piece it goes to; changed yet; bars into it */
+    int16_t tempo;                               /* the tempo sent last, easing */
+    uint32_t mask;                               /* the layers held out now (EN_M_*) */
+    uint32_t bar, six;                           /* the engine's bar last seen; the sixteenth the tempo's ease began */
+    uint32_t act;                                /* the last touch when it began (another ends it) */
+    uint8_t stay, piece, pb;                     /* the stay (JR_MIN's); the piece it is on; the phrase's bar last
+                                                  * seen (the set list: ui.jr_out) */
+    uint32_t since;                              /* the stay's start: the piece's arrival, or the last touch */
+} jr;
 static void perf_mutes(void)                     /* to the engine: the mutes, and with a solo, all but it */
 {
-    en_mute(ui.mutes | (ui.solo ? ALL_MUTE & ~ui.solo : 0u));
+    en_mute(ui.mutes | (ui.solo ? ALL_MUTE & ~ui.solo : 0u) | (jr.mask & ~JR_THIN));
 }
 static int perf_sounds(int i)                    /* layer i (0..4) heard: not muted, not soloed out */
 {
@@ -1248,9 +1328,11 @@ static void button(int b)
         set_view(ui.view == V_SPACE ? V_ESND : V_SPACE);
         return;
     }
-    if (b == B_GLO && (ui.view == V_SETUP || ui.view == V_ARC)) {   /* GLO again: the Arc (how the piece builds);
-                                                                       * again: back */
-        set_view(ui.view == V_SETUP ? V_ARC : V_SETUP);
+    if (b == B_GLO && (ui.view == V_SETUP || ui.view == V_ARC || ui.view == V_SET)) {   /* GLO again: the Arc (how
+                                                  * the piece builds); again: (1.4) the journey's Set list; again: back */
+        if (ui.view == V_ARC)
+            ui.jr_cur = (uint8_t)proj.piece;     /* (it opens on the piece playing) */
+        set_view(ui.view == V_SETUP ? V_ARC : ui.view == V_ARC ? V_SET : V_SETUP);
         return;
     }
     if (b == B_HOME && ui.view == V_DUB) {       /* HOME again: the Key page (the key and the tempo); again: back */
@@ -1527,10 +1609,15 @@ static void cc_in(int n, int v)
     int k = K_NONE, j = -1, lo, hi;
     if ((k = cc_pkey(n)) >= 0) {                 /* (1.3) an effect, held while its CC is 64 or over: on any page */
         const uint32_t b = 1u << k;
-        if (v >= 64 && !(ui.pcc & b)) {
-            ui.pcc |= b;
-            fx_send();
-            say(PKEY[k].name, 0);
+        if (v >= 64) {                           /* (1.4) 64..127 its amount too: 127 full, as 1.3 */
+            const int was = ui.pamt[k];
+            ui.pamt[k] = (uint8_t)(v > 127 ? 127 : v);
+            if (!(ui.pcc & b)) {
+                ui.pcc |= b;
+                fx_send();
+                say(PKEY[k].name, 0);
+            } else if (was != ui.pamt[k])
+                fx_send();
         } else if (v < 64 && (ui.pcc & b)) {
             ui.pcc &= ~b;
             fx_send();
@@ -1728,6 +1815,217 @@ static void nudge(int layer, int how)
 #ifdef EN_HOST
 static uint32_t ui_evolve_n, ui_evolve_bar;      /* Evolve's nudges so far, and the bar of the last */
 #endif
+/* (1.4) the journey: a stay on each piece (Setup's SELECT: off, 5, 10, 20 or 40 minutes), then the glide to the next
+ * of the set list, on a phrase's start. A touch, or a piece picked, and the stay starts again. Not saved: off at
+ * every start, as Sleep; nor is anything it does (the pieces are left as they were saved) */
+#define NJR 5
+static const uint8_t JR_MIN[NJR] = {0, 5, 10, 20, 40};
+static const char *const JR_NAME[NJR] = {"OFF", "5 MIN", "10 MIN", "20 MIN", "40 MIN"};
+static const char *const JR_SAID[NJR] = {"journey off", "journey, 5 minutes a piece", "journey, 10 minutes a piece",
+                                         "journey, 20 minutes a piece", "journey, 40 minutes a piece"};
+static uint32_t jr_touch(void) { return (int32_t)(ui.act_t - ui.turn_t) > 0 ? ui.act_t : ui.turn_t; }
+static int jr_next(void)                         /* the set list's next piece after this one: -1, there's no other */
+{
+    int i;
+    for (i = 1; i < NPIECES; i++)
+        if (!(ui.jr_out >> (proj.piece + i) % NPIECES & 1u))
+            return (proj.piece + i) % NPIECES;
+    return -1;
+}
+/* (1.4) the day and the weather: a slow round laid over whatever plays. The light: the plucks' filter, the pings'
+ * tone and the plate's size, open by day, darker and closer at night; the pace: Density a few points; the weather:
+ * the Atmosphere's level, three fronts a day, and at the heaviest a shower (Fras, lightly, 40 s at most). All as
+ * offsets in the engine (en_day), so the piece's own values never move and nothing is marked to save. The time
+ * runs while it plays; it begins at dawn. Off: every offset 0, and the sound as it was to the bit */
+#define DAY_NP 5
+static const uint8_t DAY_MIN[NDAY] = {0, 20, 60, 180};
+static const struct { uint8_t p; int8_t day, night; } DAY_P[DAY_NP - 1] = {
+    {P_CUTOFF, 8, -12}, {P_SWEEP, 6, -10}, {P_SIZE, 8, -10}, {P_DENSITY, 4, -6}};
+static struct {
+    uint32_t t, span, last, calc, sh_t;          /* ms into the day; a day; the tick before; the last sum; the shower's start */
+    int8_t sent[DAY_NP];
+    uint8_t wet;
+} dy;
+static float dy_frac(float x) { return x - (float)(int32_t)x; }
+static float dy_ph(void) { return dy.span ? (float)dy.t / (float)dy.span : 0.0f; }   /* 0 dawn, .25 noon, .5 dusk */
+static float dy_light(float ph) { return fm_sinf(FM_TWO_PI * dy_frac(ph)); }   /* -1 midnight .. 1 noon */
+static float dy_weather(float ph)                /* 0 fair .. 1 the worst of it */
+{
+    const float f = fm_sinf(FM_TWO_PI * dy_frac(3.0f * ph + 0.15f));
+    return f <= 0.0f ? 0.0f : f * (0.55f + 0.45f * fm_sinf(FM_TWO_PI * dy_frac(ph + 0.45f)));
+}
+static void dy_send(float l, float w, int on)
+{
+    int i;
+    for (i = 0; i < DAY_NP; i++) {
+        const float v = !on ? 0.0f : i == DAY_NP - 1 ? -6.0f + 26.0f * w
+                      : l > 0.0f ? l * (float)DAY_P[i].day : -l * (float)DAY_P[i].night;
+        const int o = (int)(v + (v < 0.0f ? -0.5f : 0.5f));
+        if (o != dy.sent[i])
+            dy.sent[i] = (int8_t)o, en_day(i == DAY_NP - 1 ? P_CRACKLE : DAY_P[i].p, o);
+    }
+}
+static void fx_send(void);
+static void cv_disc(int32_t cx, int32_t cy, int32_t r, uint16_t c);
+static void dy_set(int v)
+{
+    v = v < 0 ? 0 : v >= NDAY ? NDAY - 1 : v;
+    if (v == ui.day)
+        return;
+    if (!ui.day)
+        dy.t = 0;                                /* (from off: dawn) */
+    else if (v)
+        dy.t = (uint32_t)((float)dy.t * (float)DAY_MIN[v] / (float)DAY_MIN[ui.day]);   /* (the same hour) */
+    ui.day = (uint8_t)v;
+    dy.span = DAY_MIN[v] * 60000u;
+    dy.last = plat_ms(), dy.calc = 0;
+    if (!v) {
+        dy_send(0.0f, 0.0f, 0);
+        dy.wet = 0;
+        if (ui.shower)
+            ui.shower = 0, fx_send();
+    }
+}
+static void dy_tick(void)
+{
+    const uint32_t now = plat_ms(), dt = now - dy.last;
+    float ph, w;
+    int wet, sh;
+    dy.last = now;
+    if (!ui.day)
+        return;
+    if (en_playing && (dy.t += dt) >= dy.span)
+        dy.t -= dy.span;
+    if (dy.calc && now - dy.calc < 250u)
+        return;
+    dy.calc = now | 1u;
+    ph = dy_ph(), w = dy_weather(ph);
+    dy_send(dy_light(ph), w, 1);
+    wet = en_playing && w > 0.8f;
+    if (wet && !dy.wet)
+        dy.sh_t = now;
+    dy.wet = (uint8_t)wet;
+    sh = wet && now - dy.sh_t < 40000u;
+    if (sh != ui.shower)
+        ui.shower = (uint8_t)sh, fx_send();
+}
+/* the sun by day, the moon by night, on its arc at the top of the main page */
+static void draw_sun(void)
+{
+    const float ph = dy_ph(), f = ph < 0.5f ? 2.0f * ph : 2.0f * ph - 1.0f;
+    const int32_t x = 98 + (int32_t)(44.0f * f + 0.5f), y = 14 - (int32_t)(9.0f * fm_sinf(3.14159265f * f) + 0.5f);
+    if (ph < 0.5f)
+        cv_disc(x, y, 4, K_CLAP);
+    else {
+        cv_disc(x, y, 4, K_TEXT);
+        cv_disc(x + 3, y - 1, 4, K_BG);
+    }
+}
+static void jr_send(void)
+{
+    perf_mutes();
+    en_thin(jr.mask & JR_THIN);
+}
+static void jr_end(void)
+{
+    if (!jr.changed)                             /* (it stays: its own tempo back) */
+        en_set(P_TEMPO, proj.par[P_TEMPO]);
+    jr.on = 0;
+    jr.mask = 0;
+    jr.since = plat_ms();                        /* (the stay, from here) */
+    jr.piece = (uint8_t)proj.piece;
+    jr_send();
+}
+static int jr_go(int to)                         /* the glide to piece `to` begun: 0 if it can't be */
+{
+    to = (to % NPIECES + NPIECES) % NPIECES;
+    if (jr.on || !en_playing || en_frozen || to == proj.piece)
+        return 0;
+    jr.on = 1, jr.to = (uint8_t)to, jr.changed = 0, jr.n = 0;
+    jr.piece = (uint8_t)proj.piece;
+    jr.bar = en_bar_no;
+    jr.act = jr_touch();
+    jr.tempo = proj.par[P_TEMPO];
+    jr.mask = EN_M_BASS;                         /* the Lead first */
+    jr_send();
+    return 1;
+}
+static void jr_turn(int e)                       /* (a step a detent; off at the left) */
+{
+    int v = (int)jr.stay + e;
+    jr.stay = (uint8_t)(v < 0 ? 0 : v >= NJR ? NJR - 1 : v);
+    jr.since = plat_ms();
+    jr.piece = (uint8_t)proj.piece;
+    say_as("JOURNEY", JR_NAME[jr.stay], 0);
+    if (ann_on()) {
+        ann_say(JR_SAID[jr.stay], 0, ANN_NOW);
+        sp_said = 1;
+    }
+}
+static void jr_tick(void)
+{
+    const uint32_t b = en_bar_no;
+    if (!jr.on) {
+        const uint32_t now = plat_ms(), t = jr_touch();
+        const uint8_t pb = en_phrase_bar;
+        const int top = pb == 0 && jr.pb != 0;   /* a phrase's first bar, just begun */
+        int to;
+        jr.pb = pb;
+        if (!jr.stay)
+            return;
+        if (!en_playing || proj.piece != jr.piece)   /* (stopped: the time waits; a piece picked: from now) */
+            jr.since = now, jr.piece = (uint8_t)proj.piece;
+        if ((int32_t)(t - jr.since) > 0)         /* a touch: the whole stay again */
+            jr.since = t;
+        if (top && now - jr.since >= JR_MIN[jr.stay] * 60000u && (to = jr_next()) >= 0)
+            jr_go(to);
+        return;
+    }
+    if (!en_playing || jr_touch() != jr.act || proj.piece != (jr.changed ? jr.to : jr.piece)) {
+        /* stopped, a touch, or a piece picked (a program change) */
+        jr_end();
+        return;
+    }
+    if (!jr.changed && jr.n >= 4) {              /* the tempo across, bars 4 to 8: only the Drone and the tail sound */
+        const int t0 = proj.par[P_TEMPO], t1 = proj.slot[jr.to].par[P_TEMPO];
+        uint32_t d = en_bars - jr.six;
+        int v;
+        d = d > 64u ? 64u : d;
+        v = t0 + (t1 - t0) * (int)d / 64;
+        if (v != jr.tempo)
+            en_set(P_TEMPO, jr.tempo = (int16_t)v);
+    }
+    if (b == jr.bar)
+        return;
+    jr.bar = b;
+    switch (++jr.n) {
+    case 2: jr.mask |= EN_M_KICK | EN_M_HATS; break;
+    case 4: jr.mask |= EN_M_PINGS, jr.six = en_bars; break;
+    case 6: jr.mask |= JR_THIN; break;
+    case 8:                                      /* the piece: set_piece's change, never its save */
+        mac_home();
+        project_piece(jr.to);
+        project_apply();
+        oct_home_take();
+        en_seed(plat_ms());
+        en_regrow();
+        say_as("PIECE", piece_name(proj.piece), 0);
+        sp_piece();
+        undo_clear();
+        jr.changed = 1;
+        jr.act = jr_touch();
+        jr.bar = en_bar_no;
+        jr.mask &= ~(uint32_t)JR_THIN;
+        break;
+    case 10: jr.mask &= ~(uint32_t)EN_M_PINGS; break;
+    case 12: jr.mask &= ~(uint32_t)(EN_M_KICK | EN_M_HATS); break;
+    case 14: jr.mask &= ~(uint32_t)EN_M_BASS; break;
+    case 16: jr_end(); return;
+    default: return;
+    }
+    jr_send();
+}
+
 static void nudge_tick(void)                     /* Evolve's nudges: on a phrase's first bar, now and then, one layer;
                                                   * (1.2) or every N bars, every time (evolve_turn) */
 {
@@ -2031,6 +2329,8 @@ static void input(void)
             level_turn(oct_layer(ui.view), e);
         else if (ui.view == V_DUB)               /* (HOME: Energy, the user's: to play the keys and push it at once) */
             energy_turn(e);
+        else if (ui.view == V_SETUP || ui.view == V_SET)   /* (1.4) Setup and the Set list: the journey's stay */
+            jr_turn((int)e);
         ui.turn_t = plat_ms();
     }
     if ((e = plat_enc(EN_ALGO)) != 0) {         /* a layer's page: its voice; the Chords page: the walk */
@@ -2836,6 +3136,17 @@ static uint16_t pkey_col(int k)
  * it reads (4.5:1, the host's expect pfcontrast) */
 static uint16_t pflash_col(int k) { return proj.light ? mix(pkey_col(k), K_BAININ, 4) : pkey_col(k); }
 static int pflash_up(void) { return ui.perf && (ui.pheld | ui.pcc | UI_PPAD); }
+/* (1.4) a key's amount under full, in 63rds (1..63), or 0: full, or not sounding. Only a CC makes less than full */
+static int pk_under(int k)
+{
+    const uint32_t b = 1u << k;
+    const int d = PKEY[k].d;
+    if (!(ui.pcc & b) || (ui.pnow & ~ui.pcc & b) || (ui.perf && (ui.pheld | ui.platch) & b))
+        return 0;
+    if (d >= 200 || d == EN_FX_HALF || d == EN_FX_OCTAVE || d == EN_FX_FREEZE)   /* (the switches: on is on) */
+        return 0;
+    return ui.pamt[k] >= 64 && ui.pamt[k] < 127 ? ui.pamt[k] - 63 : 0;
+}
 static void pflash_band(uint32_t m, int32_t oy, int32_t hh, int fade)
 {
     int n = 0, k, j = 0, more;
@@ -2861,6 +3172,12 @@ static void pflash_band(uint32_t m, int32_t oy, int32_t hh, int fade)
         }
         col = mix(pflash_col(k), K_BG, fade);
         cv_rect(0, y0 - oy, 240, bh, col);
+        if (pk_under(k)) {                       /* (1.4) under full: a bar up the band's left edge, as tall as its
+                                                  * amount, clear of the lettering (at full there is none, and the
+                                                  * flash is 1.3's) */
+            const int32_t h = bh * pk_under(k) / 64 > 2 ? bh * pk_under(k) / 64 : 2;
+            cv_rect(0, y0 + bh - h - oy, 6, h, ink);
+        }
         caps(t, PKEY[k].name, sizeof t);
         if (n <= 2) {
             int32_t ty = y0 + (bh - 58) / 2;
@@ -2895,6 +3212,12 @@ static void draw_pflash(void)                    /* (each third frame, as the ma
         return;
     }
     h = hash(hash(0x50464C41u, last), ui.platch | (uint32_t)fade << 27);
+    {
+        int k;
+        for (k = 0; k < PERF_N; k++)             /* (1.4: and each amount under full) */
+            if (pk_under(k))
+                h = hash(h, (uint32_t)(k << 8 | pk_under(k)));
+    }
     if (h == ui.sig[1] && ui.sig[0] == 0x50464C41u)
         return;
     ui.sig[0] = 0x50464C41u;
@@ -2969,6 +3292,34 @@ static void draw_slots(void)
         } else if (i < n) {
             text_c(x + 25, y + 13, &FONT_XS, "(HOLDS)", now ? K_BG : K_DIM);
         }
+    }
+}
+/* (1.4) the Set list page: the eight pieces, two across. In: lit; out: dim, and marked OUT; the one playing in the
+ * Drone's colour; the one the knobs are on ringed. The head: the stay (SELECT's, here as on Setup) */
+static void draw_setlist(void)
+{
+    int i;
+    char t[40], *q = t;
+    const char *a = jr.stay ? "JOURNEY " : "JOURNEY OFF: SELECT SETS THE STAY", *b = jr.stay ? JR_NAME[jr.stay] : "",
+               *c = jr.stay ? " A PIECE" : "";
+    while (*a) *q++ = *a++;
+    while (*b) *q++ = *b++;
+    while (*c) *q++ = *c++;
+    *q = 0;
+    text_c(120, -1, &FONT_XS, t, jr.stay ? K_ACC : K_DIM);
+    for (i = 0; i < NPIECES; i++) {
+        const int32_t x = 6 + (i & 1) * 116, y = 16 + (i >> 1) * 24;
+        const int out = ui.jr_out >> i & 1, now = i == proj.piece, sel = i == ui.jr_cur;
+        char d[2], nm[20];
+        if (sel)
+            cv_round(x - 2, y - 2, 116, 25, 5, K_ACC);
+        cv_round(x, y, 112, 21, 4, now ? K_PAD : out ? mix(K_BG, K_PANEL, 6) : K_PANEL);
+        d[0] = (char)('1' + i), d[1] = 0;
+        cv_text(x + 4, y + 5, &FONT_XS, d, now ? K_BG : K_DIM);
+        caps(nm, piece_name(i), sizeof nm);
+        cv_text(x + 16, y + 5, &FONT_XS, nm, now ? K_BG : out ? K_DIM : K_TEXT);
+        if (out)
+            cv_text(x + 108 - text_w(&FONT_XS, "OUT"), y + 5, &FONT_XS, "OUT", now ? K_BG : K_DIM);
     }
 }
 
@@ -3123,6 +3474,18 @@ static void draw_main(void)
         }
         return;
     }
+    if (ui.view == V_SET) {                      /* (1.4) the Set list page */
+        h = hash(hash(0x5345544Cu, ui.jr_out | (uint32_t)ui.jr_cur << 8 | (uint32_t)jr.stay << 12 | (uint32_t)proj.piece << 16),
+                 (uint32_t)flash_on(now));
+        if (h != ui.sig[1] || flash_on(now)) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_setlist();
+            draw_flash(now);
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     for (i = 0; i < EN_NPAD; i++)
         h = hash(h, en_chord[i]);
     for (i = 0; i < 6; i++)
@@ -3211,6 +3574,8 @@ static void draw_main(void)
         if (ui.view == V_DUB) {                  /* (AISLING) the main page: a small green triskele before its name */
             triskele((float)x - 11.0f, 20.0f, 4.0f, 1.5f, 1.6f, 1.0f, K_EIRE);
             x -= 20;
+            if (ui.day)                          /* (1.4) the day on: its sun or moon */
+                draw_sun();
         }
         for (k = 0; k < NROUND; k++)             /* (under it, the round's dots, in the panel's order: FX ENV LFO GLO
                                                   * HOME SAVE ARP SEQ) */
@@ -3275,7 +3640,7 @@ static void draw_knobs(void)
     if (ui.view == V_MIX)
         h = hash(h, ui.mutes);
     if (ui.view == V_SETUP)
-        h = hash(h, 0x534C50u ^ sl.set);
+        h = hash(h, 0x534C50u ^ sl.set ^ (uint32_t)jr.stay << 8);
     if (ui.view == V_DUB)                        /* (1.2) Evolve's timing, lit while Evolve is above 40 */
         h = hash(h, 0x455642u ^ (uint32_t)evb() << 1 ^ (uint32_t)(proj.par[P_EVOLVE] > 40));
     int now_touch = plat_ms() < ui.touch_until, sel_on = ui.view == V_DUB && plat_ms() < ui.sel_until;
@@ -3310,7 +3675,9 @@ static void draw_knobs(void)
             x0 = cv_text(6, -1, &FONT_XS, t, K_DIM) + 5;
         } else if (ui.view == V_SETUP) {         /* (1.1) Setup: the sleep timer (ALGORITHM's), at the rule's start */
             x0 = cv_text(6, -1, &FONT_XS, "SLEEP", K_DIM) + 4;
-            x0 = cv_text(x0, -1, &FONT_XS, SLEEP_NAME[sl.set], sl.set ? K_ACC : K_DIM) + 5;
+            x0 = cv_text(x0, -1, &FONT_XS, SLEEP_NAME[sl.set], sl.set ? K_ACC : K_DIM) + 7;
+            x0 = cv_text(x0, -1, &FONT_XS, "JOURNEY", K_DIM) + 4;   /* (1.4) and the journey's stay (SELECT's) */
+            x0 = cv_text(x0, -1, &FONT_XS, JR_NAME[jr.stay], jr.stay ? K_ACC : K_DIM) + 5;
         } else if (ui.view == V_DUB && evb()) {  /* (1.2) HOME: Evolve's timing, when it's set (ALGORITHM's); dim while
                                                   * Evolve is 40 or under, so nothing moves */
             x0 = cv_text(6, -1, &FONT_XS, "EVOLVE", K_DIM) + 4;
@@ -3588,6 +3955,8 @@ static void sp_page(int all)
     if (ui.view == V_SETUP) {                    /* (1.1) the sleep timer */
         sp_cat(", ");
         sp_cat(SLEEP_SAID[sl.set]);
+        sp_cat(", ");
+        sp_cat(JR_SAID[jr.stay]);
     }
     if (ui.view == V_DUB && evb()) {             /* (1.2) Evolve's timing */
         sp_cat(", ");
@@ -3824,6 +4193,12 @@ static void speak_dump(void)
                     proj.par[k] = (int16_t)x;
                 else if (k == K_SLOT)
                     ui.slot = (uint8_t)x;
+                else if (k == K_DAY)
+                    ui.day = (uint8_t)(x == hi ? 0 : x);   /* (left off) */
+                else if (k == K_JRP)
+                    ui.jr_cur = (uint8_t)x;
+                else if (k == K_JRIN)
+                    ui.jr_out = (uint8_t)(x ? 0 : 1u << ui.jr_cur);
                 else if (k == K_CQ || k == K_CX)
                     proj.par[(k == K_CQ ? P_CQ0 : P_CX0) + ui.slot] = (int16_t)x;
                 else if (k == K_LANE)
@@ -4084,6 +4459,8 @@ void ui_frame(void)
         ui.s2_hand = 0;
     prog_take();
     nudge_tick();
+    jr_tick();
+    dy_tick();
     if (!sleep_input())
         input();
     mac_take();
