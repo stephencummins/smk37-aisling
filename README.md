@@ -131,7 +131,7 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 - **The screen, dark or light.** KNOB 3 on the Journey page (GLO, three times), **Screen**, sets the whole screen: Dark, the colours on black, as it was; or Light, the same colours deeper, on white, for a bright room or daylight. It's saved with the pieces, and changes nothing in the sound.
 - **The main page says more.** The five meters have their layers' letters under them (D 1 L 2 A), the two sequences' lanes are numbered, the chord's count sits clear of the orbits, and the dividers between the knobs start under their names.
 - Nothing else changed: the sound, the pieces and what you saved are 1.4's.
-- **On the Elite:** 1.4 and 1.4.1 together, its first since 1.3.1 (1.3.2 was never released). Screen is on Setup's
+- **On the Elite:** 1.4 and 1.4.1 together, its first since 1.3.1 (1.3.2 was a pre-release, never on an Elite). Screen is on Setup's
   fourth knob as well (K8), where 1.3.2 put it; the pads, faders and K2 work the journey as the keys and SELECT do
   ([docs/SMK37.md](docs/SMK37.md#what-14-and-141-added-on-the-elite)). The identity is `SMK-37 Elite_353141`.
   **Not yet on an Elite:** 1.4.1 passes the simulator's tests; its package has not been installed on one. 1.3.1,
@@ -145,7 +145,7 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 
 ## What was in 1.3.2
 
-1.3.2 was built for the Elite and never released or installed; 1.4.1 has all of it.
+1.3.2 was put out for the Elite as a pre-release and never installed on one; 1.4.1 has all of it.
 
 - **A light screen.** Setup's KNOB 4 is **Screen**: Dark, the colours on black, or Light, the same colours deeper, on
   white. It is saved. It takes the place of Setup's Save knob; SAVE or GLO held half a second still saves. Set it
