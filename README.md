@@ -2,7 +2,7 @@
 
 <img src="docs/card-smk37.png" width="240" height="240" alt="AISLING on the SMK-37: a gold 8-bit harp on green, with 37">
 
-**[Download 1.3.2](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
+**[Download 1.4.1](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
 **[Installing](docs/SMK37.md#11-installing-and-going-back)** ·
 **[Controls](https://aisling.stephen8n.com/smk37/controls/)** ·
 **[Manual](https://aisling.stephen8n.com/smk37/manual/)** ·
@@ -22,9 +22,10 @@ held, and its 4 faders set the mix.
 
 It is for the **SMK-37 Elite** only: not the SMK-37 Pro, and not the MKE-P37.
 
-**Status: 1.3.2.** 1.3.2 is 1.3.1 with a light screen to choose (Setup's Screen, where the Save knob was), the
-screen's 1.4.1 touches and a shorter identity that the installers read whole; the sound is 1.3.1's. **1.3.2's own
-package has not been on an Elite yet**: what follows was done with 1.3.1. It has run on one Elite, in November 2026: installed over M-VAVE's V016, played, taken off again
+**Status: 1.4.1.** This is AISLING 1.4.1, the FM-1's, on the Elite's controls: 1.4's journey, day and effect
+amounts, 1.4.1's light screen, and 1.3.2's shorter identity that the installers read whole. **1.4.1's package has
+not been on an Elite** (nor had 1.3.2's): it passes the Elite's simulator and the package checks, and what follows
+was done with 1.3.1. It has run on one Elite, in November 2026: installed over M-VAVE's V016, played, taken off again
 with M-VAVE's own package, installed again, and played for an hour with no dropouts. Every button, knob, key, pad,
 fader and light was checked by hand. [docs/SMK37.md](docs/SMK37.md#12-settled-on-an-elite-and-still-open) says what
 was checked and what is still open.
@@ -36,9 +37,9 @@ AISLING's web installer hasn't been tried on an Elite yet, so install from a com
 
 1. **First, a backup of the whole flash** ([section 11](docs/SMK37.md#11-installing-and-going-back)). It holds that
    unit's velocity calibration and its stock presets, and nothing else can bring those back.
-2. `python3 tools/fm1_install.py aisling-smk37-elite-1.3.2.fwsc --port "SMK-37 Elite"`, with the package from the
+2. `python3 tools/fm1_install.py aisling-smk37-elite-1.4.1.fwsc --port "SMK-37 Elite"`, with the package from the
    [release](https://github.com/stephencummins/smk37-aisling/releases/latest). Its identity is
-   `SMK-37 Elite_353132`; the installers refuse a package made for the other model.
+   `SMK-37 Elite_353141`; the installers refuse a package made for the other model.
 
 **Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again.
 
@@ -130,6 +131,11 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 - **The screen, dark or light.** KNOB 3 on the Journey page (GLO, three times), **Screen**, sets the whole screen: Dark, the colours on black, as it was; or Light, the same colours deeper, on white, for a bright room or daylight. It's saved with the pieces, and changes nothing in the sound.
 - **The main page says more.** The five meters have their layers' letters under them (D 1 L 2 A), the two sequences' lanes are numbered, the chord's count sits clear of the orbits, and the dividers between the knobs start under their names.
 - Nothing else changed: the sound, the pieces and what you saved are 1.4's.
+- **On the Elite:** 1.4 and 1.4.1 together, its first since 1.3.1 (1.3.2 was never released). Screen is on Setup's
+  fourth knob as well (K8), where 1.3.2 put it; the pads, faders and K2 work the journey as the keys and SELECT do
+  ([docs/SMK37.md](docs/SMK37.md#what-14-and-141-added-on-the-elite)). The identity is `SMK-37 Elite_353141`.
+  **Not yet on an Elite:** 1.4.1 passes the simulator's tests; its package has not been installed on one. 1.3.1,
+  which has, stays on [its release](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.3.1).
 
 ## What's new in 1.4
 
@@ -137,10 +143,10 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 - **The day and the weather.** KNOB 4 on the Journey page lays a slow day over whatever plays, a whole one in 20 minutes, 1 hour or 3 hours: brighter and wider by day, darker and closer at night, the Atmosphere rising with three fronts of weather and a light shower in the worst of the evening's. A sun or a moon crosses the top of the Aisling page. It moves none of the piece's values and saves nothing.
 - **An effect's CC is its amount.** From 64 to 127 the value is how much of the effect there is (127 all of it, as its key gives), so a fader or a pedal fades an effect in. PERFORM's flash shows an amount under full as a bar.
 
-## What's new in 1.3.2
+## What was in 1.3.2
 
-- **Not yet on an Elite.** 1.3.2 passes the simulator's tests; its package has not been installed on an Elite. 1.3.1,
-  which has, stays on [its release](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.3.1).
+1.3.2 was built for the Elite and never released or installed; 1.4.1 has all of it.
+
 - **A light screen.** Setup's KNOB 4 is **Screen**: Dark, the colours on black, or Light, the same colours deeper, on
   white. It is saved. It takes the place of Setup's Save knob; SAVE or GLO held half a second still saves. Set it
   between pieces: the turn redraws the whole screen at once.

@@ -205,7 +205,7 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <main class="bench">
 <div class="strip">
 <p class="lab"><b>aisling</b> · Irish ambient for the M-VAVE SMK-37 Elite</p>
-<p class="lab">v1.3.1 · __BY__</p>
+<p class="lab">v1.4.1 · __BY__</p>
 </div>
 
 <div class="mg-cover">
@@ -269,22 +269,24 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <li><b>The way back</b> to M-VAVE's firmware is proven: off, and on again.</li>
 </ol>
 <p class="mg-go"><a class="btn go big" href="manual/#s11">How to install</a></p>
-<p class="mg-small"><a href="__REPO__/releases/latest">Download 1.3.1</a> · <a href="manual/">The manual</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
+<p class="mg-small"><a href="__REPO__/releases/latest">Download 1.4.1</a> · <a href="manual/">The manual</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
 </section>
 
 <section class="mg-fold" aria-label="More about AISLING on the Elite">
-<details><summary>1.3.1, released <small>what was done on an Elite</small></summary><div class="mg-in">
-<p><strong>1.3.1, released.</strong> In November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
-off again with M-VAVE's own firmware, and installed again. The package is in its
-<a href="__REPO__/releases/latest">release</a>; it installs from a computer for now, as the
+<details><summary>1.4.1 <small>not yet on an Elite; 1.3.1 was</small></summary><div class="mg-in">
+<p><strong>1.4.1's package has not been on an Elite.</strong> It is the FM-1's AISLING 1.4.1 (the journey, the day
+and the weather, an effect's amount, the light screen) on the Elite's controls, and it passes the Elite's simulator.
+What was done on an Elite was done with 1.3.1: in November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
+off again with M-VAVE's own firmware, and installed again. 1.3.1's package is in its
+<a href="__REPO__/releases/tag/v1.3.1">release</a>; it installs from a computer for now, as the
 <a href="manual/#s11">manual</a> says, and it says what was checked and what is still open.</p>
 <p>It is for the <b>SMK-37 Elite</b> only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
 </div></details>
 <details><summary>Where it stands <small>six done, the web installer next</small></summary><div class="mg-in">
 <ol class="stages">
   <li class="done" data-state="done"><b class="lead">On a computer.</b> AISLING builds for the Elite from the FM-1's
-  tree, and the FM-1's own build is unchanged to the byte. The Elite's simulator plays all 34 of the FM-1's test
-  scenarios with byte-identical results, and its own: MASTER on a knob, the 37 keys, the battery. The installer and the
+  tree, and the FM-1's own build is unchanged to the byte. The Elite's simulator plays all 45 of the FM-1's test
+  scenarios with byte-identical results (but Setup's page, where its fourth knob is Screen), and its own: MASTER on a knob, the 37 keys, the battery. The installer and the
   rescue tool know the Elite's package, and never write the parts of its memory that are the Elite's own.</li>
   <li class="done" data-state="done"><b class="lead">A backup.</b> A whole copy of an Elite's memory, read twice and
   compared, before anything was written to it.</li>

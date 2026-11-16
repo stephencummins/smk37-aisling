@@ -1,8 +1,8 @@
 # AISLING on the SMK-37 Elite
 
-**Status.** This is 1.3.2: 1.3.1 with a light screen (Setup's Screen), the screen's small 1.4.1 changes and a
-shorter identity (section 9). 1.3.2's own package has not been on an Elite yet; everything below that says "on an
-Elite" was done with 1.3.1. AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over
+**Status.** This is 1.4.1: the FM-1's AISLING 1.4.1 on the Elite's controls (section 2 has what 1.4 and 1.4.1
+added), with Screen on Setup as well and 1.3.2's shorter identity (section 8). 1.4.1's package has not been on an
+Elite, and 1.3.2's never was; everything below that says "on an Elite" was done with 1.3.1. AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over
 M-VAVE's V016 firmware, played, taken off again with M-VAVE's own package, and installed again: the keys, buttons,
 knobs, pads, faders, lights, screen and sound were each checked by hand. Section 12 says what was checked and what is
 still open. It is one unit's evidence, so take the backup in section 11 before a first install.
@@ -205,8 +205,8 @@ The toolchain and the SDK are the FM-1's ([BUILDING.md](../BUILDING.md)). Then:
 The default board is the FM-1: `./build.sh` makes the same bytes it always has, in `build/`. The Elite's build goes
 into `build/smk37/` with the same file names (`amb.bin`, `loader/ota.bin`, the package), and its own checks: the app
 must fit the Elite's app area (0x4000–0x9CFFF), leave at least 2 KiB of RAM and 8 KiB of the pool spare, and pass the
-pin guard. A release's identity is `SMK-37 Elite_353` and the version's three numbers, one digit each (1.3.2 is
-`SMK-37 Elite_353132`): a package's identity holds 20 characters, the 20 marker blocks M-VAVE's own Elite package
+pin guard. A release's identity is `SMK-37 Elite_353` and the version's three numbers, one digit each (1.4.1 is
+`SMK-37 Elite_353141`): a package's identity holds 20 characters, the 20 marker blocks M-VAVE's own Elite package
 has. (1.3.1's, `SMK-37 Elite_353010301` in 36 blocks, was cut short by tools that read 20.)
 
 `tools/mini_build.sh --board smk37` does the same on another Mac over ssh and fetches the package back.
@@ -265,15 +265,15 @@ protocol but has not yet been tried on an Elite.
 else can bring those back:
 
 ```
-python3 tools/fm1_install.py build/smk37/aisling-smk37-elite-1.3.2-dryloader.fwsc --uboot --port "SMK-37 Elite"
+python3 tools/fm1_install.py build/smk37/aisling-smk37-elite-1.4.1-dryloader.fwsc --uboot --port "SMK-37 Elite"
 sudo python3 tools/fm1_rescue.py --location LOCATION "SMK-37 Elite_016.fwsc"
 ```
 
 The first starts a loader that writes nothing and leaves the chip in its own update mode; the second, with no
 `--write`, reads the flash to a file. Switch the Elite off and on afterwards. Keep the file private: it is that unit's.
 
-**Installing:** `python3 tools/fm1_install.py aisling-smk37-elite-1.3.2.fwsc --port "SMK-37 Elite"` (1.3.1's
-package is the one that has been installed on an Elite; 1.3.2's has not yet). On M-VAVE's
+**Installing:** `python3 tools/fm1_install.py aisling-smk37-elite-1.4.1.fwsc --port "SMK-37 Elite"` (1.3.1's
+package is the one that has been installed on an Elite; 1.4.1's has not yet). On M-VAVE's
 firmware the Elite has three MIDI ports and the installer uses the one ending "-Private"; under AISLING it has one,
 "DUB-1 SMK-37 Elite". The installers refuse a package made for the other model.
 
@@ -313,8 +313,9 @@ Settled, on one Elite on V016 (November 2026):
 
 Still open:
 
-- **1.3.2 on an Elite.** Its package (the shorter identity, the Screen setting) has passed the simulator's tests and
-  the package checks; it has not been installed on an Elite.
+- **1.4.1 on an Elite.** Its package (the shorter identity, the Screen setting, and all of 1.4: the journey, the
+  day, the effects' amounts) has passed the simulator's tests and the package checks; it has not been installed on
+  an Elite. Nor was 1.3.2's.
 
 - **The update record:** whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00), so
   that a cable pulled mid-update resumes. No update has been interrupted on purpose.
