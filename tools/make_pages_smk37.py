@@ -269,7 +269,7 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <li><b>The way back</b> to M-VAVE's firmware is proven: off, and on again.</li>
 </ol>
 <p class="mg-go"><a class="btn go big" href="manual/#s11">How to install</a></p>
-<p class="mg-small"><a href="__REPO__/releases/tag/v1.4.1">Download 1.4.1</a> (a pre-release) · <a href="__REPO__/releases/latest">1.3.1</a> · <a href="manual/">The manual</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
+<p class="mg-small"><a href="__REPO__/releases/latest">Download 1.4.1</a> · <a href="manual/">The manual</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
 </section>
 
 <section class="mg-fold" aria-label="More about AISLING on the Elite">

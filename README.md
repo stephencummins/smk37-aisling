@@ -2,7 +2,7 @@
 
 <img src="docs/card-smk37.png" width="240" height="240" alt="AISLING on the SMK-37: a gold 8-bit harp on green, with 37">
 
-**[Download 1.4.1](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.4.1)** (a pre-release; [1.3.1](https://github.com/stephencummins/smk37-aisling/releases/latest) is the latest release) ·
+**[Download 1.4.1](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
 **[Installing](docs/SMK37.md#11-installing-and-going-back)** ·
 **[Controls](https://aisling.stephen8n.com/smk37/controls/)** ·
 **[Manual](https://aisling.stephen8n.com/smk37/manual/)** ·
