@@ -24,7 +24,7 @@ It is for the **SMK-37 Elite** only: not the SMK-37 Pro, and not the MKE-P37.
 
 **Status: 1.4.1.** This is AISLING 1.4.1, the FM-1's, on the Elite's controls: 1.4's journey, day and effect
 amounts, 1.4.1's light screen, and 1.3.2's shorter identity that the installers read whole. **1.4.1's package was
-installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. Its controls, screen and sound have not yet been checked by hand** (1.3.2's was never on one): the hand checks that follow
+installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. It was then played and checked by hand on that Elite** (1.3.2's was never on one): the hand checks that follow
 were done with 1.3.1. It has run on one Elite, in November 2026: installed over M-VAVE's V016, played, taken off again
 with M-VAVE's own package, installed again, and played for an hour with no dropouts. Every button, knob, key, pad,
 fader and light was checked by hand. [docs/SMK37.md](docs/SMK37.md#12-settled-on-an-elite-and-still-open) says what
@@ -134,7 +134,7 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 - **On the Elite:** 1.4 and 1.4.1 together, its first since 1.3.1 (1.3.2 was a pre-release, never on an Elite). Screen is on Setup's
   fourth knob as well (K8), where 1.3.2 put it; the pads, faders and K2 work the journey as the keys and SELECT do
   ([docs/SMK37.md](docs/SMK37.md#what-14-and-141-added-on-the-elite)). The identity is `SMK-37 Elite_353141`.
-  **On one Elite, not yet checked by hand:** 1.4.1 passes the simulator's tests and was installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. Its controls, screen and sound have not yet been checked by hand. 1.3.1,
+  **Played and checked on one Elite:** 1.4.1 passes the simulator's tests and was installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. It was then played and checked by hand on that Elite. 1.3.1,
   which was, stays on [its release](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.3.1).
 
 ## What's new in 1.4

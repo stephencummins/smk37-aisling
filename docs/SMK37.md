@@ -2,7 +2,7 @@
 
 **Status.** This is 1.4.1: the FM-1's AISLING 1.4.1 on the Elite's controls (section 2 has what 1.4 and 1.4.1
 added), with Screen on Setup as well and 1.3.2's shorter identity (section 8). 1.4.1's package was
-installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. Its controls, screen and sound have not yet been checked by hand (1.3.2's was never on one); everything else below that says "on an Elite" was done with 1.3.1. AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over
+installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. It was then played and checked by hand on that Elite (1.3.2's was never on one); everything else below that says "on an Elite" was done with 1.3.1. AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over
 M-VAVE's V016 firmware, played, taken off again with M-VAVE's own package, and installed again: the keys, buttons,
 knobs, pads, faders, lights, screen and sound were each checked by hand. Section 12 says what was checked and what is
 still open. It is one unit's evidence, so take the backup in section 11 before a first install.
@@ -89,7 +89,7 @@ The site's [controls page](https://aisling.stephen8n.com/smk37/controls/) has wh
 
 ### What 1.4 and 1.4.1 added, on the Elite
 
-Each was read in the code and run in the Elite's simulator (section 10); none has been checked by hand on an Elite.
+Each was read in the code and run in the Elite's simulator (section 10); 1.4.1 was then played and checked by hand on one Elite (16 November 2026), without a note of each row.
 
 | 1.4, 1.4.1 | On the Elite |
 | --- | --- |
@@ -315,7 +315,7 @@ Still open:
 
 - **1.4.1 on an Elite.** Its package (the shorter identity, the Screen setting, and all of 1.4: the journey, the
   day, the effects' amounts) has passed the simulator's tests and the package checks, and was
-  installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. Its controls, screen and sound have not yet been checked by hand. 1.3.2's was never on one.
+  installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. It was then played and checked by hand on that Elite. 1.3.2's was never on one.
 
 - **The update record:** whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00), so
   that a cable pulled mid-update resumes. No update has been interrupted on purpose.
