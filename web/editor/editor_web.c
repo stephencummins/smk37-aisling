@@ -43,7 +43,7 @@ ED const char *ed_version(void) { return EN_VERSION; }
 ED int ed_ncolours(void) { return 23; }
 ED int ed_colour(int i)
 {
-    static const uint16_t C[23] = {K_BG, K_PANEL, K_LINE, K_DIM, K_TEXT, K_ACC,
+    const uint16_t C[23] = {K_BG,                 /* (1.4.1) not static: the colours are read from the palette */ K_PANEL, K_LINE, K_DIM, K_TEXT, K_ACC,
                                    K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE,
                                    K_PAD_T, K_BELL_T, K_BASS_T, K_PULSE_T,
                                    K_FROST, K_FROST_T, K_RIM, K_RIM_T, K_CLAP, K_CLAP_T, K_EIRE, K_EIRE_O};
