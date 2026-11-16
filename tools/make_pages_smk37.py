@@ -273,10 +273,11 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 </section>
 
 <section class="mg-fold" aria-label="More about AISLING on the Elite">
-<details><summary>1.4.1 <small>not yet on an Elite; 1.3.1 was</small></summary><div class="mg-in">
-<p><strong>1.4.1's package has not been on an Elite.</strong> It is the FM-1's AISLING 1.4.1 (the journey, the day
+<details><summary>1.4.1 <small>on one Elite, not yet checked by hand</small></summary><div class="mg-in">
+<p><strong>1.4.1 is on one Elite, not yet checked by hand.</strong> It is the FM-1's AISLING 1.4.1 (the journey, the day
 and the weather, an effect's amount, the light screen) on the Elite's controls, and it passes the Elite's simulator.
-What was done on an Elite was done with 1.3.1: in November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
+Its package was installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. Its controls, screen and sound have not yet been checked by hand.
+The checking by hand was done with 1.3.1: in November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
 off again with M-VAVE's own firmware, and installed again. 1.3.1's package is in its
 <a href="__REPO__/releases/tag/v1.3.1">release</a>; it installs from a computer for now, as the
 <a href="manual/#s11">manual</a> says, and it says what was checked and what is still open.</p>

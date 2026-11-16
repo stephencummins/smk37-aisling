@@ -1,8 +1,8 @@
 # AISLING on the SMK-37 Elite
 
 **Status.** This is 1.4.1: the FM-1's AISLING 1.4.1 on the Elite's controls (section 2 has what 1.4 and 1.4.1
-added), with Screen on Setup as well and 1.3.2's shorter identity (section 8). 1.4.1's package has not been on an
-Elite, and 1.3.2's never was; everything below that says "on an Elite" was done with 1.3.1. AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over
+added), with Screen on Setup as well and 1.3.2's shorter identity (section 8). 1.4.1's package was
+installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. Its controls, screen and sound have not yet been checked by hand (1.3.2's was never on one); everything else below that says "on an Elite" was done with 1.3.1. AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over
 M-VAVE's V016 firmware, played, taken off again with M-VAVE's own package, and installed again: the keys, buttons,
 knobs, pads, faders, lights, screen and sound were each checked by hand. Section 12 says what was checked and what is
 still open. It is one unit's evidence, so take the backup in section 11 before a first install.
@@ -89,7 +89,7 @@ The site's [controls page](https://aisling.stephen8n.com/smk37/controls/) has wh
 
 ### What 1.4 and 1.4.1 added, on the Elite
 
-Each was read in the code and run in the Elite's simulator (section 10); none has been on an Elite.
+Each was read in the code and run in the Elite's simulator (section 10); none has been checked by hand on an Elite.
 
 | 1.4, 1.4.1 | On the Elite |
 | --- | --- |
@@ -272,8 +272,8 @@ sudo python3 tools/fm1_rescue.py --location LOCATION "SMK-37 Elite_016.fwsc"
 The first starts a loader that writes nothing and leaves the chip in its own update mode; the second, with no
 `--write`, reads the flash to a file. Switch the Elite off and on afterwards. Keep the file private: it is that unit's.
 
-**Installing:** `python3 tools/fm1_install.py aisling-smk37-elite-1.4.1.fwsc --port "SMK-37 Elite"` (1.3.1's
-package is the one that has been installed on an Elite; 1.4.1's has not yet). On M-VAVE's
+**Installing:** `python3 tools/fm1_install.py aisling-smk37-elite-1.4.1.fwsc --port "SMK-37 Elite"` (1.4.1's
+package went on one Elite this way, over 1.3.1, on 16 November 2026; the installs over M-VAVE's firmware were 1.3.1's). On M-VAVE's
 firmware the Elite has three MIDI ports and the installer uses the one ending "-Private"; under AISLING it has one,
 "DUB-1 SMK-37 Elite". The installers refuse a package made for the other model.
 
@@ -314,8 +314,8 @@ Settled, on one Elite on V016 (November 2026):
 Still open:
 
 - **1.4.1 on an Elite.** Its package (the shorter identity, the Screen setting, and all of 1.4: the journey, the
-  day, the effects' amounts) has passed the simulator's tests and the package checks; it has not been installed on
-  an Elite. Nor was 1.3.2's.
+  day, the effects' amounts) has passed the simulator's tests and the package checks, and was
+  installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. Its controls, screen and sound have not yet been checked by hand. 1.3.2's was never on one.
 
 - **The update record:** whether the Elite's first-stage loader finds it at the top of the settings area (0xBFF00), so
   that a cable pulled mid-update resumes. No update has been interrupted on purpose.
