@@ -2640,6 +2640,7 @@ static void draw_meters(void)                    /* (BERLIN) left: the five laye
 {
     static const uint16_t C[5] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE},
                           T[5] = {K_PAD_T, K_BELL_T, K_BASS_T, K_PULSE_T, K_PANEL};
+    static const char *const NAME[5] = {"D", "1", "L", "2", "A"};
     int i;
     for (i = 0; i < 5; i++) {
         int32_t x = 8 + i * 9, h = (int32_t)(fm_clampf(en_layer_act[i], 0.0f, 1.0f) * 52.0f + 0.5f);
@@ -2650,6 +2651,8 @@ static void draw_meters(void)                    /* (BERLIN) left: the five laye
             const int32_t o = (int32_t)(fm_clampf(en_fo[i], -4.5f, 4.5f) * 6.0f);
             cv_rect(x - 1, 59 - o, 8, 1, K_TEXT);
         }
+        text_c(x + 3, 89, &FONT_XS, NAME[i], mix(K_BG, C[i], 11));   /* (1.4.1) whose it is: Drone, Sequence, Lead,
+                                                  * Sequence 2, Atmosphere, as the lanes' own 1 and 2 */
     }
 }
 
@@ -2679,6 +2682,7 @@ static void draw_lanes(void)
         const int len = proj.par[l ? P_SEQ2LEN : P_SEQLEN], pos = en_loop_pos[l],
                   lit = lay < 0 || lay == (l ? 3 : 1);
         const int32_t y = 108 + l * 16;
+        text_c(14, y - 8, &FONT_XS, l ? "2" : "1", lit ? mix(K_BG, C[l], 11) : T[l]);   /* (1.4.1) which sequence */
         for (i = 0; i < len && i < 16; i++) {
             const int32_t x = 32 + i * 12;
             if (en_playing && i == pos)
@@ -3164,6 +3168,7 @@ static void draw_main(void)
         if ((proj.par[P_PMODE] & EN_PLOOP) && en_prog_pos >= 0 && prog_count()) {   /* Loop: where it is ("2/4") */
             char t[8];
             t[0] = (char)('1' + en_prog_pos), t[1] = '/', t[2] = (char)('0' + prog_count()), t[3] = 0;
+            cv_round(CX - 12, CY + 14, 24, 11, 3, K_BG);     /* (1.4.1) clear of the orbits' dots: it is small */
             text_c(CX, CY + 11, &FONT_XS, t, K_DIM);
         }
     }
@@ -3337,7 +3342,8 @@ static void draw_knobs(void)
         if (k == K_NONE)
             continue;
         if (i)
-            cv_rect(x, 16, 1, 46, K_LINE);
+            cv_rect(x, 26, 1, 36, K_LINE);       /* (1.4.1) from under the names: TRANSPOSE (57 px of its 60)
+                                                  * ran into it (the host's knobfit) */
         if (hot)
             cv_round(x + 3, 11, 54, 57, 6, K_PANEL);
         knob_range(k, &lo, &hi);

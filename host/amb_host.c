@@ -859,6 +859,21 @@ static int expect(const char *what, const char *val)
                 printf("  too wide: %s (%d px)\n", t, (int)text_w(&FONT_S, t)), got++;
         }
     }
+    else if (!strcmp(what, "knobfit")) {          /* (1.4.1) the knobs' names wider than 58 px: a knob's column is
+                                                  * 60 and the dividers start under the names, so 2 px between
+                                                  * two neighbours at the least (0: all fit) */
+        int v, k;
+        char t[16];
+        got = 0;
+        for (v = 0; v < NVIEWS; v++)
+            for (k = 0; k < 4; k++) {
+                if (VIEW_KNOB[v][k] == K_NONE)
+                    continue;
+                caps(t, KNOB_LABEL[v][k], sizeof t);
+                if (text_w(&FONT_XS, t) > 58)
+                    printf("  too wide: %s (%d px, view %d)\n", t, (int)text_w(&FONT_XS, t), v), got++;
+            }
+    }
     else if (!strcmp(what, "nev"))                /* the noise's events that show, so far */
         got = (int)en_nev_w;
     else if (!strcmp(what, "blits")) {           /* the screen's draws since the last ask */

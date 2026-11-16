@@ -11,6 +11,7 @@ wait 400
 said EFFECTS GRID
 # (the voices batch) every cell's name fits its cell (Shimmer, where Swell was)
 expect gridfit 0
+expect knobfit 0
 key w4 down
 wait 300
 said Low-pass
