@@ -3141,8 +3141,8 @@ static int pk_under(int k)
 {
     const uint32_t b = 1u << k;
     const int d = PKEY[k].d;
-    if (!(ui.pcc & b) || (ui.pnow & ~ui.pcc & b) || (ui.perf && (ui.pheld | ui.platch) & b))
-        return 0;
+    if (!(ui.pcc & b) || (ui.pnow & ~ui.pcc & b) || (ui.perf && (ui.pheld | ui.platch) & b) || (UI_PPAD & b))
+        return 0;                                /* (the SMK's pads are a hand: full) */
     if (d >= 200 || d == EN_FX_HALF || d == EN_FX_OCTAVE || d == EN_FX_FREEZE)   /* (the switches: on is on) */
         return 0;
     return ui.pamt[k] >= 64 && ui.pamt[k] < 127 ? ui.pamt[k] - 63 : 0;

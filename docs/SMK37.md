@@ -87,6 +87,26 @@ REC.
 
 The site's [controls page](https://aisling.stephen8n.com/smk37/controls/) has what each one does.
 
+### What 1.4 and 1.4.1 added, on the Elite
+
+Each was read in the code and run in the Elite's simulator (section 10); none has been on an Elite.
+
+| 1.4, 1.4.1 | On the Elite |
+| --- | --- |
+| The journey's stay: SELECT on Setup | K2 on GLOBE's page. A pad, a fader moved and a knob thrown from a pad are each a touch, as a key is: the stay starts again |
+| The Journey page: GLO a third time | GLOBE a third time; Piece, In set, Screen and Day are K5 to K8, and the stay is K2 there too |
+| The day and the weather: the Journey page's KNOB 4 | K8 there. Its shower gives way to a pad holding the same effect, as to a key |
+| An effect's CC is its amount (64 to 127) | The same, over USB (the Elite has no MIDI jack). A pad is a hand: its effect is full whatever a CC last said, and the flash shows no bar for it; the CC's amount is back when the pad is up |
+| Screen, dark or light: the Journey page's KNOB 3 | K7 there, and Setup's K8 as well: the Elite's Setup has Screen where the FM-1's has Save |
+| The main page's letters, numbers and dividers | The same picture |
+| Setup's KNOB 4, Save | Not on the Elite: BT held saves (the FM-1's SAVE or GLO held; GLOBE held saves too) |
+
+Not on the Elite, as before 1.4: a note or CC by a MIDI jack, the keys' lights (PERFORM's map is on the screen only),
+and the outer ten keys, which stay silent. The wheels and KNOB BANK still do nothing. Two things to know with the
+journey: the faders stay where they are when it changes the piece, so a fader takes the new piece's level only when
+it is next moved (as when PRESETS changes it); and a knob thrown from a pad that is still held across the change goes
+back, when the pad is let go, to where that master action was before the throw, not to the new piece's.
+
 ## 3. Volume
 
 The FM-1's MASTER is a pot, which stays where it was left. The Elite's K1 turns without end, so AISLING keeps the level

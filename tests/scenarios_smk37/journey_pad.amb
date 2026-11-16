@@ -1,0 +1,32 @@
+# the SMK-37 Elite and 1.4's journey: the stay is SELECT's (the Elite's K2) on Setup, and a pad or a fader is a touch
+# as a key is: the whole stay again. Nothing is saved
+wait 500
+expect playing 1
+expect piece 0
+# (a fader's first reading is only where it is)
+fader 1 500
+wait 200
+tap GLOBE
+wait 300
+expect view 6
+turn K2 1
+wait 200
+expect jrstay 5
+# 4 min 40: a pad down and up. Under five minutes from it: still here
+wait 280000
+expect piece 0
+pad 3 down
+wait 200
+pad 3 up
+wait 280000
+expect piece 0
+expect jr 0
+# a fader moved at 4 min 40 again: the same
+fader 1 600
+wait 280000
+expect piece 0
+expect jr 0
+# five minutes from the fader, and a phrase and the glide's first half: gone on to Burren
+wait 110000
+expect piece 1
+expect store_writes <2

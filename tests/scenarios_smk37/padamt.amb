@@ -1,0 +1,30 @@
+# the SMK-37 Elite's pads and 1.4's amounts: a pad is a hand, so its effect is full, whatever a CC last said of it,
+# and PERFORM's flash shows no bar for it. The CC's amount is back when the pad is up
+wait 500
+expect view 0
+# PERFORM (SCALE is the FM-1's SEL), so the flash is up for what is held
+tap SCALE
+wait 300
+# Reverb (key 14, CC 104) by a CC at 80: under full, and its band has the bar
+midi B0 68 50
+wait 300
+expect pcc 16384
+expect amt14 80
+expect pbar 1
+# pad 8 is Reverb: down, and it is full, with no bar
+pad 8 down
+wait 300
+expect padfx 16384
+expect amt14 127
+expect pbar 0
+# up: the CC still holds it, at its own amount
+pad 8 up
+wait 300
+expect padfx 0
+expect pcc 16384
+expect amt14 80
+expect pbar 1
+midi B0 68 00
+wait 200
+expect pcc 0
+expect pbar 0
