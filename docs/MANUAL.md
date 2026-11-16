@@ -178,8 +178,8 @@ The screen is black, with a few dim stars drifting slowly left while the music p
   while they're on, and under it the eight bars of the phrase.
 - **Top right:** "CU_STE", small, and under it the page's name in an uncial hand (with SOLO beside it while a solo
   is on); on the Aisling page, a small green triskele before it.
-- **Left:** five **meters**, one for each layer in its own colour: the Drone (violet), the Sequence (pink), the
-  Lead (gold), Sequence 2 (cyan), the Atmosphere (grey). Each rises with what its layer is playing. Across each
+- **Left:** five **meters**, one for each layer in its own colour, with its letter under it: the Drone (violet,
+  D), the Sequence (pink, 1), the Lead (gold, L), Sequence 2 (cyan, 2), the Atmosphere (grey, A). Each rises with what its layer is playing. Across each
   one, a white **tick** shows where that layer's filter has moved to: above the middle, brighter; below,
   darker; six pixels for each octave.
 - **Middle:** the chord the Drone plays, its name in white with nothing behind it. Each note of the
@@ -195,7 +195,7 @@ The screen is black, with a few dim stars drifting slowly left while the music p
   on lit. When a button brings a new page, its name shows large over the chord for a moment, in the same uncial hand, with the same dots.
 - **A ring in the middle:** while you turn SELECT on a layer's page, its level as a big knob in its colour, the
   number inside and the layer's name under it (grey and MUTED if it's muted); it fades a moment after.
-- **Below:** two **lanes**, the Sequence (pink) and Sequence 2 (cyan), each as long as its sequence: a big dot
+- **Below:** two **lanes**, the Sequence (pink, 1) and Sequence 2 (cyan, 2), each as long as its sequence: a big dot
   for each step that plays, a speck for a rest, and a white cursor on the step playing now. Two sequences of
   different lengths drift apart and meet again, and you can see them do it. On a layer's page, the other
   lane is greyed.
@@ -531,7 +531,9 @@ Reverb, Echo. **Its Move page:** Width, Time, Rate, Intro.
 (the tail, in seconds), Reverb. The echo is a tape echo that ping-pongs left and right. **FX again: Echo:** Blur, Tone, Width, Size
 (the plate).
 
-**GLO: Setup:** Tune (±50 cents), MIDI out, Lights, Save; ALGORITHM the sleep timer (see
+**GLO: Setup:** Tune (±50 cents), MIDI out, Lights, Screen (Dark, the colours on black; or Light, the same colours
+deeper, on white: saved, as Lights is; set it between pieces, since the turn redraws the whole screen at once);
+ALGORITHM the sleep timer (see
 [Sleep](#3-controls)). **GLO again: Arc:** Lead in, Bridge, Arc,
 Memory (see [The arc and the filter motion](#6-the-arc-and-the-filter-motion)).
 
@@ -684,7 +686,7 @@ clock from a Korg nanoKEY Fold, over a plain stereo cable. Type B hasn't been tr
 - **In, CCs:** on any channel, a CC turns a knob (see the table below). It sets the value outright: 0 to 127 spans
   the knob's range, and on the centred knobs (Filter, Wet, Energy, the sound pages' ±50) 64 is the middle. A CC counts
   as a touch for the sleep timer, as a note does. CCs never save, and never turn Setup's Tune, MIDI out, Lights or
-  Save; while the effects grid is up, 16 to 19 rest, as the knobs do. A change is saved by itself later, as a turn's
+  Screen; while the effects grid is up, 16 to 19 rest, as the knobs do. A change is saved by itself later, as a turn's
   is (Filter, Wet, Energy and Chorus aren't saved at all). Other CCs are ignored.
 - **In, effects:** each of PERFORM's 27 effects has a CC, on any channel (the second table below). 64 or more holds
   the effect, less lets it go, as its key does. They work on any page, PERFORM or not; in PERFORM the screen flashes
@@ -779,8 +781,6 @@ timing.
 - **By itself:** a few seconds after a change, while resting (writing to the memory interrupts the sound
   for a moment, so it never happens while the music plays). A dot at the top means unsaved changes.
 - **SAVE or GLO held** half a second: saves now ("SAVED"). While the music plays, that can cost a very short dropout.
-- **Setup's KNOB 4 (Save):** shows Save while there are unsaved changes, Saved once there aren't; a turn
-  saves.
 - **GLO held on** (1.5 s): the piece back to its recipe ("RESET"). Like any change, it's saved by itself a few seconds after the music stops.
 
 The sleep timer isn't saved. Lock and PERFORM's Filter, Wet, Energy and Chorus aren't saved either; a piece change (or GLO's reset) returns the four to 0, so

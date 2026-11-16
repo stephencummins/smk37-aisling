@@ -2,7 +2,7 @@
 
 <img src="docs/card-smk37.png" width="240" height="240" alt="AISLING on the SMK-37: a gold 8-bit harp on green, with 37">
 
-**[Download 1.3.1](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
+**[Download 1.3.2](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
 **[Installing](docs/SMK37.md#11-installing-and-going-back)** ·
 **[Controls](https://aisling.stephen8n.com/smk37/controls/)** ·
 **[Manual](https://aisling.stephen8n.com/smk37/manual/)** ·
@@ -22,7 +22,9 @@ held, and its 4 faders set the mix.
 
 It is for the **SMK-37 Elite** only: not the SMK-37 Pro, and not the MKE-P37.
 
-**Status: 1.3.1.** It has run on one Elite, in November 2026: installed over M-VAVE's V016, played, taken off again
+**Status: 1.3.2.** 1.3.2 is 1.3.1 with a light screen to choose (Setup's Screen, where the Save knob was), the
+screen's 1.4.1 touches and a shorter identity that the installers read whole; the sound is 1.3.1's. **1.3.2's own
+package has not been on an Elite yet**: what follows was done with 1.3.1. It has run on one Elite, in November 2026: installed over M-VAVE's V016, played, taken off again
 with M-VAVE's own package, installed again, and played for an hour with no dropouts. Every button, knob, key, pad,
 fader and light was checked by hand. [docs/SMK37.md](docs/SMK37.md#12-settled-on-an-elite-and-still-open) says what
 was checked and what is still open.
@@ -123,6 +125,18 @@ AMB-1. It doesn't read what they saved (it starts with its own eight recipes), a
 after you change something, replaces theirs; they ignore AISLING's in the same way and replace it when they save.
 Installing another firmware may lose what AISLING saved. AISLING uses no samples.
 
+## What's new in 1.3.2
+
+- **Not yet on an Elite.** 1.3.2 passes the simulator's tests; its package has not been installed on an Elite. 1.3.1,
+  which has, stays on [its release](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.3.1).
+- **A light screen.** Setup's KNOB 4 is **Screen**: Dark, the colours on black, or Light, the same colours deeper, on
+  white. It is saved. It takes the place of Setup's Save knob; SAVE or GLO held half a second still saves. Set it
+  between pieces: the turn redraws the whole screen at once.
+- **The screen, tidied:** a letter under each of the five meters (D, 1, L, 2, A) and a 1 and a 2 on the lanes; the
+  count under the chord clear of the orbits; the knob strip's dividers start under the names.
+- **A shorter identity**, `SMK-37 Elite_353132`: 19 characters in 20 marker blocks, as M-VAVE's own Elite package has.
+  1.3.1's (22 characters in 36 blocks) was cut short by tools that read 20, The Firmware Hub's check among them.
+
 ## What's new in 1.3.1
 
 - **The effects grid in PERFORM's look.** Hold REC and the grid has a colour for each group (Echo, Filter, Space, Moves), its name in the uncial hand and a plaited rule under each group's name; a held effect's cell fills with its colour. Only the drawing changed: the keys, the effects and the sound are 1.3's.
@@ -213,7 +227,7 @@ The eight are listed in the manual's [The pieces](docs/MANUAL.md#7-the-pieces).
 | SEQ | Sequence 2 (Chance, Octave, Length, Level); again, its sound; again, the Pattern page (write the steps on the keys); again, its Move page |
 | SAVE | The Atmosphere (Density, Width, Drift, Air); again, its sound (Colour, Ring, Reverb, Echo); again, its Move page. Held: save |
 | FX | Space (Echo, Echo time, Feedback, Reverb); again, the Echo page (Blur, Tone, Width, Size) |
-| GLO | Setup (Tune, MIDI out, Lights, Save; ALGORITHM, the sleep timer); again, the Arc (Lead in, Bridge, Arc, Memory). Held: save; held on: the piece back to its recipe |
+| GLO | Setup (Tune, MIDI out, Lights, Screen; ALGORITHM, the sleep timer); again, the Arc (Lead in, Bridge, Arc, Memory). Held: save; held on: the piece back to its recipe |
 | ALGORITHM | On a layer's page, its voice (the Atmosphere: its character); on the Aisling page, Evolve's timing; on the Setup page, the sleep timer |
 | PRESETS | The piece |
 | SELECT | On a layer's pages, its level; on the Aisling page, Energy (elsewhere nothing) |
