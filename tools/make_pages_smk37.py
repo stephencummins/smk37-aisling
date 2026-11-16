@@ -12,7 +12,7 @@ says where the port stands, and where its release is.
   index.html          where the port stands, what it is, its screens
   controls/           the Elite's controls and the FM-1 job each does: the README's "## In short" under the Elite's names
                       (firmware/hal/smk37/smk_input.h), with what the Elite lacks and what it doesn't use yet
-  docs/               docs/SMK37.md, drawn as the FM-1 site draws its manual (tools/manual_html.py)
+  manual/             docs/SMK37.md, drawn as the FM-1 site draws its manual (tools/manual_html.py)
   img/                the screens, rendered here by the Elite's simulator (build/host/amb_host_smk37) from the manual's
                       own scenario (tests/listen/docshots.amb, renamed by tests/smk37_scenario.py); docs/card-smk37.png, the harp with 37
   the rest            web/brand: the harp, site.css, wall.js, the fonts (not Cloudflare's _headers and _redirects)
@@ -41,7 +41,7 @@ FM1 = "https://aisling.stephen8n.com/"
 BY = 'by CU_STE · <a href="https://www.stephen8n.com">www.stephen8n.com</a>'
 # (the page's key, its label, where it goes, what it is), as site_brand.NAV
 NAV = (("controls", "controls", "controls/", "The Elite's buttons, knobs and keys, and the FM-1 job each does"),
-       ("docs", "docs", "docs/", "How the port works: the flash, the pins, building, testing, and what's still open"),
+       ("manual", "manual", "manual/", "How the port works: the flash, the pins, building, testing, and what's still open"),
        ("fm1", "fm-1 version", FM1, "AISLING on the FM-1: install it, the manual, the emulator, the visualiser"),
        ("source", "source", REPO, "The code, on GitHub: one tree for the FM-1 and the Elite"),
        ("stephen8n", "stephen8n", "https://www.stephen8n.com", "Stephen Cummins's other things"))
@@ -268,8 +268,8 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <li><b>An SMK-37 Elite,</b> on M-VAVE's firmware V016.</li>
 <li><b>The way back</b> to M-VAVE's firmware is proven: off, and on again.</li>
 </ol>
-<p class="mg-go"><a class="btn go big" href="docs/#s11">How to install</a></p>
-<p class="mg-small"><a href="__REPO__/releases/latest">Download 1.3.1</a> · <a href="docs/">The docs</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
+<p class="mg-go"><a class="btn go big" href="manual/#s11">How to install</a></p>
+<p class="mg-small"><a href="__REPO__/releases/latest">Download 1.3.1</a> · <a href="manual/">The manual</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
 </section>
 
 <section class="mg-fold" aria-label="More about AISLING on the Elite">
@@ -277,7 +277,7 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <p><strong>1.3.1, released.</strong> In November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
 off again with M-VAVE's own firmware, and installed again. The package is in its
 <a href="__REPO__/releases/latest">release</a>; it installs from a computer for now, as the
-<a href="docs/#s11">docs</a> say, and they say what was checked and what is still open.</p>
+<a href="manual/#s11">manual</a> says, and it says what was checked and what is still open.</p>
 <p>It is for the <b>SMK-37 Elite</b> only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
 </div></details>
 <details><summary>Where it stands <small>six done, the web installer next</small></summary><div class="mg-in">
@@ -449,7 +449,7 @@ Bluetooth.</p>
 DOCS = """<!doctype html>
 <html lang="en">
 <head>
-__HEAD_COMMON__<title>AISLING on the SMK-37 Elite · the docs</title>
+__HEAD_COMMON__<title>AISLING on the SMK-37 Elite · the manual</title>
 <meta name="description" content="How AISLING runs on the M-VAVE SMK-37 Elite: the controls, the flash, the pins, building, testing, installing and going back, and what is still open.">
 <style>__CSS__/* this page's own: on a phone, a test's or a file's name may break, so its table fits */
 @media (max-width: 47.99rem) { .prose td:first-child, .prose td:first-child code { white-space: normal; } }
@@ -466,12 +466,12 @@ __BODY__
 </html>
 """
 DOCS_STRIP = """<div class="strip">
-<p class="lab"><b>docs</b> · AISLING on the M-VAVE SMK-37 Elite</p>
+<p class="lab"><b>manual</b> · AISLING on the M-VAVE SMK-37 Elite</p>
 <a class="btn" href="../controls/">the controls</a>
 </div>
 <div class="mg-cover">
 <div class="mg-words">
-<div><h1>The <span>Docs</span></h1>
+<div><h1>The <span>Manual</span></h1>
 <p class="mg-gloss">AISLING on the M-VAVE SMK-37 Elite.</p></div>
 <p class="mg-deck">What differs from the FM-1, the flash and the pins, building, testing, installing and going back, in __N__ sections.</p>
 </div>
@@ -541,7 +541,7 @@ def main(out, marks=False):
         shutil.rmtree(out)
     (out / "img").mkdir(parents=True)
     (out / "controls").mkdir()
-    (out / "docs").mkdir()
+    (out / "manual").mkdir()
     shots(out)
     shutil.copy(SRC / "docs" / "card-smk37.png", out / "img" / "card-smk37.png")
     shutil.copy(SRC / "docs" / "img" / "smk37-panel.svg", out / "img" / "smk37-panel.svg")   # tools/gen_smk37_figure.py
@@ -549,16 +549,16 @@ def main(out, marks=False):
     (out / "index.html").write_text(st(page(LANDING, PANEL=panel_svg(), **common), "", None), encoding="utf-8")
     (out / "controls" / "index.html").write_text(
         st(page(CONTROLS, TABLE=controls_table(), PANEL=panel_svg(), SKINS=skin_buttons(), **common), "../", "controls"), encoding="utf-8")
-    (out / "docs" / "index.html").write_text(
-        st(page(DOCS, HEAD_COMMON=HEAD_COMMON, CSS=manual_html.CSS, BODY=docs_body()), "../", "docs"),
+    (out / "manual" / "index.html").write_text(
+        st(page(DOCS, HEAD_COMMON=HEAD_COMMON, CSS=manual_html.CSS, BODY=docs_body()), "../", "manual"),
         encoding="utf-8")
     if marks:
-        print(f"pages with their marks: {out}: index.html, controls/, docs/, img/")
+        print(f"pages with their marks: {out}: index.html, controls/, manual/, img/")
         return
     shutil.copytree(SRC / "web" / "brand", out, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns("_headers", "_redirects"))
     (out / ".nojekyll").write_text("")
-    print(f"site: {out}: index.html, controls/, docs/, img/ ({', '.join(SHOTS)} from the Elite's simulator)")
+    print(f"site: {out}: index.html, controls/, manual/, img/ ({', '.join(SHOTS)} from the Elite's simulator)")
 
 
 if __name__ == "__main__":

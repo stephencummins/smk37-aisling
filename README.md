@@ -5,7 +5,7 @@
 **[Download 1.3.1](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
 **[Installing](docs/SMK37.md#11-installing-and-going-back)** ·
 **[Controls](https://aisling.stephen8n.com/smk37/controls/)** ·
-**[Docs](https://aisling.stephen8n.com/smk37/docs/)** ·
+**[Manual](https://aisling.stephen8n.com/smk37/manual/)** ·
 **[Website](https://aisling.stephen8n.com/smk37/)** ·
 **[AISLING for the FM-1](https://github.com/stephencummins/fm1-aisling)**
 
