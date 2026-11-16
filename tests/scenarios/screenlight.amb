@@ -1,0 +1,32 @@
+# 1.4.1: the screen, dark or light: KNOB 4 on Setup (GLO), where Save was (SAVE saves). Saved, as Lights; the
+# colours follow at the next frame; the held effects' lettering reads on both
+wait 300
+expect light 0
+expect pfcontrast 0
+tap GLO
+wait 600
+shot dark.png
+turn K4 2
+wait 200
+expect light 1
+expect dirty 1
+expect pfcontrast 0
+wait 2500
+shot light.png
+# saved, and still light after a restart
+press SAVE
+wait 600
+release SAVE
+wait 40
+expect dirty 0
+reboot
+wait 600
+expect light 1
+shot light_restart.png
+tap GLO
+wait 600
+turn K4 -2
+wait 200
+expect light 0
+wait 600
+shot dark_again.png

@@ -110,6 +110,7 @@ int project_load(void)
         pars_clamp(proj.par);                    /* (the ranges as they are now) */
         for (i = 0; i < NPIECES; i++)
             pars_clamp(proj.slot[i].par);
+        proj.light = (uint8_t)(proj.light != 0);   /* (1.4.1) */
         if (proj.evbars > 4u)                    /* (1.2) */
             proj.evbars = 0;
         if (project_valid())

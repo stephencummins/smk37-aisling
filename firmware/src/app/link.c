@@ -224,6 +224,7 @@ static int link_project_install(project_t *in, int pats)
     }
     if (in->leds > 2u)
         in->leds = 2u;
+    in->light = (uint8_t)(in->light != 0);
     in->screen = (uint8_t)(in->screen % 3u);
     if (!project_check(in))
         return -1;

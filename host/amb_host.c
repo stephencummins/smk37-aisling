@@ -659,6 +659,9 @@ static int expect(const char *what, const char *val)
         got = (int)ui_gain_q12;
     else if (!strcmp(what, "view"))
         got = ui.view;
+    else if (!strcmp(what, "light"))              /* (1.4.1) the screen: 0 dark, 1 light; 10 more when the colours in
+                                                   * use aren't the ones it asks for */
+        got = proj.light + (kpal != KPAL[proj.light != 0] ? 10 : 0);
     else if (!strcmp(what, "master"))             /* the level the engine gets (Q12, plat_master) */
         got = (int)plat_master();
     else if (!strcmp(what, "masterraw"))          /* MASTER's knob position, 0..1023 (plat_master_raw) */
@@ -689,7 +692,7 @@ static int expect(const char *what, const char *val)
         int k, c;
         got = 0;
         for (k = 0; k < PERF_N; k++) {
-            uint16_t q[2] = {pkey_col(k), K_PANEL};
+            uint16_t q[2] = {pflash_col(k), proj.light ? K_BG : K_PANEL};   /* (1.4.1) light: its lettering is K_BG, white */
             double l[2];
             for (c = 0; c < 2; c++) {
                 double ch[3] = {(q[c] >> 11) / 31.0, ((q[c] >> 5) & 63) / 63.0, (q[c] & 31) / 31.0};
@@ -698,7 +701,7 @@ static int expect(const char *what, const char *val)
                     ch[i] = ch[i] <= 0.03928 ? ch[i] / 12.92 : pow((ch[i] + 0.055) / 1.055, 2.4);
                 l[c] = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
             }
-            got += (l[0] + 0.05) / (l[1] + 0.05) < 4.5;
+            got += (proj.light ? (l[1] + 0.05) / (l[0] + 0.05) : (l[0] + 0.05) / (l[1] + 0.05)) < 4.5;
         }
     } else if (!strcmp(what, "pffit")) {          /* (1.3) the names and lines wider than the flash allows */
         int k;

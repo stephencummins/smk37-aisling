@@ -34,7 +34,9 @@ typedef struct {
                                          * start, as before; 1..4 every 4, 8, 16, 32 bars. Global, as Tune (the
                                          * byte was spare: a save from 1.1 reads 0) */
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
-    uint8_t rsv[16];                     /* room to grow */
+    uint8_t light;                       /* (1.4.1) the screen: 0 dark (on black, as it was), 1 light (on white).
+                                         * Global. (The byte was spare: a save from before reads 0) */
+    uint8_t rsv[15];                     /* room to grow */
 } project_t;
 
 extern project_t proj;
