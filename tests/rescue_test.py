@@ -307,10 +307,10 @@ def presets():
        "--presets: Elite_016's app and the backup's presets written, restarted")
     ok(bot.flash[0x9D000:lo] == before[0x9D000:lo] and bot.flash[hi:] == before[hi:] and backup == before,
        "  nothing else changed (settings area, calibration, the rest of the presets), backed up first")
-    ok(all(a < 0x9D000 or lo <= a < hi for a in bot.erased) and sum(lo <= a < hi for a in bot.erased) == 4,
-       "  erased: the app area and four preset sectors only")
+    ok(all(a < 0x9D000 or lo <= a < hi for a in bot.erased) and sum(lo <= a < hi for a in bot.erased) == 8,
+       "  erased: the app area and eight preset sectors only (1.5: the pack's four with the pieces' four)")
     r, bot, backup, said = run(bytearray(before), ELITE, write=False, board="smk37", presets=old)
-    ok(r is False and not bot.erased and "4 of 4 preset sectors" in said, "  without --write: counted, nothing written")
+    ok(r is False and not bot.erased and "8 of 8 preset sectors" in said, "  without --write: counted, nothing written")
     other = bytearray(old)
     other[0xC1100] ^= 1                                       # another unit's calibration
     r, bot, backup, _ = run(bytearray(before), ELITE, board="smk37", presets=bytes(other))

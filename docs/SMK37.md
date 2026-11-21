@@ -1,7 +1,8 @@
 # AISLING on the SMK-37 Elite
 
-**Status.** This is 1.4.1: the FM-1's AISLING 1.4.1 on the Elite's controls (section 2 has what 1.4 and 1.4.1
-added), with Screen on Setup as well and 1.3.2's shorter identity (section 8). 1.4.1's package was
+**Status.** This is 1.5: the FM-1's AISLING 1.5 on the Elite's controls (section 2 has what 1.5 added, and 1.4 and
+1.4.1 before it), with Screen on Setup as well and 1.3.2's shorter identity (section 8). **1.5 has not been on an Elite.** It passes the Elite's simulator and the package checks, and the FM-1's build of this tree is the released FM-1 1.5 byte for byte; nothing of 1.5 has been installed, played or saved on an Elite yet (section 12).
+What follows about an Elite is 1.4.1's and 1.3.1's. 1.4.1's package was
 installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. It was then played and checked by hand on that Elite (1.3.2's was never on one); everything else below that says "on an Elite" was done with 1.3.1. AISLING 1.3.1 runs on an M-VAVE SMK-37 Elite. On one Elite, in November 2026, it was installed over
 M-VAVE's V016 firmware, played, taken off again with M-VAVE's own package, and installed again: the keys, buttons,
 knobs, pads, faders, lights, screen and sound were each checked by hand. Section 12 says what was checked and what is
@@ -87,6 +88,18 @@ REC.
 
 The site's [controls page](https://aisling.stephen8n.com/smk37/controls/) has what each one does.
 
+### What 1.5 added, on the Elite
+
+Each was read in the code and run in the Elite's simulator (section 10). None of it has been on an Elite.
+
+| 1.5 | On the Elite |
+| --- | --- |
+| Sound packs: eight more pieces, installed over USB | The same pack files. `python3 tools/fm1_link.py pack FILE.aispack` installs one, `pack remove` takes it off, `pack` alone says what is there (under AISLING the Elite's port is "DUB-1 SMK-37 Elite", which the tool finds). The Packs page speaks of the FM-1 and has not been tried with an Elite |
+| PRESETS, turned past the eighth piece, enters the pack | K4. Program changes 8 to 15 choose the pack's pieces, over USB |
+| Screen: Auto, Dark or Light: the Journey page's KNOB 3 | K7 there, and Setup's K8: the same three |
+| The Blues scale, the Lead's Slide, the Lead's rhythms in threes | The same engine and the same pages |
+| Where the pack is kept | Four more sectors of the stock presets, 0xC6000–0xC9FFF, after AISLING's four (section 6). An Elite that had 1.4.1 loses those four presets' sectors to 1.5 when a pack is first installed or removed (no pack, nothing written there); its backup restores them |
+
 ### What 1.4 and 1.4.1 added, on the Elite
 
 Each was read in the code and run in the Elite's simulator (section 10); 1.4.1 was then played and checked by hand on one Elite (16 November 2026), without a note of each row.
@@ -164,7 +177,7 @@ AISLING writes three parts of it and never writes the rest:
 | 0x9D000–0xBFFFF | the stock firmware's settings | an update's staging, in the top five sectors (0xBB000–0xBFFFF) |
 | 0xC0000–0xC0FFF | Bluetooth pairings | never written |
 | 0xC1000–0xC1FFF | the keys' velocity calibration, made for each unit | never written |
-| 0xC2000–0xEAFFF | the stock presets | AISLING's saved pieces and panel, 0xC2000–0xC5FFF |
+| 0xC2000–0xEAFFF | the stock presets | AISLING's saved pieces and panel, 0xC2000–0xC5FFF; from 1.5 the sound pack and its pieces, 0xC6000–0xC9FFF |
 | 0xEB000–0xF3FFF | (not in the package) | not written |
 | 0xF4000–0xFDFFF | the stock firmware's resources | never written |
 | 0xFE000–0xFFFFF | (not in the package), and the key and address at 0xFF000 | never written |
@@ -175,7 +188,7 @@ first install is what restores those: `tools/fm1_rescue.py --write --presets BAC
 
 The map is in `firmware/hal/smk37/smk_flash_map.h`. Its `_Static_assert`s keep every window the firmware writes off the
 protected ranges; at run time the flash driver refuses a write that would touch one; and `tests/smk_flash_test.c`
-checks the saved pieces, the update and the update loader against each range, byte by byte. The FM-1's own map would
+checks the saved pieces, the sound pack, the update and the update loader against each range, byte by byte. The FM-1's own map would
 cross three of those ranges on an Elite, which is why the Elite has its own.
 
 ## 7. The pins
@@ -206,7 +219,7 @@ The default board is the FM-1: `./build.sh` makes the same bytes it always has, 
 into `build/smk37/` with the same file names (`amb.bin`, `loader/ota.bin`, the package), and its own checks: the app
 must fit the Elite's app area (0x4000–0x9CFFF), leave at least 2 KiB of RAM and 8 KiB of the pool spare, and pass the
 pin guard. A release's identity is `SMK-37 Elite_353` and the version's three numbers, one digit each (1.4.1 is
-`SMK-37 Elite_353141`): a package's identity holds 20 characters, the 20 marker blocks M-VAVE's own Elite package
+`SMK-37 Elite_353141`, 1.5 `SMK-37 Elite_353150`): a package's identity holds 20 characters, the 20 marker blocks M-VAVE's own Elite package
 has. (1.3.1's, `SMK-37 Elite_353010301` in 36 blocks, was cut short by tools that read 20.)
 
 `tools/mini_build.sh --board smk37` does the same on another Mac over ssh and fetches the package back.
@@ -279,8 +292,8 @@ firmware the Elite has three MIDI ports and the installer uses the one ending "-
 
 **Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again, makes its
 sounds, and its controls work. Its first presets hold AISLING's saved pieces, though: a fader showed a stale value
-until it was moved. `tools/fm1_rescue.py --write --presets BACKUP.bin` puts the four preset sectors AISLING uses
-(0xC2000–0xC5FFF) back from the unit's own backup; it checks the flash chip's ID and that the backup's bootloader area
+until it was moved. `tools/fm1_rescue.py --write --presets BACKUP.bin` puts the eight preset sectors AISLING uses
+(0xC2000–0xC9FFF; four, to 0xC5FFF, before 1.5) back from the unit's own backup; it checks the flash chip's ID and that the backup's bootloader area
 and velocity calibration equal the flash's, and writes only the app area and those sectors. That route has not been
 needed yet, so it is untried on an Elite.
 
@@ -312,6 +325,11 @@ Settled, on one Elite on V016 (November 2026):
   no missed conversions in the analog scan; the heaviest audio block took 96% of its time.
 
 Still open:
+
+- **1.5 on an Elite.** Its package (identity `SMK-37 Elite_353150`) passes the simulator's tests and the package
+  checks, and has not been installed on an Elite. To see there: that it installs over 1.4.1 and the saved pieces come
+  back; that a pack installs, plays from K4 and survives a power-off; that the four sectors at 0xC6000–0xC9FFF are the
+  only new ones written (a flash read before and after, against the backup); Screen's Auto on a Saint and a Sinner.
 
 - **1.4.1 on an Elite.** Its package (the shorter identity, the Screen setting, and all of 1.4: the journey, the
   day, the effects' amounts) has passed the simulator's tests and the package checks, and was

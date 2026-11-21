@@ -7,6 +7,7 @@ files go to GitHub Pages too (https://stephencummins.github.io/fm1-aisling/), wh
   favicon.svg, favicon-32.png, apple-touch-icon.png, mark.png, site.css, wall.js, fonts/
                               the harp, the bar, the look and the fonts every page shares (web/brand, tools/site_brand.py)
   _headers, _redirects        Cloudflare's (web/brand); GitHub Pages serves them as two stray files
+  404.html                    the page for an address the site does not have (web/brand); both hosts use it
   visualiser/                 the visualiser (web/visualiser)
   index.html                  the root: what AISLING is, then the three things it runs on (site_brand.PRODUCTS), each
                               drawn, with how far it has got and its pages; the bar's switch goes between them too
@@ -26,6 +27,7 @@ files go to GitHub Pages too (https://stephencummins.github.io/fm1-aisling/), wh
   emu/                        AISLING in the browser (build/emu, from web/emu/build.sh), with its screen reader's
                               words and voice in emu/reader/ (fm1-reader, at the commit web/emu/reader.pin names)
   editor/                     the editor (web/editor/index.html; its code from build/editor, web/editor/build.sh)
+  packs/                      the sound packs' page (web/packs) and index.json: every packs/*.json, made by tools/make_pack.py
   words/                      the screen reader's words files (web/words, from firmware/words.tsv)
   install/index.html          the web installer (web/amb_installer.html, with fm1pkg.js, fm1ota.js and
                               the package's metadata inlined; Chrome or Edge, Web MIDI)
@@ -34,7 +36,7 @@ files go to GitHub Pages too (https://stephencummins.github.io/fm1-aisling/), wh
                               "In short" (each control drawn as it looks) and pieces table; to print, those on one
                               sheet, then a page for each flow
   firmware/aisling-VERSION.fwsc   the package the installer writes; also the download
-  firmware/aislingfx-1.0.fwsc     FX-1's, for fx1/install/: the release's asset, byte for byte (FX1_SHA256), from
+  firmware/aislingfx-1.1.fwsc     FX-1's, for fx1/install/: the release's asset, byte for byte (FX1_SHA256), from
                                   build/ or given with --fx1 FILE (or FX1_PKG=FILE)
 
   tools/make_pages.py build/aisling-0.1.fwsc 0.1 OUT_DIR [--smk37 DIR] [--fx1 FILE]
@@ -59,9 +61,9 @@ from site_brand import NAV, PRODUCTS, SITE, stamp  # noqa: E402
 from make_site import product_of, strip_module  # noqa: E402  (Felucca's: the package format)
 
 REPO = "https://github.com/stephencummins/fm1-aisling"
-FX1_REPO, FX1_VERSION = "https://github.com/stephencummins/fx1-aisling", "1.0"           # its release
-FX1_SHA256 = "9412ae355356aec34878597786cba0d63cc0a55608db6c1794ed42bc82682815"           # aislingfx-1.0.fwsc, its asset
-SMK37_REPO, SMK37_VERSION = "https://github.com/stephencummins/smk37-aisling", "1.3.1"  # the Elite's
+FX1_REPO, FX1_VERSION = "https://github.com/stephencummins/fx1-aisling", "1.1"           # its release
+FX1_SHA256 = "41ae37d3d478737c73df32b87de1661d3cb7efd8883319f5b26c2baa011e0d1c"           # aislingfx-1.1.fwsc, its asset
+SMK37_REPO, SMK37_VERSION = "https://github.com/stephencummins/smk37-aisling", "1.4.1"  # the Elite's
 BY = 'by CÚ_STE · <a href="https://www.stephen8n.com">www.stephen8n.com</a>'
 
 LANDING = """<!doctype html>
@@ -132,6 +134,7 @@ p.small { color: var(--brand-muted); font-size: 12.5px; }
 <p class="mg-stand">The same code the FM-1 runs, <em>with sound</em>. No FM-1 needed.</p>
 <p class="mg-go"><a class="btn go big" href="emu/">Open the emulator</a></p>
 <p class="mg-small">Mouse, touch or keyboard. Slide the visualiser up beneath it to watch what it plays painted.</p>
+<p class="mg-small">New: on a phone it is <a href="emu/?app">an app</a>, full screen from the home screen. <a href="./#new">How</a>. Tested on an iPhone, in Safari and Chrome.</p>
 </div>
 <div class="mg-shots">
   <img src="img/screen-launch.png" width="240" height="240" alt="The launch screen: a green triskele, AISLING, by CU_STE, www.stephen8n.com">
@@ -401,6 +404,9 @@ CHOOSER = """<!doctype html>
 .ask small { display: block; margin: 0 0 6px; font: 400 12px/1.3 var(--brand-mono); letter-spacing: .12em; color: var(--brand-rust); }
 .band { border-top: 1px solid var(--brand-rule); }
 .band .mg-head { margin-bottom: 18px; }
+#new .mg-num { font-size: clamp(56px, 8vw, 104px); text-transform: uppercase; }
+#new .how { margin: 22px 0 10px; font: 600 22px/1.1 var(--brand-display); text-transform: uppercase; }
+#new .mg-split { align-items: center; }
 .band .shot { display: block; border: 1px solid var(--brand-rule); }
 .band .shot img { display: block; width: 100%; height: auto; max-height: 340px; object-fit: cover; }
 /* the tip cup, in the cover's corner: our own drawing. Steam all the time; every 14 seconds a sugar lump goes in and it wiggles */
@@ -494,7 +500,28 @@ p.small { margin: 0; color: var(--brand-muted); font-size: 12.5px; }
 </div>
 </div>
 
-<h2 class="ask"><small>three firmwares</small>Which have you got?</h2>
+<section class="mg-feat band" id="new" aria-labelledby="newh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">New</div>
+<div><p class="mg-kick">What's new · November 2026</p><h2 id="newh">Aisling, as an app on your phone</h2></div></div>
+<div class="mg-split">
+<div>
+<p class="mg-stand">The whole instrument, full screen, <em>from your home screen</em>. It plays with no connection, and it can wear any of the store's skins.</p>
+<p class="mg-go"><a class="btn go big" href="emu/?app">Open the app</a></p>
+<p class="mg-small"><b>Tested on an iPhone, in Safari and Chrome.</b> It may well work on an iPad or an Android phone; nobody has tried it there yet.</p>
+</div>
+<a class="shot" href="emu/?app" tabindex="-1"><img src="img/app-phone.webp" width="1688" height="780" loading="lazy" alt="AISLING filling a phone's screen, turned on its side: the FM-1 drawn with a map skin on it, its screen playing"></a>
+</div>
+<h3 class="how">An icon on your home screen</h3>
+<ol class="mg-steps">
+<li><b>Open the app in Safari</b> on your iPhone, with the button above.</li>
+<li><b>Tap Share,</b> the square with an arrow pointing up. On a newer iPhone it may be under the three dots.</li>
+<li><b>Choose Add to Home Screen,</b> then Add. You may need to scroll down the list to find it.</li>
+<li><b>Open AISLING from its icon.</b> It fills the screen. Tap the FM-1 once to start the sound.</li>
+</ol>
+<p class="mg-small">It sounds even with the phone's silent switch on. For a skin, tap the menu button in the corner and choose one under Decal. Once it has been opened from its icon, it works with no connection.</p>
+</section>
+
+<h2 class="ask band"><small>three firmwares</small>Which have you got?</h2>
 <div class="parts">
 __PARTS__
 </div>
@@ -677,7 +704,7 @@ FX1_CONTROLS = dict(
     title="AISLING FX-1 · the controls",
     desc="An M-VAVE FM-1 running AISLING FX-1, the USB effects box, drawn: what each knob, button and key does to a computer's sound.",
     strip="AISLING FX-1, an FM-1 as a USB effects box", button=("../manual/", "manual"),
-    notice='<div class="pane notice" role="note">\n<p><strong>1.0.</strong> What is drawn here is what the firmware '
+    notice='<div class="pane notice" role="note">\n<p><strong>1.1.</strong> What is drawn here is what the firmware '
            'does, measured in AISLING\'s simulator; the <a href="../manual/">manual</a> says which of it has been tried on '
            'the FM-1 itself.</p>\n</div>\n',
     svg="fx1-controls.svg", table_head="The controls", table=("docs/FX1.md", "The controls"), manual="../manual/",
@@ -690,9 +717,9 @@ FX1_LANDING = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AISLING FX-1 · an FM-1 as a USB effects box</title>
-<meta name="description" content="AISLING FX-1 makes an M-VAVE FM-1 an effects box for a computer: its sound in over USB, through AISLING's filter, echo, reverb and effects, out of the FM-1's socket. 1.0, released.">
+<meta name="description" content="AISLING FX-1 makes an M-VAVE FM-1 an effects box for a computer: its sound in over USB, through AISLING's filter, echo, reverb and effects, out of the FM-1's socket. A guitar goes through it by way of the computer. 1.1, released.">
 <meta property="og:title" content="AISLING FX-1 · an FM-1 as a USB effects box">
-<meta property="og:description" content="An M-VAVE FM-1 as an effects box for a computer's sound, over USB. 1.0, released.">
+<meta property="og:description" content="An M-VAVE FM-1 as an effects box for a computer's sound, over USB. 1.1, released.">
 <meta property="og:url" content="__SITE__fx1/">
 <style>
 /* FX-1's page's own. The rest is the site's (web/brand/site.css): its magazine parts, mg-* */
@@ -705,6 +732,21 @@ ul.plain { list-style: square; padding-left: 1.2rem; margin: 0 0 10px; }
 ul.plain li { margin: 0 0 6px; }
 ul.plain li::marker { color: var(--brand-green); }
 p.small { color: var(--brand-muted); font-size: 12.5px; }
+/* the guitar's way through: boxes in a row with the lead between each named, a column on a phone */
+.chain { list-style: none; display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; margin: 0 0 20px; padding: 0; }
+.chain li { flex: 1 1 120px; display: flex; flex-direction: column; justify-content: center; padding: 12px 12px 13px; border: 1px solid var(--brand-rule);
+            background: var(--brand-ground); font-size: 12.5px; line-height: 1.4; }
+.chain li b { display: block; margin: 0 0 3px; font: 600 19px/1.15 var(--brand-display); letter-spacing: .02em; }
+.chain li.fx { background: var(--brand-green); border-color: var(--brand-green); color: var(--brand-ground); }
+.chain li.by { flex: 0 0 auto; justify-content: center; align-items: center; padding: 0 8px; border: 0; background: none; color: var(--brand-muted);
+               font: 400 11px/1.3 var(--brand-mono); text-align: center; }
+.chain li.by::after { content: "→"; font-size: 18px; line-height: 1; color: var(--brand-rust); }
+@media (max-width: 47.99rem) {
+  .chain { flex-direction: column; }
+  .chain li { flex: 0 0 auto; }
+  .chain li.by { flex-direction: row; gap: 8px; padding: 6px 0; }
+  .chain li.by::after { content: "↓"; }
+}
 </style>
 <!--AISLING-HEAD-->
 </head>
@@ -713,7 +755,7 @@ p.small { color: var(--brand-muted); font-size: 12.5px; }
 <main class="bench">
 <div class="strip">
 <p class="lab"><b>aisling fx-1</b> · an M-VAVE FM-1 as a USB effects box</p>
-<p class="lab">v1.0 · __BY__</p>
+<p class="lab">v1.1 · __BY__</p>
 </div>
 
 <div class="mg-cover">
@@ -722,17 +764,46 @@ p.small { color: var(--brand-muted); font-size: 12.5px; }
 <h1>Aisling <span>FX-1</span></h1>
 <p class="mg-gloss">AISLING with its voices taken out and a computer's sound let in.</p>
 </div>
-<p class="mg-deck">An FM-1 as a USB effects box: your computer's sound in over the cable, out through AISLING's filter, echo and reverb.</p>
+<p class="mg-deck">An FM-1 as a USB effects box: a guitar, or anything your computer plays, in over the cable and out through AISLING's filter, echo and reverb.</p>
 </div>
 <div class="mg-pic"><img src="../img/fx1-photo.webp" width="984" height="590" alt="An FM-1 in a printed skin, running AISLING FX-1"></div>
 </div>
 
 <nav class="mg-jump" aria-label="On this page">
-<a href="#controls"><i>01</i>Controls</a><a href="#install"><i>02</i>Install</a><a href="#manual"><i>03</i>Manual</a>
+<a href="#guitar"><i>01</i>Guitar</a><a href="#controls"><i>02</i>Controls</a><a href="#install"><i>03</i>Install</a><a href="#manual"><i>04</i>Manual</a>
 </nav>
 
-<section class="mg-feat" id="controls" aria-labelledby="controlsh">
+<section class="mg-feat" id="guitar" aria-labelledby="guitarh">
 <div class="mg-head"><div class="mg-num" aria-hidden="true">01</div>
+<div><p class="mg-kick">What it is for</p><h2 id="guitarh">A guitar through the FM-1</h2></div></div>
+<p class="mg-stand">Plug a guitar into the computer, and the computer into the FM-1: you play through <em>the Filter, the Echo and the Reverb</em>, with a hand free for the knobs.</p>
+<ol class="chain" aria-label="The guitar's way through">
+  <li><b>Guitar</b>or a bass, or a microphone</li>
+  <li class="by">guitar lead</li>
+  <li><b>Interface</b>an iRig, or any sound interface with a guitar input</li>
+  <li class="by">its lead</li>
+  <li><b>Computer</b>music software, with the track's monitor on</li>
+  <li class="by">USB</li>
+  <li class="fx"><b>FM-1</b>running FX-1: the knobs and keys are the effects</li>
+  <li class="by">3.5&nbsp;mm</li>
+  <li><b>Headphones</b>or a speaker or an amp</li>
+</ol>
+<ol class="mg-steps">
+  <li>Plug the guitar into the interface and the interface into the computer. The guitar never goes into the FM-1:
+      <b>its socket is an output only</b>.</li>
+  <li>In your music software, choose the interface as the sound input and <b>AISLING FX-1</b> as the sound output, at
+      44.1&nbsp;kHz, with the smallest buffer that plays cleanly (64 samples here).</li>
+  <li>Make an audio track that listens to the guitar and turn its monitor on (in Ableton Live, Monitor: <b>In</b>).</li>
+  <li>Listen at the FM-1's socket and play. Turn the Echo and the Reverb up at HOME; in PERFORM (SEL) hold a key for
+      an effect.</li>
+</ol>
+<p class="mg-small">Tried by its author: a guitar through an iRig 2, and through the first iRig, into a MacBook's headphone
+socket, Ableton Live 12 on macOS 27, out to the FM-1. The sound goes through the computer, so there is a short delay
+between the string and the speaker; it has not been measured. A bass and a microphone go the same way and have not been tried.</p>
+</section>
+
+<section class="mg-feat" id="controls" aria-labelledby="controlsh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">02</div>
 <div><p class="mg-kick">The controls</p><h2 id="controlsh">Every knob, button and key</h2></div></div>
 <a class="mg-draw" href="controls/" title="The controls page">__PANEL__</a>
 <p class="mg-stand" style="margin-top:18px">At HOME the knobs are <em>the Filter, the Echo, the Reverb and the Dry</em>. In PERFORM the keys are effects while held.</p>
@@ -740,11 +811,11 @@ p.small { color: var(--brand-muted); font-size: 12.5px; }
 </section>
 
 <section class="mg-feat" id="install" aria-labelledby="installh">
-<div class="mg-head"><div class="mg-num" aria-hidden="true">02</div>
+<div class="mg-head"><div class="mg-num" aria-hidden="true">03</div>
 <div><p class="mg-kick">Install</p><h2 id="installh">Put it on your FM-1</h2></div></div>
 <ol class="mg-steps">
   <li>Put FX-1 on the FM-1 from its <a href="install/">install page</a>, in Chrome or Edge, over AISLING, another
-      firmware or the stock one (or download <code>aislingfx-1.0.fwsc</code> from the release and install it with
+      firmware or the stock one (or download <code>aislingfx-1.1.fwsc</code> from the release and install it with
       <code>tools/fm1_install.py</code>).</li>
   <li>Connect the FM-1 to the computer with a USB data cable. It shows up as a sound device, <b>AISLING FX-1</b>.</li>
   <li>Make it the computer's sound output, or a track's in your music software, and play something. The screen says
@@ -753,12 +824,12 @@ p.small { color: var(--brand-muted); font-size: 12.5px; }
       the keys are effects while held.</li>
   <li>To record what comes out, choose the FM-1 as the computer's input as well.</li>
 </ol>
-<p class="mg-go"><a class="btn go big" href="install/">Install v1.0</a></p>
-<p class="mg-small"><a href="__FX1_REPO__/releases/tag/v1.0">Download 1.0</a> · Going back: <a href="../install/">install AISLING</a>, or the stock firmware.</p>
+<p class="mg-go"><a class="btn go big" href="install/">Install v1.1</a></p>
+<p class="mg-small"><a href="__FX1_REPO__/releases/tag/v1.1">Download 1.1</a> · Going back: <a href="../install/">install AISLING</a>, or the stock firmware.</p>
 </section>
 
 <section class="mg-feat" id="manual" aria-labelledby="manualh">
-<div class="mg-head"><div class="mg-num" aria-hidden="true">03</div>
+<div class="mg-head"><div class="mg-num" aria-hidden="true">04</div>
 <div><p class="mg-kick">The manual</p><h2 id="manualh">Setting it up</h2></div></div>
 <div class="mg-split">
 <div>
@@ -770,11 +841,12 @@ __SHOTS__
 </section>
 
 <section class="mg-fold" aria-label="More about AISLING FX-1">
-<details><summary>1.0, released <small>where it has run</small></summary><div class="mg-in">
-<p><strong>1.0, released.</strong> It installs from Chrome or Edge on its <a href="install/">install page</a>, and its
-package, <code>aislingfx-1.0.fwsc</code>, is on <a href="__FX1_REPO__/releases/tag/v1.0">the 1.0 release</a> for the
-command-line installer. It has run on one FM-1 so far, put on from the command line: the install page is new, and does
-the same as AISLING's. The way back is the usual one: <a href="../install/">install AISLING</a>, or the stock firmware.</p>
+<details><summary>1.1, released <small>where it has run</small></summary><div class="mg-in">
+<p><strong>1.1, released.</strong> It is 1.0 with a light screen to choose (the Journey page's Screen) and the knob
+strip tidied; the sound is 1.0's. It installs from Chrome or Edge on its <a href="install/">install page</a>, and its
+package, <code>aislingfx-1.1.fwsc</code>, is on <a href="__FX1_REPO__/releases/tag/v1.1">the 1.1 release</a> for the
+command-line installer. 1.0 and 1.1 have each gone on one FM-1 from the command line (1.1's screen looked right, and the computer's
+sound played through its effects). The install page has not been used with FX-1: it does the same as AISLING's. The way back is the usual one: <a href="../install/">install AISLING</a>, or the stock firmware.</p>
 </div></details>
 <details><summary>Tried, and not yet <small>what works, what's untested</small></summary><div class="mg-in">
 <ul class="plain">
@@ -1258,6 +1330,17 @@ def main(pkg, version, out, smk37=None, fx1=None):
     for f in ("amb.wasm", "engine.js", "worklet.js", "link.js", "editor.js", "editor.css"):
         shutil.copy2(ed / f, out / "editor" / f)
     (out / "editor" / "index.html").write_text(stamp((SRC / "web" / "editor" / "index.html").read_text(encoding="utf-8"), "../", "editor"), encoding="utf-8")
+    # the sound packs: the page, and every pack in packs/ made afresh (tools/make_pack.py), listed in index.json
+    (out / "packs").mkdir()
+    for f in ("packs.js", "worklet.js"):
+        shutil.copy2(SRC / "web" / "packs" / f, out / "packs" / f)
+    (out / "packs" / "index.html").write_text(stamp((SRC / "web" / "packs" / "index.html").read_text(encoding="utf-8"), "../", "packs"),
+                                              encoding="utf-8")
+    listed = []
+    for src in sorted((SRC / "packs").glob("*.json")):
+        subprocess.check_call([sys.executable, str(SRC / "tools" / "make_pack.py"), str(src), "-o", str(SRC / "build" / "packs")])
+        listed.append(json.loads((SRC / "build" / "packs" / src.name).read_text(encoding="utf-8")))
+    (out / "packs" / "index.json").write_text(json.dumps(listed), encoding="utf-8")
     # the harp, the bar's style and the fonts, at the root, for every page; Cloudflare's two files with them
     shutil.copytree(SRC / "web" / "brand", out, dirs_exist_ok=True)
     # the visualiser, as it is, but for its switch's SMK-37 if those pages aren't here
@@ -1269,6 +1352,10 @@ def main(pkg, version, out, smk37=None, fx1=None):
     shutil.copytree(SRC / "web" / "screen", out / "screen")
     (out / "screen" / "index.html").write_text(stamp((SRC / "web" / "screen" / "index.html").read_text(encoding="utf-8"), "../", "screen"),
                                                encoding="utf-8")
+    # the support page: M-Flasher and m-bootloader
+    (out / "support").mkdir()
+    (out / "support" / "index.html").write_text(stamp((SRC / "web" / "support" / "index.html").read_text(encoding="utf-8"), "../", "support"),
+                                                encoding="utf-8")
     # the screen reader's words files (fm1-reader): every one ever made, for the devices that point at them
     shutil.copytree(SRC / "web" / "words", out / "words")
     (out / ".nojekyll").write_text("")

@@ -35,7 +35,15 @@ tap GLO
 wait 300
 tap GLO
 wait 600
-turn K3 -2
+turn K3 -1
+wait 200
+expect light 0
+# (packs) a turn more: Auto, as the piece is. The eight are dark
+turn K3 -1
+wait 200
+expect light 2
+expect lit 0
+turn K3 1
 wait 200
 expect light 0
 wait 600

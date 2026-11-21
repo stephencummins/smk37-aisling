@@ -53,7 +53,25 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
                  text-decoration-color: var(--brand-rule); text-underline-offset: 3px; white-space: nowrap; }
 .sitebar-nav a:hover { text-decoration-color: currentColor; color: var(--brand-green); }
 .sitebar-nav a[aria-current] { color: var(--brand-green); text-decoration: none; }
-@media (max-width: 47.99rem) { .sitebar-nav { margin-left: 0; width: 100%; } }
+/* a menu on the bar: a group of the part's pages under one word (site_brand.GROUPS). It opens over the page, so the
+   bar keeps its height; wall.js shuts it on a click elsewhere or Escape */
+.sitebar-group { position: relative; }
+.sitebar-group > summary { display: block; padding: 8px 0; cursor: pointer; white-space: nowrap; list-style: none; user-select: none; -webkit-user-select: none; }
+.sitebar-group > summary::-webkit-details-marker { display: none; }
+.sitebar-group > summary::after { content: ""; display: inline-block; margin-left: 6px; border: 4px solid transparent; border-top-color: currentColor;
+                                  border-bottom-width: 0; vertical-align: middle; opacity: .6; }
+.sitebar-group > summary:hover, .sitebar-group[open] > summary, .sitebar-group.has-now > summary { color: var(--brand-green); }
+.sitebar-group[open] > summary::after { transform: rotate(180deg); }
+.sitebar-menu { position: absolute; top: 100%; left: -13px; z-index: 30; display: flex; flex-direction: column; min-width: 9.5rem; padding: 4px 12px 6px;
+                background: var(--brand-ground); border: 1px solid var(--brand-rule); box-shadow: 3px 3px 0 var(--brand-rule); }
+.sitebar-group:nth-last-child(-n+2) > .sitebar-menu { left: auto; right: -13px; }
+.sitebar-nav .sitebar-menu a { display: block; padding: 7px 0; }
+@media (max-width: 47.99rem) {
+  .sitebar-nav { margin-left: 0; width: 100%; position: relative; }
+  /* a menu hangs from the row's left end, whichever word opened it: no menu runs off a phone's side */
+  .sitebar-group { position: static; }
+  .sitebar-menu, .sitebar-group:nth-last-child(-n+2) > .sitebar-menu { left: 0; right: auto; }
+}
 /* it stays at the top from here up, and a jump to a heading stops clear of it. Its height, --brand-bar, is one row for
    most parts and two for the FM-1's, which has the most pages (three on a narrow screen): wall.js keeps it exact, and
    5rem stands in until it has */

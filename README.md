@@ -22,8 +22,11 @@ held, and its 4 faders set the mix.
 
 It is for the **SMK-37 Elite** only: not the SMK-37 Pro, and not the MKE-P37.
 
-**Status: 1.4.1.** This is AISLING 1.4.1, the FM-1's, on the Elite's controls: 1.4's journey, day and effect
-amounts, 1.4.1's light screen, and 1.3.2's shorter identity that the installers read whole. **1.4.1's package was
+**Status: 1.5, not yet on an Elite.** This is AISLING 1.5, the FM-1's, on the Elite's controls: sound packs and Saints &
+Sinners, Screen's Auto, the Blues scale and the Lead's Slide. **1.5 has not been on an Elite.** It passes the Elite's simulator and the package checks, and the FM-1's build of this tree is the released FM-1 1.5 byte for byte; nothing of 1.5 has been installed, played or saved on an Elite yet, and
+1.5 keeps its sound pack in four more sectors of the stock presets (0xC6000–0xC9FFF), so **take the backup first if this
+Elite has none**. 1.4.1, which was played and checked on one, stays on
+[its release](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.4.1). **1.4.1's package was
 installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. It was then played and checked by hand on that Elite** (1.3.2's was never on one): the hand checks that follow
 were done with 1.3.1. It has run on one Elite, in November 2026: installed over M-VAVE's V016, played, taken off again
 with M-VAVE's own package, installed again, and played for an hour with no dropouts. Every button, knob, key, pad,
@@ -39,12 +42,14 @@ AISLING's web installer hasn't been tried on an Elite yet, so install from a com
    unit's velocity calibration and its stock presets, and nothing else can bring those back.
 2. `python3 tools/fm1_install.py aisling-smk37-elite-1.4.1.fwsc --port "SMK-37 Elite"`, with the package from the
    [release](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.4.1). Its identity is
-   `SMK-37 Elite_353141`; the installers refuse a package made for the other model.
+   `SMK-37 Elite_353141`; the installers refuse a package made for the other model. 1.5's package
+   (`aisling-smk37-elite-1.5.fwsc`, identity `SMK-37 Elite_353150`) is built from this tree
+   (`./build.sh --board smk37 --release 1.5`) and has no release until it has run on an Elite.
 
 **Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again.
 
-**Saved pieces.** AISLING saves over the first of V016's presets (0xC2000–0xC5FFF) and doesn't read V016's presets or
-another firmware's saves. Going back to V016 doesn't put those presets back; the unit's own backup does
+**Saved pieces.** AISLING saves over the first of V016's presets (0xC2000–0xC5FFF; from 1.5 to 0xC9FFF, the further four
+sectors for the sound pack and its pieces) and doesn't read V016's presets or another firmware's saves. Going back to V016 doesn't put those presets back; the unit's own backup does
 (`tools/fm1_rescue.py --write --presets BACKUP.bin`, not yet tried on an Elite). AISLING uses no samples.
 
 > Installing AISLING on your Elite is at your own risk. It has run on one unit.
@@ -94,7 +99,7 @@ remembers and answers) and changes what it plays:
   **Fras** (FRASS, a burst of rain);
 - a green triskele on the launch screen and the main page.
 
-**Status: 1.4.1** (see [the releases](https://github.com/stephencummins/fm1-aisling/releases)).
+**Status: 1.5** (see [the releases](https://github.com/stephencummins/fm1-aisling/releases)).
 It runs on the FM-1, installed from the [web installer](https://aisling.stephen8n.com/install/), and
 in the [browser emulator](https://aisling.stephen8n.com/emu/), from the same code.
 
@@ -125,6 +130,18 @@ tried. The [manual](docs/MANUAL.md#11-midi) has the details.
 AMB-1. It doesn't read what they saved (it starts with its own eight recipes), and its first save, a few seconds
 after you change something, replaces theirs; they ignore AISLING's in the same way and replace it when they save.
 Installing another firmware may lose what AISLING saved. AISLING uses no samples.
+
+## What's new in 1.5
+
+- **Sound packs.** Eight more pieces at a time, kept on the FM-1 beside AISLING's own eight: hear a pack on the Packs page, install it over USB, take it off again. PRESETS turns on past the eighth piece into the pack; program changes 8 to 15 choose its pieces. Each pack's pieces keep your changes, apart from the eight's. A pack is data (`packs/*.json`, built by `tools/make_pack.py`; `firmware/src/app/pack.h` has the format).
+- **Saints & Sinners**, the first pack: chant and the Delta's blues with Ireland between them. Glendalough, Rocky Road (a slip jig), Iona, Crossroads, Vespers, Banshee, The Braes, Juke Joint.
+- **Screen: Auto.** The Journey page's Screen is Auto, Dark or Light. Auto follows the piece: a Saint on white, a Sinner on black.
+- **In the engine:** a Blues scale, a Slide for the Lead, and the Lead's rhythms in threes over a slip jig or a jig.
+- With no pack installed, nothing changes: the eight pieces, their sound and what you saved are 1.4.1's.
+- **On the Elite:** the same, on its controls: PRESETS is K4, Screen is K7 on the Journey page and K8 on Setup, and a pack
+  goes on with `tools/fm1_link.py pack FILE.aispack` ([docs/SMK37.md](docs/SMK37.md#what-15-added-on-the-elite)). The
+  pack and its pieces are saved in four more sectors of the stock presets, 0xC6000–0xC9FFF, after the four AISLING had;
+  the unit's backup restores all eight. The identity is `SMK-37 Elite_353150`. **1.5 has not been on an Elite.** It passes the Elite's simulator and the package checks, and the FM-1's build of this tree is the released FM-1 1.5 byte for byte; nothing of 1.5 has been installed, played or saved on an Elite yet.
 
 ## What's new in 1.4.1
 

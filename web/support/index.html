@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AISLING · support</title>
+<meta name="description" content="Back an FM-1 up, switch it between AISLING, FX-1 and M-VAVE's firmware, and bring one back that won't start, with Julius Vitkauskas's M-Flasher and m-bootloader.">
+<meta property="og:title" content="AISLING · support">
+<meta property="og:description" content="Back an FM-1 up, switch its firmware, and bring one back that won't start: M-Flasher and m-bootloader, step by step.">
+<meta property="og:url" content="https://aisling.stephen8n.com/support/">
+<meta property="og:image" content="https://aisling.stephen8n.com/img/card.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+/* The support page's own: the cover's right half is type, not a picture; a table of what each action writes; the
+   notes that say what was tried here and what was not. The rest is the site's (web/brand/site.css), its mg-* parts */
+.mg-feat p, .mg-in p { margin: 0 0 10px; max-width: 78ch; }
+.mg-feat p b, .mg-feat li b, .mg-in b { font-weight: 400; color: var(--brand-green); }
+.mg-steps li strong { display: block; margin: 0 0 3px; font: 600 18px/1.2 var(--brand-display); letter-spacing: .03em; text-transform: uppercase; }
+.sum { display: grid; align-content: stretch; gap: 1px; background: #3a2f22; border-left: 1px solid #3a2f22; }
+.sum a { align-content: center; }
+.sum a { display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); align-items: baseline; padding: 15px 18px 14px; background: #1c1610;
+         color: #f3ead7; text-decoration: none; font: 600 clamp(19px, 2.2vw, 26px)/1.1 var(--brand-display); letter-spacing: .03em; text-transform: uppercase; }
+.sum a i { font: 400 12px/1 var(--brand-mono); font-style: normal; color: #e9a23b; }
+.sum a small { grid-column: 2; margin-top: 5px; font: 400 12px/1.4 var(--brand-mono); letter-spacing: .02em; text-transform: none; color: #c9b99a; }
+.sum a:hover { background: #2a2118; color: #f3ead7; }
+.tried, .untried { margin: 16px 0 0; padding: 10px 12px; border-left: 3px solid var(--brand-green); background: var(--brand-strip); font-size: 12.5px; max-width: 78ch; }
+.untried { border-left-color: var(--brand-rust); }
+.tried b, .untried b { letter-spacing: .1em; text-transform: uppercase; font-size: 11.5px; }
+.untried b { color: var(--brand-rust) !important; }
+table.acts { width: 100%; max-width: 86ch; border-collapse: collapse; margin: 0 0 6px; font-size: 13px; }
+table.acts th, table.acts td { padding: 8px 10px 7px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--brand-rule); }
+table.acts th { font: 600 15px/1.2 var(--brand-display); letter-spacing: .06em; text-transform: uppercase; border-bottom: 2px solid var(--brand-ink); }
+table.acts td:first-child { white-space: nowrap; color: var(--brand-green); }
+ul.plain { margin: 0 0 10px; padding-left: 1.2em; max-width: 78ch; }
+ul.plain li { margin: 0 0 5px; }
+.mg-steps.six { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 47.99rem) { .mg-steps.six { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+kbd { font: inherit; padding: 0 4px; border: 1px solid var(--brand-rule); background: var(--brand-strip); white-space: nowrap; }
+.credit { font-size: 12.5px; }
+@media (max-width: 59.99rem) { .sum { border-left: 0; border-top: 1px solid #3a2f22; } }
+@media (max-width: 47.99rem) { table.acts td:first-child { white-space: normal; } }
+</style>
+<!--AISLING-HEAD-->
+</head>
+<body>
+<!--AISLING-BAR-->
+<main class="bench">
+<div class="strip">
+<p class="lab"><b>support</b> · back up, switch, rescue</p>
+<p class="lab">tried on one FM-1, from a Mac, with M-Flasher 0.12.1</p>
+</div>
+
+<div class="mg-cover">
+<div class="mg-words">
+<div>
+<h1>Sup<span>port</span></h1>
+<p class="mg-gloss">For an FM-1 running AISLING, FX-1 or anything else.</p>
+</div>
+<p class="mg-deck">Keep a copy of your FM-1, change what it runs, and bring it back if it won't start.</p>
+</div>
+<nav class="sum" aria-label="On this page">
+<a href="#flasher"><i>01</i>M-Flasher<small>the program that does all of it</small></a>
+<a href="#switch"><i>02</i>Back up and switch<small>six steps, the backup first</small></a>
+<a href="#bootloader"><i>03</i>m-bootloader<small>a way back in from the FM-1's own keys</small></a>
+<a href="#rescue"><i>04</i>It won't start<small>what to try, in order</small></a>
+</nav>
+</div>
+
+<section class="mg-feat" id="flasher" aria-labelledby="flasherh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">01</div>
+<div><p class="mg-kick">The tool</p><h2 id="flasherh">What is M-Flasher?</h2></div></div>
+<p class="mg-stand">A free program for Windows, macOS and Linux that reads and writes the FM-1's whole memory over USB, <em>even when the firmware on it does not run</em>.</p>
+<p>It is by <b>Julius Vitkauskas</b>, not by AISLING, and it works with any firmware: M-VAVE's own, AISLING, FX-1 and the rest.
+AISLING's installer in the browser is still the short way to put AISLING on. M-Flasher is for what the installer cannot do:
+a backup of everything, going from one custom firmware to another, and an FM-1 the installer can no longer see.</p>
+<p>Before it writes anything it reads the whole memory, checks that the package is for this model and this unit, saves a backup,
+and shows what would change. After writing, it checks what it wrote.</p>
+<p class="mg-go"><a class="btn go big" href="https://jvitkauskas.github.io/m-apps/flasher/" target="_blank" rel="noopener">Get M-Flasher</a>
+<a class="btn big" href="https://jvitkauskas.github.io/m-apps/flasher/guide/" target="_blank" rel="noopener">Its own guide</a></p>
+<p class="mg-small">Both open Julius Vitkauskas's pages. His guide is the full one, and the one to trust where it and this page differ.</p>
+</section>
+
+<section class="mg-feat" id="switch" aria-labelledby="switchh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">02</div>
+<div><p class="mg-kick">The everyday use</p><h2 id="switchh">Back up, then switch firmware</h2></div></div>
+<p class="mg-stand">Six steps. The backup comes first, <em>every time</em>: it is the only thing that brings back the sounds and saves a firmware kept.</p>
+<ol class="mg-steps six">
+<li><strong>Install it</strong>On a Mac, drag M-Flasher to Applications. It is not signed by Apple, so the first time: <b>System Settings → Privacy &amp; Security → Open Anyway</b>.</li>
+<li><strong>Plug the FM-1 in</strong>Straight into the computer with a USB <b>data</b> cable, not through a hub, and switched on. Close anything else that uses MIDI.</li>
+<li><strong>Download mode</strong>Press <b>DOWNLOAD MODE</b> in M-Flasher. The FM-1's screen stays as it was. A Mac asks for your password, then whether M-Flasher may use a removable volume: <b>Allow</b>.</li>
+<li><strong>Back up</strong><b>BACKUP FULL FLASH</b>. It saves a 1 MiB <code>.bin</code> and a <code>.json</code> beside it in <code>Documents/M-Flasher/backups</code>. Keep both.</li>
+<li><strong>Choose the firmware</strong><b>FLASH FIRMWARE</b>, then the <code>.fwsc</code> package: AISLING's, FX-1's or M-VAVE's, as downloaded. Then <b>REVIEW &amp; FLASH</b>, and read what it says it will change.</li>
+<li><strong>Restart</strong>When it has written and checked, unplug the FM-1, switch it off and on. It starts the new firmware.</li>
+</ol>
+<p class="mg-go"><a class="btn" href="https://github.com/stephencummins/fm1-aisling/releases/latest" target="_blank" rel="noopener">AISLING's package</a>
+<a class="btn" href="https://github.com/stephencummins/fx1-aisling/releases/latest" target="_blank" rel="noopener">FX-1's package</a>
+<a class="btn" href="https://www.m-vave.com/download" target="_blank" rel="noopener">M-VAVE's firmware</a></p>
+<ul class="plain">
+<li><b>If DOWNLOAD MODE finds nothing</b> and the FM-1 runs AISLING: hold <kbd>OCT−</kbd> and <kbd>OCT+</kbd> together for five seconds, until the screen shows UBOOT. With m-bootloader (below), hold <kbd>REC</kbd> while switching on.</li>
+<li><b>On a Mac, start M-Flasher soon after the FM-1 enters download mode.</b> Left alone for about half a minute, the FM-1 may leave it again.</li>
+<li><b>An install writes the firmware and nothing else.</b> Settings and saves stay where they were, and each firmware keeps them in places of its own. To go back to a firmware <em>with</em> what you saved in it, restore the backup made while it was installed (<b>RESTORE FULL FLASH</b>).</li>
+<li><b>A backup holds one FM-1's keys and calibration.</b> Restored onto another FM-1, M-Flasher keeps that unit's own.</li>
+</ul>
+<p class="tried"><b>Tried here</b> · An FM-1 running FX-1 1.1 was sent to download mode by the button, backed up, and given AISLING 1.4.1, from a Mac. It started AISLING. One FM-1, with the older memory chip (M-Flasher shows <code>0x856014 (old)</code>).</p>
+<p class="untried"><b>Not tried here</b> · Windows and Linux; the newer memory chip (<code>0xB36014</code>); restoring a backup; whether AISLING's saves are still there after a spell on FX-1.</p>
+</section>
+
+<section class="mg-feat" id="bootloader" aria-labelledby="bootloaderh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">03</div>
+<div><p class="mg-kick">Once per FM-1</p><h2 id="bootloaderh">Install m-bootloader</h2></div></div>
+<p class="mg-stand">The bootloader is the first small program the FM-1 runs. Julius Vitkauskas's replaces M-VAVE's and adds <em>a way into download mode from the FM-1's own keys</em>.</p>
+<p>With M-VAVE's bootloader, an FM-1 whose firmware does not start can only be reached with extra hardware (a Raspberry Pi Pico made into a USB_KEY dongle).
+With m-bootloader it is two fingers:</p>
+<table class="acts">
+<thead><tr><th scope="col">Held while switching on</th><th scope="col">What happens</th></tr></thead>
+<tbody>
+<tr><td><kbd>REC</kbd></td><td>Download mode, ready for M-Flasher.</td></tr>
+<tr><td><kbd>PLAY</kbd></td><td>A recovery menu: the firmware's state, <b>Boot app</b>, <b>Download mode</b>, <b>Boot anyway</b>, and a MIDI mode that a browser installer can write through.</td></tr>
+<tr><td>nothing</td><td>It checks the firmware, then starts it. Damaged firmware opens the menu instead of being started.</td></tr>
+</tbody>
+</table>
+<ol class="mg-steps">
+<li><strong>Back up first</strong>Steps 1 to 4 above. The backup holds M-VAVE's bootloader too, so it is also the way back.</li>
+<li><strong>Look at Flash chip</strong>Under device info. <code>0x856014 (old)</code>: go on. <code>0xB36014 (new)</code>, in FM-1s sold from late 2026: m-bootloader is little tested there, its author says at your own risk, and M-Flasher warns.</li>
+<li><strong>Flash bootloader</strong>On an FM-1 with M-VAVE's bootloader, M-Flasher offers this by itself once it has read the memory. Otherwise press <b>FLASH BOOTLOADER</b>. It has the build for the FM-1 inside it.</li>
+<li><strong>Review and flash</strong>It writes the first 16 KiB only, and keeps the chip key that firmware installers need. The firmware, settings and sounds are not touched.</li>
+<li><strong>Try the keys</strong>Unplug, switch off, then on holding <kbd>REC</kbd>: M-Flasher should find the FM-1 again. Switch off and on with nothing held, and the firmware starts as before.</li>
+</ol>
+<ul class="plain">
+<li><b>M-VAVE's own updates put M-VAVE's bootloader back.</b> After one, install m-bootloader again.</li>
+<li><b>To take it off:</b> restore the backup, or <b>FLASH BOOTLOADER</b> with an official M-VAVE package chosen as the stock one.</li>
+<li><b>AISLING and FX-1 need neither bootloader in particular.</b> Their installers write the firmware and leave the bootloader as it is.</li>
+</ul>
+<p class="tried"><b>Tried here</b> · AISLING 1.4.1 and FX-1 1.1 both start and play on an FM-1 with m-bootloader 2.4 (<code>2.4-395e6cc</code>, as M-Flasher reads it).</p>
+<p class="untried"><b>Not tried here</b> · The install itself: that FM-1 already had m-bootloader, so the five steps above are from M-Flasher's guide, not from doing it. Nor the two keys, the menu, or MIDI mode with AISLING's installer.</p>
+</section>
+
+<section class="mg-feat" id="rescue" aria-labelledby="rescueh">
+<div class="mg-head"><div class="mg-num" aria-hidden="true">04</div>
+<div><p class="mg-kick">When it goes wrong</p><h2 id="rescueh">The FM-1 won't start</h2></div></div>
+<p class="mg-stand">A dark screen is nearly always the chip waiting in download mode, <em>not a dead FM-1</em>. In order:</p>
+<ol class="mg-steps">
+<li><strong>Off and on</strong>If you sent it to download mode yourself, that is all it needs: the firmware starts again.</li>
+<li><strong>Open M-Flasher</strong>Plug the FM-1 in and switch it on. An FM-1 whose firmware is damaged often goes to download mode by itself, and M-Flasher finds it.</li>
+<li><strong>Hold REC</strong>With m-bootloader: switch on holding <kbd>REC</kbd>. M-Flasher finds it.</li>
+<li><strong>Put it back</strong><b>RESTORE FULL FLASH</b> with your backup, or <b>FLASH FIRMWARE</b> with any package for the FM-1.</li>
+</ol>
+<p>With M-VAVE's bootloader, no backup, and a Mac: AISLING's own rescue script puts M-VAVE's firmware back from the command line.
+It is in the manual, under <a href="../manual/#recovering-an-fm-1-that-wont-start">Recovering an FM-1 that won't start</a>.</p>
+<p>If none of that reaches it, the USB_KEY dongle does: it forces the chip into download mode whatever is on it.
+It is described in <a href="https://github.com/jvitkauskas/m-bootloader" target="_blank" rel="noopener">m-bootloader's own pages</a>.</p>
+</section>
+
+<div class="mg-fold">
+<details>
+<summary>What each button writes <small>and what it leaves alone</small></summary>
+<div class="mg-in">
+<table class="acts">
+<thead><tr><th scope="col">Button</th><th scope="col">What it writes</th></tr></thead>
+<tbody>
+<tr><td>Download mode</td><td>Nothing. It sends the FM-1 one MIDI message, and the FM-1 restarts into the chip's download mode.</td></tr>
+<tr><td>Backup full flash</td><td>Nothing on the FM-1. A copy of its 1 MiB memory on the computer.</td></tr>
+<tr><td>Restore full flash</td><td>The parts that differ from the backup. This unit's factory data is kept. With <b>Keep this unit's bootloader</b>, not the first 16 KiB.</td></tr>
+<tr><td>Flash firmware</td><td>The firmware in the package. The bootloader is kept; nothing outside the package is erased.</td></tr>
+<tr><td>Flash bootloader</td><td>The first 16 KiB only: m-bootloader, or M-VAVE's from an official package.</td></tr>
+</tbody>
+</table>
+<p class="mg-small">From M-Flasher's guide, in its words shortened.</p>
+</div>
+</details>
+<details>
+<summary>The Mac calls my FM-1 something else <small>a name left over from another device</small></summary>
+<div class="mg-in">
+<p>M-Flasher's first line may show another instrument's name beside "running": here, an FM-1 was listed as an SMK-37 Elite.
+macOS remembers a MIDI device's name by its USB number and the socket it was in, and several custom firmwares share a number.
+It does no harm: once the FM-1 is in download mode, M-Flasher reads the model from the memory itself.</p>
+<p>To clear the old name: <b>Audio MIDI Setup → Window → Show MIDI Studio</b>, unplug the FM-1, and delete the greyed-out device.</p>
+</div>
+</details>
+<details>
+<summary>Messages on the FM-1's screen <small>BAD CONFIG, FAILED −5, APP BAD CRC</small></summary>
+<div class="mg-in">
+<p>These are m-bootloader's and M-VAVE's updater's, not AISLING's, and what they mean depends on the versions involved.
+<a href="https://jvitkauskas.github.io/m-apps/flasher/guide/" target="_blank" rel="noopener">M-Flasher's guide</a> and
+<a href="https://github.com/jvitkauskas/m-bootloader#status" target="_blank" rel="noopener">m-bootloader's status notes</a> list them.
+In short: <b>BAD CONFIG</b> is an older m-bootloader, and installing the current one from M-Flasher fixes it;
+<b>APP BAD CRC</b>, <b>APP INCOMPLETE</b> and <b>APP NOT FOUND</b> mean the firmware is damaged or missing, so install it again.</p>
+</div>
+</details>
+<details>
+<summary>Windows says it is a threat <small>Defender and unsigned programs</small></summary>
+<div class="mg-in">
+<p>M-Flasher is not signed, so Windows may say it protected your PC (<b>More info → Run anyway</b>), and Microsoft Defender sometimes
+removes a new release as a guess. Its author reports each one to Microsoft, and his
+<a href="https://jvitkauskas.github.io/m-apps/flasher/guide/" target="_blank" rel="noopener">guide</a> says what to do meanwhile.
+Download it only from his page or his releases on GitHub.</p>
+</div>
+</details>
+</div>
+
+<section class="pane">
+<p class="credit">M-Flasher and m-bootloader are by Julius Vitkauskas:
+<a href="https://github.com/jvitkauskas/m-flasher" target="_blank" rel="noopener">github.com/jvitkauskas/m-flasher</a>,
+<a href="https://github.com/jvitkauskas/m-bootloader" target="_blank" rel="noopener">github.com/jvitkauskas/m-bootloader</a>.
+Questions about them go to him there. This page is AISLING's account of using them, and is not his.<br>
+Changing an FM-1's firmware or bootloader is at your own risk. M-VAVE and FM-1 are trademarks of their respective owners.</p>
+</section>
+</main>
+</body>
+</html>

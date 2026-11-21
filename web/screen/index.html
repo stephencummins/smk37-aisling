@@ -27,7 +27,7 @@
 .cover .gloss { margin: 10px 0 0; font-size: 12px; letter-spacing: .04em; color: #c9b99a; }
 .cover .deck { margin: 0; font: 600 clamp(19px, 2.1vw, 25px)/1.2 var(--brand-display); letter-spacing: .01em; max-width: 22ch; }
 .cover video { display: block; width: 100%; height: 100%; object-fit: cover; aspect-ratio: 16 / 9; }
-.jump { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.jump { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .jump a { display: flex; align-items: baseline; gap: 12px; padding: 12px 16px 11px; text-decoration: none;
           font: 600 clamp(17px, 2vw, 22px)/1.1 var(--brand-display); letter-spacing: .04em; text-transform: uppercase; }
 .jump a + a { border-left: 1px solid var(--brand-rule); }
@@ -129,6 +129,15 @@ ul.how li { margin: 0 0 8px; } ul.how li::marker { color: var(--brand-green); }
 .faq div > p { font-size: 13.5px; }
 p.small { color: var(--brand-muted); font-size: 12.5px; }
 p.small code { overflow-wrap: anywhere; }
+/* 05: how the tray was designed: the story in a column beside Studio's picture, one line of the script, the checks */
+.made { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 26px; align-items: start; margin: 0 0 22px; }
+.made p { margin: 0 0 10px; font-size: 13px; }
+.made .sub { margin-top: 18px; } .made > div > .sub:first-child { margin-top: 0; }
+pre.line { margin: 0 0 10px; padding: 10px 12px; overflow-x: auto; border: 1px solid var(--brand-rule); background: var(--brand-strip); font: 400 12.5px/1.6 var(--brand-mono); }
+.checks { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--brand-rule); border: 1px solid var(--brand-rule); }
+.checks li { padding: 10px 12px 11px; background: var(--brand-ground); font-size: 12.5px; }
+.checks li b { display: block; margin: 0 0 3px; font: 600 16px/1.2 var(--brand-display); letter-spacing: .04em; text-transform: uppercase; color: var(--brand-ink); }
+@media (max-width: 59.99rem) { .made { grid-template-columns: minmax(0, 1fr); } .checks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 59.99rem) {
   .cover, .fwgrid, .buy { grid-template-columns: minmax(0, 1fr); }
   .films { grid-template-columns: repeat(2, minmax(0, 1fr)); } .films .film:first-child { grid-column: 1 / -1; }
@@ -137,7 +146,7 @@ p.small code { overflow-wrap: anywhere; }
 }
 @media (max-width: 47.99rem) {
   .jump { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .jump a:nth-child(3) { border-left: 0; }
+  .jump a:nth-child(odd) { border-left: 0; }
   .jump a:nth-child(n+3) { border-top: 1px solid var(--brand-rule); }
   .feat { padding: 20px 16px 22px; } .fold summary { padding-left: 16px; padding-right: 16px; } .fold .in { padding: 2px 16px 18px; }
   .feat-head { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
@@ -181,7 +190,7 @@ p.small code { overflow-wrap: anywhere; }
 </div>
 
 <nav class="jump" aria-label="On this page">
-<a href="#see"><i>01</i>See it</a><a href="#others"><i>02</i>Other firmware</a><a href="#get"><i>03</i>Get one</a><a href="#tray"><i>04</i>Lego tray</a>
+<a href="#see"><i>01</i>See it</a><a href="#others"><i>02</i>Other firmware</a><a href="#get"><i>03</i>Get one</a><a href="#tray"><i>04</i>Lego tray</a><a href="#design"><i>05</i>Its design</a>
 </nav>
 
 <section class="feat" id="see" aria-labelledby="seeh">
@@ -313,6 +322,54 @@ p.small code { overflow-wrap: anywhere; }
 <li>Wanted's Buy tab then looks for shops that hold the parts between them. You pay those shops, and postage to each.</li>
 </ol>
 <p class="small" style="margin-top:12px">LEGO is a trademark of the LEGO Group, which does not sponsor or endorse this.</p>
+</section>
+
+<section class="feat" id="design" aria-labelledby="designh">
+<div class="feat-head"><div class="num d" aria-hidden="true">05</div>
+<div><p class="kick">How the tray was designed</p><h2 id="designh">Written as code, opened in Studio</h2></div></div>
+<p class="stand">Nobody dragged these bricks into place. The tray is a short Python script that puts 50 parts on a grid and <em>says so if one of them floats</em>.</p>
+<div class="made">
+<div>
+<h3 class="sub">1. Sizes from photos</h3>
+<p>There was no ruler to hand, so the box was photographed side on and measured against its own header pins, which are 2.54 mm apart. Measured that way the small board came out at 65.2 mm against its real 65.0, and two photos agreed to about half a millimetre.</p>
+<p>The first design guessed 14 mm under the screen's board and 7 mm above it. The photos said about 19.5 mm and 4.6 mm, so the second design, the one here, has pillars one plate taller.</p>
+<h3 class="sub">2. A grid, and one line a part</h3>
+<p>Lego is already a grid. The tray is 13 studs across and 10 deep, and heights are counted in plates of 3.2 mm, with a brick three plates high. Each part is one line: the step it is built in, its number, the column and row of its corner, its level, its colour.</p>
+<pre class="line">put(2, "3008", 0, 2, 1, 72, "z")   # step 2, a Brick 1 x 8, dark grey</pre>
+<p>The whole tray is 41 such lines, some of them in loops.</p>
+<h3 class="sub">3. Out come the files</h3>
+<p>The script writes the LDraw file with its seven steps, the BrickLink wanted list and the parts table on this page, then runs its checks and ends "checks: all passed" or lists what failed. It also writes the scenes for the drawings above, which were drawn with OpenSCAD from the same list of parts: they are not Studio's pictures.</p>
+<h3 class="sub">4. Into Studio</h3>
+<p>BrickLink's Studio imports the LDraw file (File, Import, Import LDraw File). Studio 2.26 knew all 14 kinds of part, gave no list of errors, and showed the seven steps. Studio was used to look at the model, turn it and step through it. Nothing was built or moved in it, and its collision and stability checks have not been run.</p>
+</div>
+<div>
+<figure><img src="img/lego/studio.webp" width="1400" height="1104" loading="lazy" alt="Studio's window with the tray in it, seen from above and behind: a black rim of plates on dark grey walls, the light grey floor inside, three orange pillars and the orange stop, the cable gap open at the near side"><figcaption>The same file open in Studio 2.26: the black rim, the three pillars and the stop in orange, the cable gap nearest.</figcaption></figure>
+<h3 class="sub" style="margin-top:22px">5. Then real bricks</h3>
+<p>The prototype of 15 November sent two things back. Its foot stopped a stud short of the left edge, so a tall Brick 1 × 2 × 2 went in there, and into the script. And in the tray a brick covered the right end of the strip along the bottom of the screen; that was put right in the screen's program, in a later build than the ones on this page, not in the bricks.</p>
+<figure><img src="img/lego/prototype-front.webp" width="1200" height="1224" loading="lazy" alt="The screen sitting in a tray of mixed white, grey, tan, yellow and black Lego, showing the effects page, with a wrapped lollipop resting on the top edge; the strip of tune names along the bottom ends just clear of the bricks on the right"><figcaption>The tray in real bricks, 16 November, in whatever colours were to hand. The strip along the bottom now ends just clear of the bricks on the right. The lollipop is for pressing the touch screen: its round top makes it easy to hold.</figcaption></figure>
+</div>
+</div>
+<h3 class="sub">What the script checks</h3>
+<ul class="checks">
+<li><b>Nothing overlaps</b>No two parts in the same cell, and none off the 13 × 10 grid.</li>
+<li><b>Everything is held</b>Every part is joined by studs, through the others, to the floor. Nothing sits on a tile.</li>
+<li><b>It can be built</b>In the steps' order, each part has something already there to press on to.</li>
+<li><b>The floor is one piece</b>No holes, and both seams between its plates are crossed above and below.</li>
+<li><b>The pocket is clear</b>11 × 7 studs with only the three pillars and the stop in it.</li>
+<li><b>The cables get out</b>A gap in the back wall, clear for both courses of bricks, high enough for a USB-C plug.</li>
+<li><b>The wall is level</b>Every cell of the border reaches the same height, but for the gap.</li>
+<li><b>The boards fit</b>With the measured sizes: pin tips 1.2 mm clear of the floor's studs, glass 1.3 mm over the wall's.</li>
+</ul>
+<p class="small">What it does not know: how hard real bricks grip, or whether the tilt is steady under a pressing finger. One built tray says yes to both.</p>
+<h3 class="sub" style="margin-top:22px" id="tray-change">Take it and change it</h3>
+<p class="vids" style="margin-bottom:14px"><a class="btn go big" href="voxbox_lego.py" download>The script</a><a class="btn big" href="voxbox-lego-tray.ldr" download>The model</a><a class="btn big" href="voxbox-lego-tray.io" download>The Studio file</a><a class="btn big" href="voxbox_lego_render.sh" download>The drawings' script</a></p>
+<ol class="plain">
+<li>The script needs Python 3 and nothing else. <code>python3 voxbox_lego.py out</code> writes the model, the wanted list and the parts table into a folder <code>out</code>, and ends "checks: all passed".</li>
+<li>For another board, change the sizes at <code>SIZES</code> and the pillars' height and places. For another shape, change the <code>put</code> lines.</li>
+<li>Run it again. If a brick floats, overlaps or leaves the boards no room, it ends "FAILED" and says which part and where. The files are written all the same, so do not build from them until it passes.</li>
+<li>Import the new <code>.ldr</code> into Studio to see it, and to send its parts to a wanted list.</li>
+</ol>
+<p class="small" style="margin-top:12px">voxbox-lego-tray.io, 161,692 bytes, is the same 50 parts saved from Studio 2.26, for opening there without an import. voxbox_lego.py, 17,353 bytes; voxbox_lego_render.sh, 1,915 bytes, which also needs OpenSCAD, Pillow and numpy and is only for the drawings. Both are under the GPL, version 3, like the rest of AISLING. Run as it is here, the script writes the very model on this page, byte for byte.</p>
 </section>
 
 <section class="fold" aria-label="The small print">

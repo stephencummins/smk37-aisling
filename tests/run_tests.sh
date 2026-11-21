@@ -104,6 +104,7 @@ if command -v emcc >/dev/null 2>&1; then
     run emu sh -c "sh web/emu/build.sh >/dev/null && node tests/host/emu_test.mjs build/emu/amb.wasm"
     run app sh -c "sh web/app/build.sh >/dev/null && node tests/host/app_test.mjs build/app/amb.wasm"
 fi
+run pack python3 tools/make_pack.py packs/saints-sinners.json   # (scenario pack installs it)
 for s in tests/scenarios/*.amb; do
     n=$(basename "$s" .amb)
     mkdir -p "build/scenarios/$n"

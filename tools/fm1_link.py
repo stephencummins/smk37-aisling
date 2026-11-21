@@ -38,14 +38,14 @@ SR = (0x7D, 0x53, 0x52)
 PORT_RE = re.compile(r"FM-1|DUB-1", re.I)     # by name: nothing goes to any other device
 
 HELLO, BYE, BEAT, SET, VIEW, PIECE, PLAY, HOLD, PERF, FORGET, KEYS, BUTTONS = range(1, 13)
-UNDO, REDO, SAVE, VOICE, COPY, SWAP, RESET, OPEN, READ, BEGIN, WRITE, COMMIT = range(13, 25)
+UNDO, REDO, SAVE, VOICE, COPY, SWAP, RESET, OPEN, READ, BEGIN, WRITE, COMMIT, BANK = range(13, 26)
 R_HELLO, R_ACK, R_STATE, R_VALS, R_CHUNK = 65, 66, 67, 68, 69
 ST_OK, ST_BAD, ST_REFUSED, ST_SUM, ST_BUSY, ST_NONE = range(6)
 ST_NAME = ["ok", "bad", "refused", "sum", "busy", "none"]
 GAVE_UP = -1
 SAY = 16
 
-A_PROJ, A_SLOT, A_FLASH = 0, 1, 9             # area 1 + piece: a piece
+A_PROJ, A_SLOT, A_FLASH, A_PACK = 0, 1, 9, 10  # area 1 + piece: a piece; (packs) 10: the sound pack installed
 VER, CHUNK = 1, 128
 RESEND, TRIES = 0.2, 25
 NPIECES, NPARS, PROJ_FORMAT, PROJ_LEN, SLOT_LEN = 8, 133, 3, 3112, 352
@@ -107,8 +107,14 @@ def unpack(s):
 
 def parse_hello(a):
     n = a[9]
-    return dict(ver=a[0], format=a[1], proj=get14u(a, 2), slot=get14u(a, 4), npars=get14u(a, 6), npieces=a[8],
-                version=bytes(a[10:10 + n]).decode("ascii", "replace"))
+    h = dict(ver=a[0], format=a[1], proj=get14u(a, 2), slot=get14u(a, 4), npars=get14u(a, 6), npieces=a[8],
+             version=bytes(a[10:10 + n]).decode("ascii", "replace"), level=1, bank=0, pack=None)
+    at = 10 + n                                # (packs) after the version: level, bank, the pack's version and name
+    if len(a) >= at + 5:
+        h["level"], h["bank"] = a[at], a[at + 1]
+        if a[at + 4]:
+            h["pack"] = "%s v%d" % (bytes(a[at + 5:at + 5 + a[at + 4]]).decode("ascii", "replace"), get14u(a, at + 2))
+    return h
 
 
 def parse_state(a):
@@ -754,6 +760,9 @@ def main():
     sub.add_parser("state")
     sub.add_parser("play")
     sub.add_parser("stop")
+    s = sub.add_parser("pack", help="(packs) the sound pack: what is on the FM-1, or install FILE.aispack, remove, or bank 0|1")
+    s.add_argument("do", nargs="?", default="show", help="show, a .aispack file to install, remove, or bank")
+    s.add_argument("n", nargs="?", type=int, default=1, help="with bank: 0 the eight, 1 the pack's")
     for name in ("backup", "verify", "restore", "test"):
         s = sub.add_parser(name)
         s.add_argument("dir")
@@ -782,6 +791,22 @@ def main():
         elif a.what in ("play", "stop"):
             code = 0 if lk.set_playing(a.what == "play") else 1
             print(show_state(lk.state))
+        elif a.what == "pack":                 # (the FM-1 takes or drops a pack only at rest: it is stopped first)
+            if a.do == "bank":
+                st, _ = lk.req(BANK, [1 if a.n else 0])
+            elif a.do != "show":
+                data = b"" if a.do == "remove" else open(a.do, "rb").read()
+                if lk.state and lk.state["playing"]:
+                    lk.set_playing(False)
+                st = lk.write_area(A_PACK, data, rest_wait=30)
+            else:
+                st = ST_OK
+            print("level %d, bank %d, pack: %s  (%s)" % (lk.hello["level"], lk.hello["bank"], lk.hello["pack"] or "none",
+                                                          ST_NAME[st] if 0 <= st < 6 else "gave up"))
+            if a.do != "show" and st == ST_OK:
+                got = lk.read_area(A_PACK)
+                print("now on it: %s" % ("%d bytes, %s" % (len(got), bytes(got[12:32]).split(b"\0")[0].decode()) if got else "no pack"))
+            code = 0 if st == ST_OK else 1
         elif a.what == "backup":
             code = cmd_backup(a, lk)
         elif a.what == "verify":

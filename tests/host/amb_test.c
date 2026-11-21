@@ -2000,15 +2000,16 @@ int main(void)
         }
         {                                        /* (AISLING, step 4) Chanter, Fiddle and Voice appended to the Lead's:
                                                   * the Flute, Theremin and Synthi keep their numbers */
-            static const char *const L[4] = {"Synthi", "Chanter", "Fiddle", "Voice"};
+            static const char *const L[5] = {"Synthi", "Chanter", "Fiddle", "Voice", "Slide"};   /* (Saints &
+                                                  * Sinners: the Slide after them) */
             int i;
-            for (i = 0; i < 4; i++) {
+            for (i = 0; i < 5; i++) {
                 en_param_text(P_LVOICE, 4 + i, t);
                 CHECK(!strcmp(t, L[i]), "test_voices_listed: lead voice %d %s (%s)", 4 + i, t, L[i]);
             }
             en_param_text(P_LVOICE, 2, t);
-            CHECK(!strcmp(t, "Flute") && en_param_info(P_LVOICE)->hi == 7,
-                  "test_voices_listed: lead voice 2 %s (Flute, kept), hi %d (7)", t, en_param_info(P_LVOICE)->hi);
+            CHECK(!strcmp(t, "Flute") && en_param_info(P_LVOICE)->hi == 8,
+                  "test_voices_listed: lead voice 2 %s (Flute, kept), hi %d (8)", t, en_param_info(P_LVOICE)->hi);
         }
         en_param_text(P_CATT, 40, t);
         CHECK(!strcmp(t, "40"), "attack 40, unsigned: %s", t);
@@ -3286,12 +3287,12 @@ int main(void)
         static float x[2 * 44100];
         static const int OCT[7] = {-1, -1, 0, 0, 1, 1, 1}, DEG[7] = {0, 4, 0, 4, 0, 4, 7};
         static const int PC[5] = {1, 2, 4, 5, 6}, PV[5] = {6, 5, 7, 7, 6};
-        static const char *const VN[8] = {"", "", "Flute", "", "", "Chanter", "Fiddle", "Voice"};
+        static const char *const VN[9] = {"", "", "Flute", "", "", "Chanter", "Fiddle", "Voice", "Slide"};
         static const char *const PN[5] = {"Burren", "Aran", "Blasket", "Samhain", "Connemara"};
-        double lv[7][4], a[2];
+        double lv[7][5], a[2];
         int k, v, w, n, nt[7];
         for (k = 0; k < 7; k++)
-            for (w = 0; w < 4; w++)
+            for (w = 0; w < 5; w++)              /* (Saints & Sinners: the Slide, the fifth) */
                 for (v = !w; v < 2; v++) {      /* (v 0, the pitch: the new voices'; 1, the level: the Flute's too) */
                     const int vv = w ? 4 + w : 2;
                     float f, p, c;
@@ -3327,9 +3328,9 @@ int main(void)
                     en_lead_key(DEG[k], 0);
                 }
         for (k = 0; k < 6; k++) {
-            printf("  lead: note %d held: Flute %.1f dB(A), Chanter %+.1f, Fiddle %+.1f, Voice %+.1f\n", nt[k], lv[k][0], lv[k][1] - lv[k][0], lv[k][2] - lv[k][0],
-                   lv[k][3] - lv[k][0]);
-            for (w = 1; w < 4; w++)
+            printf("  lead: note %d held: Flute %.1f dB(A), Chanter %+.1f, Fiddle %+.1f, Voice %+.1f, Slide %+.1f\n", nt[k], lv[k][0], lv[k][1] - lv[k][0], lv[k][2] - lv[k][0],
+                   lv[k][3] - lv[k][0], lv[k][4] - lv[k][0]);
+            for (w = 1; w < 5; w++)
                 CHECK(fabs(lv[k][w] - lv[k][0]) < 2.0, "test_lead_voices_level: note %d %s %.1f dB(A), the Flute %.1f",
                       nt[k], VN[4 + w], lv[k][w], lv[k][0]);
         }

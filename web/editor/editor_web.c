@@ -117,6 +117,15 @@ ED void ed_rest(void)                            /* (the page opened by touching
     sp_tp.play_t = plat_ms();
 }
 ED void ed_piece_go(int i) { set_piece(i); }
+/* (packs) the Packs page's preview boots this with a pack in its store (OBJ_PACK) and plays its pieces */
+ED int ed_level(void) { return EN_LEVEL; }
+ED int ed_obj_pack(void) { return OBJ_PACK; }
+ED int ed_pack(void) { return pack_have(); }
+ED const char *ed_pack_name(void) { return pack_title(); }
+ED int ed_bank(void) { return bank; }
+ED void ed_bank_go(int b) { set_piece_bank(b, proj.piece); }
+ED void ed_pack_piece(int i) { set_piece_bank(1, i); }
+ED int ed_piece_light(int i) { return piece_light(i); }
 ED void ed_save(void) { do_save(); }
 ED void ed_voice(int p, int v) { link_voice(p, v); }
 
@@ -141,10 +150,12 @@ static uint8_t recipes_ok;
 static void recipes_take(void)
 {
     int i;
+    if (recipes_ok != bank + 1u)                 /* (packs: the bank's that plays) */
+        recipes_ok = 0;
     if (!recipes_ok)
         for (i = 0; i < NPIECES; i++)
             recipe(i, &recipes[i]);
-    recipes_ok = 1;
+    recipes_ok = (uint8_t)(bank + 1u);
 }
 ED int ed_recipe(int i, int p)                   /* a parameter in a piece's recipe: what double-click goes back to */
 {

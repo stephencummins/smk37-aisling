@@ -34,9 +34,12 @@ typedef struct {
                                          * start, as before; 1..4 every 4, 8, 16, 32 bars. Global, as Tune (the
                                          * byte was spare: a save from 1.1 reads 0) */
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
-    uint8_t light;                       /* (1.4.1) the screen: 0 dark (on black, as it was), 1 light (on white).
+    uint8_t light;                       /* (1.4.1) the screen: 0 dark (on black, as it was), 1 light (on white);
+                                         * (packs) 2 as the piece is: a Saint light, a Sinner and the eight dark.
                                          * Global. (The byte was spare: a save from before reads 0) */
-    uint8_t rsv[15];                     /* room to grow */
+    uint8_t bank;                        /* (packs) the bank playing as this was saved: 0 the eight, 1 the pack's.
+                                         * Read from the eight's project only (OBJ_PROJ), at boot. (Spare before) */
+    uint8_t rsv[14];                     /* room to grow */
 } project_t;
 
 extern project_t proj;
@@ -46,6 +49,19 @@ int project_load(void);                  /* 0 = loaded; else defaults are in pla
 int project_save(void);                  /* 0 = saved and verified */
 void project_apply(void);                /* every value to the engine (boot, load) */
 const char *piece_name(int i);
+/* (packs) the bank playing: 0 the eight, 1 the installed pack's (firmware/src/app/pack.h). Each has its project
+ * (OBJ_PROJ, OBJ_PROJ_B); proj is the one playing, the other kept beside it and saved with it. */
+extern uint8_t bank;
+int pack_have(void);                     /* a pack is installed */
+const char *pack_title(void);            /* its name ("": none) */
+const uint8_t *pack_bytes(int *len);     /* as installed (len 0: none) */
+int pack_install(const uint8_t *b, int len);   /* 0 kept (len 0: the pack removed), else pk_check's refusal; the
+                                                * pack's bank is its recipes again, the eight play. Then project_save */
+int project_bank(int b);                 /* 1: the other bank taken up as it was left (then project_apply) */
+int piece_light(int i);                  /* piece i of the bank playing a Saint: the white screen */
+int screen_light(void);                  /* the screen now: proj.light, or (2) as the piece playing is */
+void piece_recipe(int i, int16_t *par, uint16_t *pool);   /* piece i's recipe, of the bank playing */
+uint32_t proj_obj(void);                 /* the playing bank's storage object */
 void project_piece(int i);               /* the playing piece kept, piece i taken up as it was left */
 void project_piece_reset(void);          /* the playing piece back to its recipe */
 
