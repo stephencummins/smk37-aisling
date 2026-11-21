@@ -37,9 +37,9 @@ on an SMK-37 Pro), its backup must hold the
 velocity calibration's "trimdat" at 0xC1224 (and an FM-1's must not), and only [0x4000, 0x9D000) is
 written: never the head, the calibration (0xC0000-0xC1FFF) or the resources and key above 0xF4000.
 
-The Elite's presets: AISLING keeps its saved pieces in four sectors of the stock presets (0xC2000-0xC5FFF),
-and stock's app alone does not bring those back. --presets BACKUP.bin, with --write, also puts those four
-sectors back from a backup this script saved before AISLING was installed. The backup must be this unit's
+The Elite's presets: AISLING keeps its saved pieces, and from 1.5 its sound pack, in eight sectors of the stock presets
+(0xC2000-0xC9FFF; four, to 0xC5FFF, before 1.5), and stock's app alone does not bring those back. --presets
+BACKUP.bin, with --write, also puts those eight sectors back from a backup this script saved before AISLING was installed. The backup must be this unit's
 own: its head and its velocity calibration (0xC1000-0xC1FFF, different on every unit) must equal the flash's.
 
 Two devices: in update mode an FM-1 and an SMK-37 are the same USB device. With more than one present the
@@ -83,7 +83,7 @@ BOARDS = {
     # own: what every unit has for itself, by which a backup is known to be this unit's
     "smk37": dict(label="SMK-37 Elite", flash_ids=(0x856014, 0xEB6014),
                   never=((0, WRITE_MIN), (0xC0000, 0xC2000), (0xF4000, FLASH_SIZE)), trim=True,
-                  store=(0xC2000, 0xC6000), own=(0xC1000, 0xC2000)),
+                  store=(0xC2000, 0xCA000), own=(0xC1000, 0xC2000)),
 }
 
 # ROM UBOOT1.00
@@ -538,7 +538,7 @@ def main():
     ap.add_argument("--write", action="store_true", help="write stock (without it: check and back up only)")
     ap.add_argument("--ask", action="store_true", help="after the check and the backup, ask before writing")
     ap.add_argument("--presets", metavar="BACKUP.bin",
-                    help="SMK-37 Elite: also put the stock presets (0xC2000-0xC5FFF, where AISLING keeps its "
+                    help="SMK-37 Elite: also put the stock presets (0xC2000-0xC9FFF, where AISLING keeps its "
                          "saved pieces) back from this unit's own earlier backup")
     ap.add_argument("--loader", help="a local wl82loader.bin instead of downloading it")
     ap.add_argument("--wait", type=float, default=120, help="seconds to wait for the device (default 120)")

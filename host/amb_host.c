@@ -193,7 +193,7 @@ void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 
 /* flash: one buffer per object, kept across a simulated reboot */
 static uint8_t store[OBJ_NOBJ][PLAT_STORE_MAX];
-static int store_len[OBJ_NOBJ] = {-1, -1};
+static int store_len[OBJ_NOBJ] = {-1, -1, -1, -1};
 static uint32_t store_writes;
 int plat_store_load(uint32_t obj, void *dst, uint32_t max)
 {
@@ -661,7 +661,7 @@ static int expect(const char *what, const char *val)
         got = ui.view;
     else if (!strcmp(what, "light"))              /* (1.4.1) the screen: 0 dark, 1 light; 10 more when the colours in
                                                    * use aren't the ones it asks for */
-        got = proj.light + (kpal != KPAL[proj.light != 0] ? 10 : 0);
+        got = proj.light + (kpal != KPAL[screen_light()] ? 10 : 0);
     else if (!strcmp(what, "master"))             /* the level the engine gets (Q12, plat_master) */
         got = (int)plat_master();
     else if (!strcmp(what, "masterraw"))          /* MASTER's knob position, 0..1023 (plat_master_raw) */
@@ -670,6 +670,14 @@ static int expect(const char *what, const char *val)
         got = batt_bars();
     else if (!strcmp(what, "battpct"))
         got = batt_pct();
+    else if (!strcmp(what, "lit"))                /* (packs) the screen as it is now: 1 white */
+        got = screen_light();
+    else if (!strcmp(what, "bank"))               /* (packs) 0 the eight, 1 the pack's */
+        got = bank;
+    else if (!strcmp(what, "pack"))               /* a pack installed */
+        got = pack_have();
+    else if (!strcmp(what, "pname"))              /* the piece playing: its name's first letter */
+        got = piece_name(proj.piece)[0];
     else if (!strcmp(what, "piece"))
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
@@ -1097,7 +1105,7 @@ static int link_command(const char *name, const char *line)
         {"perf", LK_PERF, "11"}, {"forget", LK_FORGET, ""}, {"keys", LK_KEYS, "4"}, {"buttons", LK_BUTTONS, "2"},
         {"undo", LK_UNDO, ""}, {"redo", LK_REDO, ""}, {"save", LK_SAVE, ""}, {"voice", LK_VOICE, "22"}, {"copy", LK_COPY, "11"},
         {"swap", LK_SWAP, "11"}, {"reset", LK_RESET, "1"}, {"open", LK_OPEN, "1"}, {"read", LK_READ, "2"}, {"begin", LK_BEGIN, "1"},
-        {"write", LK_WRITE, "2"}, {"commit", LK_COMMIT, "3"}, {"nonsense", 60, ""},
+        {"write", LK_WRITE, "2"}, {"commit", LK_COMMIT, "3"}, {"bank", LK_BANK, "1"}, {"nonsense", 60, ""},
     };
     uint32_t i, n = 0;
     if (!strcmp(name, "again"))
@@ -1387,6 +1395,15 @@ int main(int argc, char **argv)
         } else if (!strcmp(cmd, "linkkeep")) {     /* the last read, kept: what `linkwrite` sends, `lsame` compares */
             memcpy(lc.wr, lc.rd, sizeof lc.wr);
             lc.wr_len = lc.rd_len;
+        } else if (!strcmp(cmd, "linkfile")) {     /* (packs) a file as what's kept (`linkfile none`: nothing) */
+            FILE *f = strcmp(a, "none") ? fopen(a, "rb") : 0;
+            lc.wr_len = f ? (uint32_t)fread(lc.wr, 1, sizeof lc.wr, f) : 0u;
+            if (f)
+                fclose(f);
+            else if (strcmp(a, "none")) {
+                printf("line %d: no file %s\n", lineno, a);
+                return 2;
+            }
         } else if (!strcmp(cmd, "linkpoke")) {     /* a byte of what's kept: to test the checks */
             int at = 0, v = 0;
             sscanf(line, "%*s %d %d", &at, &v);

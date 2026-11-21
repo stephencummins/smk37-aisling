@@ -19,12 +19,13 @@ const char *const EN_NOTE_NAME[12] = {"C", "C#", "D", "Eb", "E", "F", "F#", "G",
  * neighbouring modes disagree on, as so many airs do: Hex maj no seventh (Ionian or Mixolydian), Hex min no sixth
  * (Dorian or Aeolian)) */
 const char *const EN_MODE_NAME[EN_NMODES] = {"Major", "Dorian", "Phrygian", "Lydian", "Mixolyd.", "Minor",
-                                             "Pent maj", "Pent min", "Hex maj", "Hex min"};
+                                             "Pent maj", "Pent min", "Hex maj", "Hex min", "Blues"};   /* (Saints & Sinners: the
+                                                  * minor pentatonic and its flat fifth, the blue note) */
 #define B(a, b, c, d, e, f, g) (1u << (a) | 1u << (b) | 1u << (c) | 1u << (d) | 1u << (e) | 1u << (f) | 1u << (g))
 const uint16_t EN_MODE_POOL[EN_NMODES] = {
     B(0, 2, 4, 5, 7, 9, 11), B(0, 2, 3, 5, 7, 9, 10), B(0, 1, 3, 5, 7, 8, 10), B(0, 2, 4, 6, 7, 9, 11),
     B(0, 2, 4, 5, 7, 9, 10), B(0, 2, 3, 5, 7, 8, 10), B(0, 2, 4, 7, 9, 9, 9),  B(0, 3, 5, 7, 10, 10, 10),
-    B(0, 2, 4, 5, 7, 9, 9),  B(0, 2, 3, 5, 7, 10, 10)};
+    B(0, 2, 4, 5, 7, 9, 9),  B(0, 2, 3, 5, 7, 10, 10), B(0, 3, 5, 6, 7, 10, 10)};
 #undef B
 const uint8_t EN_LOOP_LEN[EN_NLOOP] = {13, 17, 23, 29};
 const uint8_t EN_DRUM_N[EN_NDRUM] = {16, 16, 16, 16, 16};
@@ -71,7 +72,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Noise width", 0, 100, 50}, {"Noise plate", 0, 100, 50}, {"Noise echo", 0, 100, 50}, {"Atmos width", 0, 100, 20},
     {"Noise LFO", 0, 100, 0}, {"Arc", 0, 100, 0},
     {"Atmos rate", 0, 100, 30}, {"Atmos intro", 0, 64, 0}, {"Bridge", 0, 100, 40}, {"Memory", 0, 100, 50},
-    {"Ornament", 0, 100, 30}, {"Lead air", 0, EN_NAIRS, 0},
+    {"Ornament", 0, 100, 30}, {"Lead air", 0, EN_NAIRS + 1, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -232,12 +233,28 @@ void en_piece(int i, int16_t *par, uint16_t *pool)
         par[s[0]] = s[1];
     *pool = EN_MODE_POOL[par[P_MODE]];
 }
+/* (packs) a recipe that is data, not this file's: n pairs of three bytes (the parameter, its value's low and high
+ * byte) over the defaults, as en_piece's; a parameter this engine has not is passed over, a value out of range
+ * clamped (a pack is checked before it is kept, pack.h; this trusts nothing all the same) */
+void en_recipe_apply(const uint8_t *pairs, int n, int16_t *par, uint16_t *pool)
+{
+    int p, k;
+    for (p = 0; p < P_NPARAMS; p++)
+        par[p] = PARAMS[p].def;
+    for (k = 0; k < n; k++, pairs += 3) {
+        const int v = (int16_t)(uint16_t)(pairs[1] | pairs[2] << 8);
+        p = pairs[0];
+        if (p < P_NPARAMS)
+            par[p] = (int16_t)(v < PARAMS[p].lo ? PARAMS[p].lo : v > PARAMS[p].hi ? PARAMS[p].hi : v);
+    }
+    *pool = EN_MODE_POOL[par[P_MODE]];
+}
 
 const char *const EN_CV_NAME[EN_NCV] = {"Organ", "Strings", "Pipes", "Harmonium", "Glass", "Choir"};   /* (BERLIN: the
                                                  * Drone's; the voices batch: Horn was Choir, its place kept; the formant
                                                  * Choir appended; AISLING: Pipes in Horn's place, Harmonium in Saws') */
 const char *const EN_BV_NAME[EN_NBV] = {"Odyssey", "Mini", "Flute", "Theremin", "Synthi", "Chanter", "Fiddle",
-                                        "Voice"};   /* (BERLIN: the Lead's; AISLING's appended, so the saves and
+                                        "Voice", "Slide"};   /* (BERLIN: the Lead's; AISLING's appended, so the saves and
                                                      * NACHTFAHRT's pieces keep theirs) */
 const char *const EN_CQ_NAME[EN_NCQ] = {"Empty", "Major", "Minor", "Sus2", "Sus4", "Dim", "Aug"};
 const char *const EN_CX_NAME[EN_NCX] = {"Triad", "6", "7", "Maj7", "9", "11", "Add9"};
@@ -2217,10 +2234,10 @@ static uint32_t ld_cmask(void);
  * frame, not the chord's (over the bVII as over the I), its notes never varied (a return in a quiet stretch may come
  * at half speed, ld_aug, as any theme's may; never its first), its call's last note its own; its answer closes on the
  * chord as any answer does. A figure on the keys takes its place (ld_take) */
-static const struct {
+static struct {
     int8_t s[16];
     uint8_t d[16], n;
-} AIRS[EN_NAIRS] = {
+} AIRS[EN_NAIRS + 1] = {
     {{3, 5, 7, 7, 8, 7, 5, 7, 12, 3, 5, 7}, {2, 2, 4, 3, 1, 2, 2, 4, 4, 3, 1, 8}, 12},   /* Skellig: O'Carolan's
                                                   * Lament (69, D minor): its pickup, two bars, the third's first A held
                                                   * (its F sharp after) */
@@ -2247,6 +2264,17 @@ static const struct {
                                                   * Lament (132, G, here in D: Oisin back from Tir na nOg): its pickup,
                                                   * two bars, the third's B held */
 };
+/* (packs) the air after the eight (P_AIR EN_NAIRS + 1): a pack's piece's, set as the piece is taken, before its
+ * parameters (the app's thread: the Lead reads it only as a piece begins, ld_air) */
+void en_air_set(const int8_t *semi, const uint8_t *dur, int n)
+{
+    int i;
+    n = n < 0 ? 0 : n > 16 ? 16 : n;
+    AIRS[EN_NAIRS].n = 0;
+    for (i = 0; i < n; i++)
+        AIRS[EN_NAIRS].s[i] = semi[i], AIRS[EN_NAIRS].d[i] = (uint8_t)(dur[i] ? dur[i] : 1);
+    AIRS[EN_NAIRS].n = (uint8_t)n;
+}
 static uint8_t ld_airq;                          /* (the air due: at power-on the piece's parameters are set after
                                                   * en_init, with no regrow, so the Lead's first draw takes it, unless
                                                   * the keys or FORGET come first) */
@@ -2257,7 +2285,7 @@ static void ld_air(void)                         /* the piece's air (P_AIR) into
     ld_motif_t *m = &ld_bank[0];
     int i, n;
     ld_airq = 0;
-    if ((unsigned)a >= EN_NAIRS)
+    if ((unsigned)a > EN_NAIRS || !AIRS[a].n)
         return;
     n = AIRS[a].n < LD_MOTN ? AIRS[a].n : LD_MOTN;
     for (i = 0; i < n; i++) {
@@ -2304,7 +2332,7 @@ int en_lead_air(void) { return (ld_bank[0].cm & LD_AIR) != 0; }
 int en_air(int a, int8_t *semi, uint8_t *dur)
 {
     int i;
-    a = (unsigned)a < EN_NAIRS ? a : 0;
+    a = (unsigned)a <= EN_NAIRS ? a : 0;
     for (i = 0; i < AIRS[a].n; i++)
         semi[i] = AIRS[a].s[i], dur[i] = AIRS[a].d[i];
     return AIRS[a].n;
@@ -2405,7 +2433,23 @@ static const uint8_t LD_RHY[][7] = {
     {8, 4, 4, 8, 8}, {6, 2, 8, 8, 8}, {4, 2, 2, 8, 16}, {12, LD_RST | 2, 2, 4, 4, 8},
     {8, 2, 2, 2, 2, 16}, {12, 1, 1, 1, 1, 16}, {4, 4, 2, 2, 4, 16},
 };
+/* (packs: Rocky Road) a slip jig's (both sequences in nine), a jig's or a shuffle's (twelve over six; none of
+ * the eight is either): the same in threes, an eighth two sixteenths, a bar
+ * eighteen: ta-TUM (2 4), ONE two three four five (4 2 4 2 6), runs of eighths to a held note */
+static const uint8_t LD_RHY3[][7] = {
+    {18, 18}, {12, 6}, {6, 12},
+    {6, 6, 6}, {4, 2, 12}, {2, 4, 12}, {6, LD_RST | 2, 4, 6},
+    {4, 2, 4, 8}, {2, 4, 2, 10}, {6, 2, 4, 6},
+    {4, 2, 4, 2, 6}, {2, 4, 2, 4, 6}, {2, 2, 2, 6, 6}, {4, 2, 4, 2, 6},
+    {2, 4, 2, 4, 2, 4}, {4, 2, 4, 2, 2, 4}, {2, 2, 2, 2, 2, 8},
+};
 #define LD_NRHY ((int)(sizeof LD_RHY / sizeof LD_RHY[0]))
+typedef char ld_rhy3_rows[sizeof LD_RHY3 == sizeof LD_RHY ? 1 : -1];   /* (a template for a template) */
+static const uint8_t *ld_rhy(int j)
+{
+    const int nine = par[P_SEQLEN] == 9 && par[P_SEQ2LEN] == 9, twelve = par[P_SEQLEN] == 12 && par[P_SEQ2LEN] == 6;
+    return (nine || twelve) && !par[P_SEQGRID] ? LD_RHY3[j] : LD_RHY[j];   /* (twelve over six: a jig, a shuffle) */
+}
 static const uint8_t LD_R[7] = {16, 15, 12, 8, 5, 2, 1};   /* range: by degrees from the centre */
 static const uint8_t LD_P[8] = {4, 16, 6, 2, 1, 1, 1, 1};   /* proximity: by degrees from the note before (the
                                                               * report's 4 16 8 4 2 1 1 2, steeper: held notes are
@@ -2414,8 +2458,9 @@ static const uint8_t LD_P[8] = {4, 16, 6, 2, 1, 1, 1, 1};   /* proximity: by deg
 static int ld_rhy_n(int j)                       /* a template's notes (its rests not counted) */
 {
     int i, n = 0;
-    for (i = 0; i < 7 && LD_RHY[j][i]; i++)
-        n += !(LD_RHY[j][i] & LD_RST);
+    const uint8_t *t = ld_rhy(j);
+    for (i = 0; i < 7 && t[i]; i++)
+        n += !(t[i] & LD_RST);
     return n;
 }
 
@@ -2472,7 +2517,7 @@ static void ld_gen(ld_motif_t *m, float intensity, int role, const int8_t *g)
     intensity = intensity < 0.0f ? 0.0f : intensity > 1.0f ? 1.0f : intensity;
     if (!g) {                                    /* the rhythm */
         j = ld_rhy_pick((int)(2.0f + 4.0f * intensity + 0.5f));
-        t = LD_RHY[j];
+        t = ld_rhy(j);
         nn = ld_rhy_n(j);
         for (n = 0; n < 7 && t[n]; n++) {
             m->dur[n] = (uint8_t)(t[n] & ~LD_RST);
@@ -2689,7 +2734,7 @@ static int ld_offspring(ld_motif_t *m, float in, int kin)
         }
     if (kind == LK_HEAD || kind == LK_TAIL) {    /* continued: a template's rhythm after it, for the notes left */
         const int tg = (int)(2.0f + 4.0f * in + 0.5f) - h;
-        const uint8_t *r = LD_RHY[ld_rhy_pick(tg < 2 ? 2 : tg)];
+        const uint8_t *r = ld_rhy(ld_rhy_pick(tg < 2 ? 2 : tg));
         for (i = 0; i < 7 && r[i] && n < cap; i++, n++) {
             m->dur[n] = (uint8_t)(r[i] & ~LD_RST);
             m->off[n] = r[i] & LD_RST ? (int8_t)LD_REST : 0;
@@ -3423,7 +3468,8 @@ static void orn_plan(int dg, int dur)
 {
     static const uint8_t W[EN_NBV][5] = {        /* (cut, tap, roll, slide, turn) */
         {40, 10, 20, 30, 0}, {40, 10, 20, 30, 0}, {50, 10, 35, 5, 0}, {0, 0, 0, 100, 0},
-        {40, 10, 20, 30, 0}, {45, 15, 40, 0, 0},  {20, 5, 35, 40, 0}, {0, 0, 0, 60, 40}};
+        {40, 10, 20, 30, 0}, {45, 15, 40, 0, 0},  {20, 5, 35, 40, 0}, {0, 0, 0, 60, 40},
+        {0, 5, 0, 80, 15}};                      /* (the Slide: slides, a turn now and then) */
     const uint32_t r0 = seq_rand(&or_rng), r1 = seq_rand(&or_rng), r2 = seq_rand(&or_rng);
     const int lv = (unsigned)par[P_LVOICE] < EN_NBV ? par[P_LVOICE] : 0, nt = lead.note;
     const float note = (float)nt, u = (float)(r2 >> 8) * (1.0f / 16777216.0f), nl = (float)dur * step_len;
@@ -6674,7 +6720,8 @@ static void render_drone(uint32_t n)
 
 /* (AISLING) the new voices' levels, each heard as loud as the Flute on the same note (test_lead_voices_level), and
  * their colours */
-static const float LV_GAIN[3] = {0.507f, 0.638f, 1.55f};   /* the Chanter's, the Fiddle's, the Voice's */
+static const float LV_GAIN[4] = {0.507f, 0.638f, 1.55f, 0.86f};   /* the Chanter's, the Fiddle's, the Voice's, the
+                                                  * Slide's */
 #define LV_TRIM 0.031f                           /* (the Fiddle's: octaves a semitone over its middle, 66; a saw's low
                                                   * notes, many overtones in the ear's best octaves, heard ~6 dB over
                                                   * its high ones, where the Flute's sine is the other way) */
@@ -6713,7 +6760,7 @@ static void render_lead(uint32_t n)
 {
     const int lv = (unsigned)par[P_LVOICE] < EN_NBV ? par[P_LVOICE] : 0;
     const float g = lead_vol * 0.45f * (lv >= 5 ? LV_GAIN[lv - 5] : 1.0f),
-                vib = (float)par[P_VIB] * 0.004f + (lv == 3 ? 0.25f : 0.0f), gl = 0.84f, gr = 1.08f,
+                vib = (float)par[P_VIB] * (lv == 8 ? 0.007f : 0.004f) + (lv == 3 ? 0.25f : 0.0f), gl = 0.84f, gr = 1.08f,
                 tone = ld_tone * fo_mul(FO_LEAD),   /* (Tone, moved by the filter motion) */
                 tb = fm_clampf(tone, 0.5f, 2.0f),   /* (AISLING: as the Flute's, so the motion never shuts a voice) */
                 rel = lv == 5 ? 0.0009f : 0.00008f;   /* (~300 ms out; the Chanter stopped in ~25 ms) */
@@ -6729,6 +6776,9 @@ static void render_lead(uint32_t n)
     else if (lv == 6) {                          /* the Fiddle's body: its air, and the bridge's hill */
         svf_coefs(lead.c4, 290.0f, 0.8f);
         svf_coefs(lead.c5, 2800.0f, 1.1f);
+    } else if (lv == 8) {                        /* (Saints & Sinners) the Slide's resonator: the cone's two hills */
+        svf_coefs(lead.c4, 620.0f, 1.4f);
+        svf_coefs(lead.c5, 1900.0f, 1.6f);
     } else if (lv == 7) {                        /* the Voice: the vowel eased toward the note's (Tone and the filter
                                                   * motion open it), its three formants the Choir's, and its gain
                                                   * (lv_level). A high note's harmonics stand further apart than these
@@ -6761,7 +6811,10 @@ static void render_lead(uint32_t n)
     for (j = 0; j < n; j++) {
         float x, bp, a, nose = 0.0f;
         if (!(j & 15u)) {                        /* the glide, the vibrato, the filter: every 16 */
-            const float vd = vib * fm_clampf((lead.vt - 0.4f) * 2.5f, 0.0f, 1.0f), f = mtof(lead.cur + vd * sine(lead.vph));
+            const float vd = vib * fm_clampf((lead.vt - 0.4f) * 2.5f, 0.0f, 1.0f),
+                        f = mtof(lead.cur + vd * sine(lead.vph) - (lv == 8 ? 2.0f * lead.fenv * lead.fenv : 0.0f));
+                                                 /* (the Slide: the bottleneck up into each note, from a tone and a
+                                                  * half under it, ~0.2 s) */
             dt = f * (1.0f / EN_SR);
             if (lv < 5) {
                 svf_coefs(lead.c1, f * (3.0f + 6.0f * lead.fenv) * tone, 0.9f);
@@ -6769,6 +6822,10 @@ static void render_lead(uint32_t n)
             } else if (lv < 7) {                 /* (AISLING) the Chanter's low-pass as the synths', bright at the
                                                   * start; the Fiddle's steadier */
                 const float fc = f * (lv == 5 ? 3.0f + 6.0f * lead.fenv : 4.0f + 3.0f * lead.fenv) * tb;
+                svf_coefs(lead.c1, fc, 0.9f);
+                svf_coefs(lead.c2, fc, 0.7f);
+            } else if (lv == 8) {                /* the Slide: a steel string picked, bright and then mellow */
+                const float fc = f * (2.2f + 4.0f * lead.fenv) * tb;
                 svf_coefs(lead.c1, fc, 0.9f);
                 svf_coefs(lead.c2, fc, 0.7f);
             }
@@ -6824,6 +6881,10 @@ static void render_lead(uint32_t n)
             lead.tl += CH_TILT * (blep_saw(lead.ph, dt) - lead.tl);
             x = lead.tl + (0.02f + 0.1f * ck) * lv_noise();
             break;
+        case 8:                                  /* the Slide: a steel string (a saw and a narrow pulse), the pick's
+                                                  * click, the glass on the string after it */
+            x = 0.7f * blep_saw(lead.ph, dt) + 0.5f * blep_pulse(lead.ph, dt, 0.18f) + (0.015f + 0.5f * ck) * lv_noise();
+            break;
         default: x = blep_saw(lead.ph, dt) - blep_saw(frac1(lead.ph + 0.5f), dt); break;
         }
         lead.ph += dt;
@@ -6847,6 +6908,12 @@ static void render_lead(uint32_t n)
             svf_lp(lead.c4, lead.s4, x, &b1);
             svf_lp(lead.c5, lead.s5, x, &b2);
             x = (x + 0.5f * b1 + 0.35f * b2) * trim;
+        } else if (lv == 8) {                    /* the Slide's cone, and the picked note's fall to what the glass
+                                                  * keeps ringing */
+            float b1, b2;
+            svf_lp(lead.c4, lead.s4, x, &b1);
+            svf_lp(lead.c5, lead.s5, x, &b2);
+            x = (0.6f * x + 0.9f * b1 + 0.6f * b2) * (0.55f + 0.45f * lead.fenv);
         } else if (lv == 7) {                    /* the Voice's throat: its three formants, then its low-pass */
             int f;
             for (f = 0; f < 3; f++) {

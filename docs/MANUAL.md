@@ -20,7 +20,7 @@ vision), and a pun on *AI Synth Link*; [Saying the names](#saying-the-names) has
 by FartyPants, a Berlin School firmware: it keeps NACHTFAHRT's whole machine and changes what it plays. NACHTFAHRT
 is a fork of DUB-1, itself a fork of AMB-1, Charles Vestal's generative ambient firmware for the FM-1.
 
-**This is 1.4.1:** 1.4 (the journey through the pieces, the day and the weather, and an amount on each effect's CC, over 1.3's PERFORM of 27 effects) with a screen you can set dark or light, and its meters and lanes named. It runs
+**This is 1.5:** 1.4.1 (the journey through the pieces, the day and the weather, PERFORM's 27 effects, and a screen you can set dark or light) with [sound packs](#sound-packs): eight more pieces at a time beside AISLING's own eight, the first of them Saints & Sinners. It runs
 on the FM-1 (install it from the web installer) and in the browser emulator, from the same code.
 
 ![A drawing of the FM-1 running AISLING, each control labelled with what it does: the Controls section below says the same in words](img/fm1-panel.svg "The FM-1 (a drawing), running AISLING, each control labelled")
@@ -176,8 +176,9 @@ out), and the journey passes over the ones that are out. The journey changes not
 nothing; the stay and the list aren't saved either, so it's off, with all eight in, every time the FM-1 starts.
 
 **The screen, dark or light.** KNOB 3 on the Journey page, **Screen**, sets the whole screen: Dark, the colours on
-black, as it comes; or Light, the same colours deeper, on white, for a bright room or daylight. It changes nothing
-in the sound. It's saved with the pieces, as Lights is, and a CC never turns it. The turn itself redraws the whole
+black, as it comes; Light, the same colours deeper, on white, for a bright room or daylight; or Auto, as the piece
+is: AISLING's own eight are dark, and a [sound pack](#sound-packs)'s pieces say which they are (Saints & Sinners:
+a Saint white, a Sinner black). Installing a pack turns Dark to Auto. It changes nothing in the sound. It's saved with the pieces, as Lights is, and a CC never turns it. The turn itself redraws the whole
 screen at once, the busiest moment the FM-1 has: set it between pieces rather than in the middle of one.
 
 ![The main screen, light: the same screen on white, the colours deeper](img/screen-light.png "The main screen with Screen at Light")
@@ -566,7 +567,7 @@ Reverb, Echo. **Its Move page:** Width, Time, Rate, Intro.
 page's: [docs/SMK37.md](SMK37.md)); ALGORITHM the sleep timer (see
 [Sleep](#3-controls)); SELECT the journey's stay. **GLO again: Arc:** Lead in, Bridge, Arc,
 Memory (see [The arc and the filter motion](#6-the-arc-and-the-filter-motion)). **GLO a third time: Journey:** Piece,
-In set, Screen (Dark or Light) and Day; SELECT the stay (see [The journey](#3-controls)).
+In set, Screen (Auto, Dark or Light) and Day; SELECT the stay (see [The journey](#3-controls)).
 
 **EDIT: Chords:** eight slots. In **Endless** the walk writes them and slot 1 plays; on each change they move
 up a slot. A key writes a slot's root, KNOB 2 its kind, KNOB 3 its type, KNOB 4 Play: Endless or **Loop**
@@ -717,8 +718,9 @@ clock from a Korg nanoKEY Fold, over a plain stereo cable. Type B hasn't been tr
   all sound off (CC 123 and 120) let it go. In earlier versions a note on channel 1 changed the scale; the Key page
   does that now.
 - **In, program change:** programs 0 to 7, on any channel, choose the eight pieces in their order (0 is Skellig; a DAW
-  that counts from 1 calls them 1 to 8), as PRESETS does. Programs 8 and above are ignored, and so is a change to the piece already playing, because a DAW sends
-  one at the start of every clip.
+  that counts from 1 calls them 1 to 8), as PRESETS does. With a [sound pack](#sound-packs) installed, 8 to 15 choose
+  its eight; without one they are ignored, as 16 and above always are, and so is a change to the piece already playing,
+  because a DAW sends one at the start of every clip.
 - **In, CCs:** on any channel, a CC turns a knob (see the table below). It sets the value outright: 0 to 127 spans
   the knob's range, and on the centred knobs (Filter, Wet, Energy, the sound pages' ±50) 64 is the middle. A CC counts
   as a touch for the sleep timer, as a note does. CCs never save, and never turn Setup's Tune, MIDI out, Lights or
@@ -813,6 +815,25 @@ cable) the FM-1 shows EDITOR GONE, lets go of any key the page was holding and p
 jack ignores it.
 
 ---
+
+### Sound packs
+
+A sound pack is eight more pieces. The FM-1 holds one at a time, beside AISLING's own eight, and you put it on or
+take it off from [the Packs page](https://aisling.stephen8n.com/packs/) in Chrome or Edge, over USB. The page plays
+every piece of a pack first, with no FM-1, on the same code the FM-1 runs.
+
+- **Install:** connect on the page, stop the FM-1 (PLAY) and let the sound die away, then press Install. It takes a
+  few seconds. Installing another pack replaces the one that was there.
+- **Play it:** turn PRESETS past the eighth piece and you are in the pack's first; on through its eight and round to
+  Skellig again. Program changes 8 to 15 choose them too.
+- **Yours as the eight are:** every piece of a pack keeps its settings as you leave it, apart from the eight's. Hold
+  GLO to take one back to how the pack made it.
+- **Remove:** the page's "Take it off the FM-1". The eight are untouched. Your changes to the pack's pieces go with
+  it, and they go too when another pack replaces it.
+- A pack may need a newer AISLING than the FM-1 has: the page says so, and [the installer](#1-install) updates it.
+
+Packs are data, not code: a pack can only ask for voices and scales the firmware already has. To make one, see
+`packs/saints-sinners.json` and `tools/make_pack.py` in the source.
 
 ## 12. Saving
 

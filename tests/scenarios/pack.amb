@@ -1,0 +1,131 @@
+# packs: a sound pack over the link (area 10), kept in flash beside the eight; its bank, with its own project;
+# PRESET's ring through both, program change 8-15; the screen as the piece is (Screen: Auto); removed again.
+# Needs build/packs/saints-sinners.aispack (tools/make_pack.py packs/saints-sinners.json; run_tests.sh makes it)
+wait 500
+expect playing 1
+expect pack 0
+expect bank 0
+expect light 0
+link hello
+expect linkon 1
+linkbeat 1
+# --- no pack: no bank to go to, nothing to read
+link bank 1
+expect linkack 5
+expect bank 0
+linkread 10
+expect lread 0
+# PRESET's ring is the eight's alone
+turn PRESET -1
+expect piece 7
+expect bank 0
+turn PRESET 1
+expect piece 0
+# --- installing: not while it plays; not with a wrong sum; then kept
+linkfile build/packs/saints-sinners.aispack
+linkwrite 10
+expect linkack 4
+expect pack 0
+link play
+wait 14000
+expect playing 0
+linkwrite 10 sumbad
+expect linkack 3
+expect pack 0
+linkfile build/packs/saints-sinners.aispack
+linkwrite 10
+expect linkack 0
+expect pack 1
+expect bank 0
+expect piece 0
+expect pname 83
+expect dirty 0
+linkread 10
+expect lsame 1
+# the screen was dark: now as the piece is, and the eight are dark
+expect light 2
+expect lit 0
+# --- the pack's bank: its names, its recipes, its sides
+link bank 1
+expect linkack 0
+expect bank 1
+expect piece 0
+expect pname 71
+expect lit 1
+expect par18 120
+turn PRESET 1
+expect piece 1
+expect pname 82
+expect lit 0
+expect par18 160
+# back past its first: the eight's last; and on round
+turn PRESET -2
+expect bank 0
+expect piece 7
+expect pname 84
+turn PRESET 1
+expect bank 1
+expect piece 0
+# program change: 0-7 the eight, 8-15 the pack's
+midi C0 03 00
+wait 200
+expect bank 0
+expect piece 3
+midi C0 0D 00
+wait 200
+expect bank 1
+expect piece 5
+expect pname 66
+# --- an edit in the pack's bank stays there; saved, both come back
+link set 18 77
+expect par18 77
+link bank 0
+expect par18 !=77
+link bank 1
+expect piece 5
+expect par18 77
+expect playing 0
+link save
+wait 14000
+expect dirty 0
+reboot
+wait 500
+expect pack 1
+expect bank 1
+expect piece 5
+expect pname 66
+expect par18 77
+expect light 2
+link hello
+linkbeat 1
+# --- a pack for a newer engine, a pack cut short: refused, the one installed stays
+link play
+wait 14000
+expect playing 0
+linkread 10
+linkkeep
+linkpoke 5 99
+linkwrite 10
+expect linkack 2
+expect pack 1
+linkread 10
+linkkeep
+linkpoke 6 7
+linkwrite 10
+expect linkack 2
+expect pack 1
+expect bank 1
+# --- removed: the eight play, and after a restart too
+linkfile none
+linkwrite 10
+expect linkack 0
+expect pack 0
+expect bank 0
+expect pname !=66
+link bank 1
+expect linkack 5
+reboot
+wait 500
+expect pack 0
+expect bank 0
+expect lit 0

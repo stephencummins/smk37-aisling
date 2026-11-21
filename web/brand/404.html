@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>AISLING · no such page</title>
+<!-- Served for every address the site does not have, at any depth: so it stands alone, with whole addresses and
+     its own few styles, and borrows only the two fonts. Without it Cloudflare Pages answers a wrong address with the
+     home page and a 200, and a crawler following relative links never finds the end. -->
+<style>
+@font-face { font-family: "Barlow Semi Condensed"; font-weight: 600; font-display: swap; src: url(https://aisling.stephen8n.com/fonts/BarlowSemiCondensed-SemiBold.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-display: swap; src: url(https://aisling.stephen8n.com/fonts/IBMPlexMono-Regular.woff2) format("woff2"); }
+html { background: #f3ead7; color: #2b2219; color-scheme: light; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; font: 400 14px/1.6 "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
+main { width: min(100% - 32px, 40rem); padding: 32px 0; }
+.kick { margin: 0 0 6px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #8c3510; }
+h1 { margin: 0 0 14px; font: 600 clamp(44px, 12vw, 92px)/.95 "Barlow Semi Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .01em; text-transform: uppercase; }
+p { margin: 0 0 18px; }
+ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid #d9ccb1; }
+li { border-bottom: 1px solid #d9ccb1; }
+li a { display: flex; justify-content: space-between; gap: 16px; padding: 10px 2px; color: #2b2219; text-decoration: none; }
+li a b { font: 600 19px/1.2 "Barlow Semi Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #146c41; }
+li a:hover { background: #ece2cb; }
+li a span { color: #5b4a3a; text-align: right; }
+</style>
+</head>
+<body>
+<main>
+<p class="kick">404 · AISLING</p>
+<h1>No such page</h1>
+<p>Nothing lives at this address. It may have moved, or the link was mistyped. These do exist:</p>
+<ul>
+<li><a href="https://aisling.stephen8n.com/"><b>Home</b><span>the three firmwares</span></a></li>
+<li><a href="https://aisling.stephen8n.com/install/"><b>Install</b><span>AISLING on an FM-1</span></a></li>
+<li><a href="https://aisling.stephen8n.com/manual/"><b>Manual</b><span>every page and knob</span></a></li>
+<li><a href="https://aisling.stephen8n.com/emu/"><b>Emulator</b><span>play it in the browser</span></a></li>
+<li><a href="https://aisling.stephen8n.com/screen/"><b>Screen</b><span>the VOXBOX</span></a></li>
+<li><a href="https://aisling.stephen8n.com/support/"><b>Support</b><span>M-Flasher, and an FM-1 that won't start</span></a></li>
+</ul>
+</main>
+</body>
+</html>

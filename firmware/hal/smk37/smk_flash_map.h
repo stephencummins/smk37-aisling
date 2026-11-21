@@ -12,8 +12,10 @@
  *   0xC0000-0xC0FFF  BTIF: Bluetooth pairings                          NEVER WRITTEN
  *   0xC1000-0xC1FFF  USRTRIM: the per-key velocity calibration,        NEVER WRITTEN: without a backup it
  *                    marker "trimdat" at 0xC1224                       cannot be recovered
- *   0xC2000-0xEAFFF  USRFLASH: the stock presets                       AISLING's store, 0xC2000-0xC5FFF
- *                                                                      (the stock backup restores them)
+ *   0xC2000-0xEAFFF  USRFLASH: the stock presets                       AISLING's store, 0xC2000-0xC9FFF
+ *                                                                      (the stock backup restores them);
+ *                                                                      to 1.4.1 it ended at 0xC5FFF, and
+ *                                                                      1.5's sound pack took four more
  *   0xEB000-0xF3FFF  (not in the package)                              not written
  *   0xF4000-0xFDFFF  USR: the stock resources                          NEVER WRITTEN
  *   0xFE000-0xFEFFF  (not in the package)                              NEVER WRITTEN
@@ -39,10 +41,12 @@
 #define FL_PLAIN_LO     0x0009D000u
 #define FL_OTA_LO       0x000BB000u                /* the VM's top five sectors */
 #define FL_OTA_HI       0x000C0000u
-#define FL_DATA_LO      0x000C2000u                /* AISLING's store: four sectors of the stock presets */
-#define FL_DATA_HI      0x000C6000u
+#define FL_DATA_LO      0x000C2000u                /* AISLING's store: eight sectors of the stock presets */
+#define FL_DATA_HI      0x000CA000u                /* (four to 1.4.1, 0xC6000; 1.5's sound pack has the rest) */
 #define FL_PROJ_SECTOR  0x000C2000u                /* the project (its pieces in it) */
 #define FL_PANEL_SECTOR 0x000C4000u                /* the panel calibration, should the SMK ever need one */
+#define FL_PACK_SECTOR  0x000C6000u                /* (packs, 1.5) the sound pack installed */
+#define FL_PROJB_SECTOR 0x000C8000u                /* ... and its bank's project */
 
 #define FL_STORE_OK(off, n) FL_IN(off, n, FL_DATA_LO, FL_DATA_HI)
 #define FL_LDR_RANGE_OK(off, n) (FL_IN(off, n, FL_APP_LO, FL_APP_HI) || FL_IN(off, n, FL_REC_LO, FL_REC_HI))

@@ -15,7 +15,7 @@
   "use strict";
   const H0 = 0x7D, H1 = 0x41, H2 = 0x4C;
   const LK = { HELLO: 1, BYE: 2, BEAT: 3, SET: 4, VIEW: 5, PIECE: 6, PLAY: 7, HOLD: 8, PERF: 9, FORGET: 10, KEYS: 11, BUTTONS: 12,
-    UNDO: 13, REDO: 14, SAVE: 15, VOICE: 16, COPY: 17, SWAP: 18, RESET: 19, OPEN: 20, READ: 21, BEGIN: 22, WRITE: 23, COMMIT: 24 };
+    UNDO: 13, REDO: 14, SAVE: 15, VOICE: 16, COPY: 17, SWAP: 18, RESET: 19, OPEN: 20, READ: 21, BEGIN: 22, WRITE: 23, COMMIT: 24, BANK: 25 };
   const R_HELLO = 65, R_ACK = 66, R_STATE = 67, R_VALS = 68, R_CHUNK = 69;
   const OK = 0, GAVE_UP = -1;
   const VER = 1, CHUNK = 128;
@@ -54,8 +54,16 @@
 
   function parseHello(a) {
     const n = a[9];
-    return { ver: a[0], format: a[1], proj: get14u(a, 2), slot: get14u(a, 4), npars: get14u(a, 6), npieces: a[8],
-      version: String.fromCharCode(...a.subarray(10, 10 + n)) };
+    const h = { ver: a[0], format: a[1], proj: get14u(a, 2), slot: get14u(a, 4), npars: get14u(a, 6), npieces: a[8],
+      version: String.fromCharCode(...a.subarray(10, 10 + n)), level: 1, bank: 0, pack: null };
+    const at = 10 + n;                               // (packs) after the version: level, bank, the pack's version and name
+    if (a.length >= at + 5) {
+      const pn = a[at + 4];
+      h.level = a[at];
+      h.bank = a[at + 1];
+      if (pn) h.pack = { version: get14u(a, at + 2), name: String.fromCharCode(...a.subarray(at + 5, at + 5 + pn)) };
+    }
+    return h;
   }
   function parseState(a) {
     const f = a[1];
@@ -139,6 +147,16 @@
         this.tOpenBy = t + ms;
         this.send(this.frame(LK.HELLO, null, [VER]));
         this.timer = setInterval(() => this.tick(), 50);
+      });
+    }
+    again(ms = 3000) {                               // HELLO once more: what it is now (after a pack, a bank)
+      if (this.closed) return Promise.resolve(null);
+      return new Promise((res) => {
+        const t = performance.now();
+        this.helloWait = res;
+        this.tHello = t;
+        this.tOpenBy = t + ms;
+        this.send(this.frame(LK.HELLO, null, [VER]));
       });
     }
     close() {                                        // says goodbye: the FM-1 lets go of anything still held
@@ -253,6 +271,12 @@
       });
     }
 
+    /* ---------- (packs) the sound pack: area 10, and the bank ---------- */
+    pack() { return this.read(AislingLink.A_PACK); }                 // its bytes; null: none installed
+    install(bytes) { return this.write(AislingLink.A_PACK, bytes); }   // 0 kept; 4: the FM-1 isn't at rest; 2: refused
+    remove() { return this.write(AislingLink.A_PACK, new Uint8Array(0)); }
+    bank(b) { return this.req(LK.BANK, [b ? 1 : 0]).then((r) => r.status); }   // 0; 5: no pack to go to
+
     /* ---------- the messages the page's worklet takes ---------- */
     post(m) {
       const reply = (x) => { if (this.h.onReply) this.h.onReply({ type: "reply", id: m.id, ...x }); };
@@ -281,6 +305,7 @@
       }
     }
   }
+  AislingLink.A_PACK = 10;
   AislingLink.parseHello = parseHello;
   AislingLink.parseState = parseState;
   AislingLink.sum = sum;

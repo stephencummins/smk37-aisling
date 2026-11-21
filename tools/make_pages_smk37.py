@@ -205,7 +205,7 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <main class="bench">
 <div class="strip">
 <p class="lab"><b>aisling</b> · Irish ambient for the M-VAVE SMK-37 Elite</p>
-<p class="lab">v1.4.1 · __BY__</p>
+<p class="lab">v1.5 · __BY__</p>
 </div>
 
 <div class="mg-cover">
@@ -273,6 +273,12 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 </section>
 
 <section class="mg-fold" aria-label="More about AISLING on the Elite">
+<details><summary>1.5 <small>not yet on an Elite</small></summary><div class="mg-in">
+<p><strong>1.5 has not been on an Elite.</strong> It is the FM-1's AISLING 1.5 (sound packs, with Saints &amp; Sinners
+the first; Screen's Auto; a Blues scale and a Slide for the Lead) on the Elite's controls. It passes the Elite's
+simulator, and nothing of it has been installed, played or saved on an Elite yet. It keeps a pack in four more sectors of
+the stock presets, so take the <a href="manual/#s11">backup</a> first. The download below is still 1.4.1.</p>
+</div></details>
 <details><summary>1.4.1 <small>played and checked on one Elite</small></summary><div class="mg-in">
 <p><strong>1.4.1 has been played and checked on one Elite.</strong> It is the FM-1's AISLING 1.4.1 (the journey, the day
 and the weather, an effect's amount, the light screen) on the Elite's controls, and it passes the Elite's simulator.
@@ -286,7 +292,7 @@ off again with M-VAVE's own firmware, and installed again. 1.3.1's package is in
 <details><summary>Where it stands <small>six done, the web installer next</small></summary><div class="mg-in">
 <ol class="stages">
   <li class="done" data-state="done"><b class="lead">On a computer.</b> AISLING builds for the Elite from the FM-1's
-  tree, and the FM-1's own build is unchanged to the byte. The Elite's simulator plays all 45 of the FM-1's test
+  tree, and the FM-1's own build is unchanged to the byte. The Elite's simulator plays all 46 of the FM-1's test
   scenarios with byte-identical results (but Setup's page, where its fourth knob is Screen), and its own: MASTER on a knob, the 37 keys, the battery. The installer and the
   rescue tool know the Elite's package, and never write the parts of its memory that are the Elite's own.</li>
   <li class="done" data-state="done"><b class="lead">A backup.</b> A whole copy of an Elite's memory, read twice and
