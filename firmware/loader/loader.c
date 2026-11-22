@@ -6,7 +6,7 @@
  * M-UPGRADE update protocol as "ota-FM-1_900" (the SMK-37 Elite's: "ota-SMK-37
  * Elite_900"; hosts look for "ota-"), and
  * writes the app area only (ldr_core.c). The UBOOT soft key works here too.
- * It says so on the screen (ldr_ui.c): UPDATING, a percentage and a bar.
+ * It says so on the screen (ldr_ui.c): UPDATING, a percentage and a bar (the FM-1; not the SMK-37 Elite).
  * Single compilation unit. */
 #include <stdint.h>
 #define FELUCCA_LOADER 1
@@ -29,11 +29,23 @@
 /* the loader may write the app area and erase update records; never the head (the board's map, fl_map.h) */
 #define FL_RANGE_OK(off, n) FL_LDR_RANGE_OK(off, n)
 #include "fm1_flash.h"
+#if defined(AISLING_BOARD_SMK37) && AISLING_BOARD_SMK37
+/* The SMK-37 Elite: no screen from the loader. ldr_ui.c draws through the FM-1's display pins (fm1_lcd_hw.h), which
+ * the Elite's build must never include (tools/build.py's pin guard), and its own display has not been driven from
+ * here; the loader behaves as it did up to 1.4.1. */
+#include "../src/libc.c"
+#include "../src/usb.c"
+static void ui_init(void) {}
+static void ui_begin(void) {}
+static void ui_progress(uint32_t done, uint32_t total) { (void)done; (void)total; }
+static void ui_end(int32_t rc) { (void)rc; }
+#else
 #include "fm1_lcd_hw.h"
 #include "../src/libc.c"
 #include "../src/usb.c"
 #include "../src/lcd.c"
 #include "ldr_ui.c"
+#endif
 
 static uint32_t ldr_ms(void)   /* monotonic ms; survives the TIMER4 wrap (178.9 s) */
 {

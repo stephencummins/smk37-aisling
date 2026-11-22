@@ -1,12 +1,20 @@
 # the SMK-37 Elite: the screen, dark or light, on Setup (GLOBE) too: KNOB 8, where the FM-1 has Save (BT, the FM-1's
 # SAVE, saves). The same value as the Journey page's Screen (tests/scenarios/screenlight.amb, which runs here as well)
+# (1.6) it starts on Auto, as the piece is: the eight are light. A turn up is Dark, one more Light
 wait 300
-expect light 0
+expect light 2
+expect lit 1
 expect pfcontrast 0
 tap GLOBE
 wait 600
+shot auto.png
+turn K8 1
+wait 200
+expect light 0
+expect lit 0
+wait 600
 shot dark.png
-turn K8 2
+turn K8 1
 wait 200
 expect light 1
 expect dirty 1
@@ -25,7 +33,7 @@ expect light 1
 shot light_restart.png
 tap GLOBE
 wait 600
-turn K8 -2
+turn K8 -1
 wait 200
 expect light 0
 wait 600
@@ -35,11 +43,12 @@ tap GLOBE
 wait 300
 tap GLOBE
 wait 600
-turn K7 2
+turn K7 1
 wait 200
 expect light 1
 tap GLOBE
 wait 600
 turn K8 -2
 wait 200
-expect light 0
+expect light 2
+expect lit 1
