@@ -23,8 +23,8 @@ typedef struct { uint32_t lo, hi; } win_t;            /* [lo, hi) */
 static const win_t PROT[] = {{0x00000u, 0x04000u},    /* the head: SPL, isd_config, the chip key */
                              {0xC0000u, 0xC2000u},    /* BTIF, USRTRIM (the velocity calibration) */
                              {0xF4000u, 0x100000u}};  /* USR, key_mac */
-static const win_t STORE[] = {{0xC2000u, 0xC6000u}};
-static const win_t APP[] = {{0xC2000u, 0xC6000u}, {0xBB000u, 0xC0000u}};    /* the store, the staging */
+static const win_t STORE[] = {{0xC2000u, 0xCA000u}};
+static const win_t APP[] = {{0xC2000u, 0xCA000u}, {0xBB000u, 0xC0000u}};    /* the store, the staging */
 static const win_t LOADER[] = {{0x04000u, 0x9D000u}, {0x9D000u, 0xC0000u}}; /* the app area, the VM */
 #define NW(a) (sizeof a / sizeof a[0])
 
@@ -197,7 +197,7 @@ int main(void)
             if (nor[i] != before[i])
                 in ? changed_in++ : changed_out++;
         }
-        snprintf(line, sizeof line, "storage: no byte outside 0xC2000..0xC5FFF changed (%u inside did)", changed_in);
+        snprintf(line, sizeof line, "storage: no byte outside 0xC2000..0xC9FFF changed (%u inside did)", changed_in);
         ok(!changed_out && changed_in, line);
     }
 

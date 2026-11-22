@@ -43,7 +43,7 @@ AISLING's web installer hasn't been tried on an Elite yet, so install from a com
 
 **Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again.
 
-**Saved pieces.** AISLING saves over the first of V016's presets (0xC2000–0xC5FFF) and doesn't read V016's presets or
+**Saved pieces.** AISLING saves over the first of V016's presets (0xC2000–0xC9FFF; to 0xC5FFF until 1.4.1, the sound pack's four sectors from 1.6) and doesn't read V016's presets or
 another firmware's saves. Going back to V016 doesn't put those presets back; the unit's own backup does
 (`tools/fm1_rescue.py --write --presets BACKUP.bin`, not yet tried on an Elite). AISLING uses no samples.
 
@@ -94,7 +94,7 @@ remembers and answers) and changes what it plays:
   **Fras** (FRASS, a burst of rain);
 - a green triskele on the launch screen and the main page.
 
-**Status: 1.4.1** (see [the releases](https://github.com/stephencummins/fm1-aisling/releases)).
+**Status: 1.6** (see [the releases](https://github.com/stephencummins/fm1-aisling/releases)).
 It runs on the FM-1, installed from the [web installer](https://aisling.stephen8n.com/install/), and
 in the [browser emulator](https://aisling.stephen8n.com/emu/), from the same code.
 
@@ -125,6 +125,22 @@ tried. The [manual](docs/MANUAL.md#11-midi) has the details.
 AMB-1. It doesn't read what they saved (it starts with its own eight recipes), and its first save, a few seconds
 after you change something, replaces theirs; they ignore AISLING's in the same way and replace it when they save.
 Installing another firmware may lose what AISLING saved. AISLING uses no samples.
+
+## What's new in 1.6
+
+- **Sounds of your own.** Each of the Drone, both Sequences and the Lead has one more voice, **Patch**: a sound made of sixteen numbers (two oscillators, FM, a sub, noise, the filter, the attack). A sound pack's piece brings its own, so a pack can have sounds the firmware doesn't. A pack with a patch needs 1.6; the others stay 1.5 packs.
+- **AISLING as a plugin.** The FM-1's engine, the same C, as a VST3, an Audio Unit and an app: load a pack, shape a piece's patches by ear in a DAW, and save them into the pack. With an FM-1 on USB it plays each patch on the FM-1 as you shape it. It is built from source ([plugin/](plugin/README.md)); there is no download yet.
+- **A piece at a time.** The Packs page lists the sixteen pieces on a connected FM-1, and adds or removes the pack's pieces one by one, from any pack. PRESETS and the Journey pass over an empty place.
+- **Screen: Auto is light for the eight.** AISLING's own eight show light on a new FM-1; a pack's pieces say which they are, as before. An FM-1 with saved pieces keeps the screen it had.
+- With no pack, or a pack without patches, the sound is 1.5's.
+
+## What's new in 1.5
+
+- **Sound packs.** Eight more pieces at a time, kept on the FM-1 beside AISLING's own eight: hear a pack on the Packs page, install it over USB, take it off again. PRESETS turns on past the eighth piece into the pack; program changes 8 to 15 choose its pieces. Each pack's pieces keep your changes, apart from the eight's. A pack is data (`packs/*.json`, built by `tools/make_pack.py`; `firmware/src/app/pack.h` has the format). Since 1.5 the Packs page is a pack manager, with no firmware change: it names the pack on the FM-1, keeps your changes to a pack's pieces when the pack leaves and offers them back when it returns, and takes packs from `.aispack` files.
+- **Saints & Sinners**, the first pack: chant and the Delta's blues with Ireland between them. Glendalough, Rocky Road (a slip jig), Iona, Crossroads, Vespers, Banshee, The Braes, Juke Joint.
+- **Screen: Auto.** The Journey page's Screen is Auto, Dark or Light. Auto follows the piece: a Saint on white, a Sinner on black.
+- **In the engine:** a Blues scale, a Slide for the Lead, and the Lead's rhythms in threes over a slip jig or a jig.
+- With no pack installed, nothing changes: the eight pieces, their sound and what you saved are 1.4.1's.
 
 ## What's new in 1.4.1
 
@@ -196,7 +212,7 @@ Installing another firmware may lose what AISLING saved. AISLING uses no samples
 
 ## What's new in 0.5.1
 
-- **Newer FM-1s can save and update.** Units sold since autumn 2026 carry a different flash chip (0xB36014). AISLING now accepts it beside the first one, so pieces survive switching off and updates start. Nothing else changes. We have only the first chip, so this has been tried by us on that one alone.
+- **Newer FM-1s can save and update.** Units sold since autumn 2026 carry a different flash chip (0xB36014). AISLING now accepts it beside the first one, so pieces survive switching off and updates start. Nothing else changes. AISLING 1.5 has been tried on one newer FM-1: it plays, a save was still there after switching off and on, a sound pack went on over USB, read back whole and was still there after switching off and on, and the editor connected and changed a setting.
 - **On a newer FM-1 with an earlier AISLING?** Those versions refuse updates, so reaching this one takes [the chip's own download mode](https://thefirmwarehub.com/tools/rescue/#chip), once. The [manual](https://aisling.stephen8n.com/manual/#a-newer-fm-1-on-an-earlier-aisling) has the steps.
 - **Still new from 0.5:** [the editor](https://aisling.stephen8n.com/editor/), undo, hold SAVE to save, and USB audio before MASTER.
 

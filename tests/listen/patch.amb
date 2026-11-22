@@ -1,0 +1,53 @@
+# (AISLING 1.6) the Patch voice: each layer alone in Patch, its plain one and then one made for it; then the four
+# together, each in its own. No clipping. (par 22/33/34/35: the Drone's voice, the Sequence's, the Lead's, the
+# second Sequence's; enmute: every layer but the one heard)
+wait 300
+expect piece 0
+par 22 6
+enmute 62
+peakreset
+wav patch_drone.wav
+wait 20000
+patch 0 3,50,2,12,3,25,20,0,30,0,0,30,0,0,0,-6
+wait 20000
+patch 0 1,20,1,7,5,60,0,0,40,0,-5,50,0,0,0,-8
+wait 20000
+wavstop
+expect peak_db_max -0.5
+par 33 8
+enmute 61
+peakreset
+wav patch_seq.wav
+wait 20000
+patch 1 2,50,2,24,4,0,55,100,0,0,12,10,20,50,0,12
+wait 20000
+patch 1 0,50,0,0,0,0,0,0,0,0,-12,90,85,0,0,0
+wait 20000
+wavstop
+expect peak_db_max -0.5
+par 34 9
+enmute 59
+peakreset
+wav patch_lead.wav
+wait 30000
+patch 2 1,25,1,12,0,30,0,0,0,10,0,60,70,100,0,-8
+wait 30000
+patch 2 2,50,2,19,2,0,100,80,0,0,12,20,30,100,0,0
+wait 30000
+wavstop
+expect peak_db_max -0.5
+par 35 10
+enmute 39
+peakreset
+wav patch_seq2.wav
+wait 20000
+patch 3 1,30,0,0,0,0,0,0,80,0,-6,50,60,0,0,0
+wait 20000
+wavstop
+expect peak_db_max -0.5
+enmute 0
+peakreset
+wav patch_all.wav
+wait 60000
+wavstop
+expect peak_db_max -0.5

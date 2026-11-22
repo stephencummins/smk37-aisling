@@ -35,7 +35,7 @@
 
 /* modes: pools relative to the root (bit i: root + i semitones) */
 enum { MODE_IONIAN, MODE_DORIAN, MODE_PHRYGIAN, MODE_LYDIAN, MODE_MIXOLYDIAN, MODE_AEOLIAN, MODE_PENT_MAJ,
-       MODE_PENT_MIN, MODE_HEX_MAJ, MODE_HEX_MIN, EN_NMODES };   /* (AISLING: the two gapped scales of the airs, after
+       MODE_PENT_MIN, MODE_HEX_MAJ, MODE_HEX_MIN, MODE_BLUES, EN_NMODES };   /* (AISLING: the two gapped scales of the airs, after
                                                                    * the eight, so a mode's number keeps its meaning) */
 extern const char *const EN_MODE_NAME[EN_NMODES];
 extern const uint16_t EN_MODE_POOL[EN_NMODES];
@@ -200,17 +200,34 @@ extern int32_t *en_usb_out;
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2);
 
 /* the voices: each layer's sounds (ALGORITHM on the layer's page) */
-#define EN_NCV 6                         /* (BERLIN) the Drone's voices: Organ, Strings, Horn, Saws, Glass, Choir */
-#define EN_NBV 8                         /* (the Lead's: Odyssey, Mini, Flute, Theremin, Synthi; AISLING appends
-                                         * Chanter, Fiddle, Voice) */
-#define EN_NSV 8                        /* (BERLIN) the Sequence's voices: 2600, Moog, Synthi, Pulse, Glass, Harp
+#define EN_NCV 7                         /* (BERLIN) the Drone's voices: Organ, Strings, Horn, Saws, Glass, Choir */
+#define EN_NBV 10                        /* (the Lead's: Odyssey, Mini, Flute, Theremin, Synthi; AISLING appends
+                                         * Chanter, Fiddle, Voice; Saints & Sinners the Slide) */
+#define EN_NSV 9                        /* (BERLIN) the Sequence's voices: 2600, Moog, Synthi, Pulse, Glass, Harp
                                          * (Pluck), Bouzouki, Dulcimer */
-#define EN_NS2V 10                      /* Sequence 2's: the same five, Sub, Harp, Bouzouki, Dulcimer, Bodhran (the
+#define EN_NS2V 11                      /* Sequence 2's: the same five, Sub, Harp, Bouzouki, Dulcimer, Bodhran (the
                                          * voices batch: Pluck appended to both, so every saved value keeps its voice;
                                          * AISLING's step 4 the same: the Sequence's 5..7 are Harp, Bouzouki,
                                          * Dulcimer, Sequence 2's 5 Sub and 6..9 the Harp .. Bodhran) */
 extern const char *const EN_SV_NAME[EN_NS2V];   /* all ten: 2600 .. Glass, Sub, Harp, Bouzouki, Dulcimer, Bodhran (the
                                                  * engine's own numbers) */
+/* (1.6) Patch, each family's last voice: a sound the player makes, 16 bytes a layer (0 the Drone, 1 the Sequence,
+ * 2 the Lead, 3 Sequence 2). Byte by byte: A's shape (0 saw, 1 pulse, 2 sine, 3 organ), the pulses' width (5..50 %);
+ * B's shape, semitones from A (-24..36), cents (-50..50), level (0..100); FM, B into A (0..100: a sine or organ A
+ * only), how far it follows the note's envelope (0..100); the sub, a sine an octave under (0..100); noise (0..100);
+ * the filter's offset (semitones, -36..36), resonance (0..100), envelope (0..100), key follow (0..100); the attack
+ * (0..100, the Sequences'); the gain (half dB, -24..12). Out of range: clamped. p 0: the layer's plain patch. In RAM
+ * only: a pack's piece brings its own */
+#define EN_PATCH_N 16
+void en_patch(int layer, const uint8_t *p);
+void en_patch_get(int layer, uint8_t *p);
+#ifdef EN_HOST
+/* (the plugin: a computer's notes, as played and not to the scale) a note on a layer (1 the Sequence, 2 the Lead,
+ * 3 Sequence 2; vel 0: let go, the Lead's only), and the Sequences' own notes held back (bit 0 the Sequence's, bit 1
+ * Sequence 2's) while a hand plays them */
+void en_note(int layer, int note, int vel);
+void en_hand(uint32_t mask);
+#endif
 extern volatile uint8_t en_seq_len[2];          /* each sequence's return point as it plays (the performer's moves) */
 extern volatile int8_t en_s2oct_shift;          /* Sequence 2's octave away from its knob's (home): -1, 0, 1 (Motion's,
                                                  * at the section changes; the UI shows the knob as home + it) */
@@ -391,6 +408,14 @@ const char *en_chord_label(int root, int kind, int type, char *buf);   /* "Fm7",
 
 /* the pieces: recipes for every parameter (Tune and MIDI out included, but they are the player's) */
 #define EN_NPIECES 8
-#define EN_NAIRS 8                             /* (AISLING) the airs (P_AIR), one a piece */
+#define EN_NAIRS 8                             /* (AISLING) the airs (P_AIR), one a piece; EN_NAIRS + 1 the pack's,
+                                                * en_air_set */
+#define EN_LEVEL 3                             /* (packs) what this engine has, for a pack to ask for: raised whenever a
+                                                * voice, a scale or a parameter is appended (never moved: a pack's
+                                                * numbers stay true). 1: AISLING 1.0's; 2: the Blues scale, the Slide,
+                                                * the pack's air, a slip jig's Lead; 3: Patch, each
+                                                * family's last voice */
 const char *en_piece_name(int i);
 void en_piece(int i, int16_t *par, uint16_t *pool);
+void en_recipe_apply(const uint8_t *pairs, int n, int16_t *par, uint16_t *pool);   /* (packs: a recipe as data) */
+void en_air_set(const int8_t *semi, const uint8_t *dur, int n);                   /* (packs: the piece's air) */

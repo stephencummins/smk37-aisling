@@ -2,7 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- AISLING as an app: from the home screen (or with ?app) the FM-1 fills the screen and nothing else shows -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/touch-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AISLING">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+if (matchMedia("(display-mode: standalone)").matches || navigator.standalone || new URLSearchParams(location.search).has("app"))
+  document.documentElement.classList.add("app");
+</script>
 <title>Emulator · AISLING</title>
 <meta name="description" content="AISLING, a generative Irish ambient firmware for the M-VAVE FM-1, in your browser: the same code the FM-1 runs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,9 +34,15 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 /* on a phone held upright the FM-1 goes edge to edge, and no narrower than 388 px: its buttons then sit 24 px
    apart (WCAG target size); on a narrower phone its frame scrolls sideways (the page does not) */
 @media (max-width: 440px) { .frame { margin-inline: -16px; overflow-x: auto; } .device { min-width: 388px; } }
-.device { position: relative; width: 100%; aspect-ratio: 1000 / 640; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.device { position: relative; width: 100%; aspect-ratio: 1615 / 965; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+/* Turn, on the page: the FM-1 a quarter round, as tall as the window takes. The frame keeps the turned panel's
+   footprint so the page flows round it; the app has its own rule (html.app-turned) */
+html.turned:not(.app) { --turn-w: min(100vh - 24px, (100vw - 32px) / .5975, 1040px); }
+html.turned:not(.app) .frame { flex: none; position: relative; width: calc(var(--turn-w) * .5975); height: var(--turn-w); max-width: none; margin-inline: auto; overflow: visible; }
+html.turned:not(.app) .device { position: absolute; left: 50%; top: 50%; width: var(--turn-w); min-width: 0; transform: translate(-50%, -50%) rotate(90deg); }
+html.turned:not(.app) .turn { display: none; }
 .device:focus { outline: none; }
-.device:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4.4% / 6.9%; }
+.device:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 5.9% / 9.8%; }
 .device svg { pointer-events: none; }
 .controls { position: absolute; inset: 0; pointer-events: none; }
 .keybed { position: absolute; inset: 0; pointer-events: none; }
@@ -34,7 +51,7 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 .hit:focus { outline: none; }
 .hit:focus-visible { outline: 3px solid #fff4dc; outline-offset: 2px; }
 .device svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.device canvas { position: absolute; left: 31.8%; top: 9.6875%; width: 20%; height: 31.25%; image-rendering: pixelated; background: #000; border-radius: 2px; }
+.device canvas { position: absolute; left: 27.523%; top: 10.259%; width: 20.155%; height: 33.731%; image-rendering: pixelated; background: #000; border-radius: 2px; }
 #screen { cursor: zoom-in; }
 /* the screen, large: beside the FM-1, or above it in a window taller than it is wide, so nothing covers the knobs.
    fitZoom() sets its size, and the room the row takes beyond the page's own width */
@@ -48,7 +65,7 @@ body.zoom-above .frame { flex: none; }
 body.zoom-above .zoom { order: -1; align-self: center; }
 body.zoomed .stage:fullscreen { --sw: 100%; width: 100%; margin: 0; padding: 16px; box-sizing: border-box; background: #000; justify-content: center; align-items: center; overflow: auto; }
 body.zoomed.zoom-above .stage:fullscreen { align-items: stretch; }
-.stage:fullscreen .frame { max-width: calc((100vh - 32px) / .64); }
+.stage:fullscreen .frame { max-width: calc((100vh - 32px) / .5975); }
 .zoom-more { display: inline-flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; }
 .zoom-more[hidden] { display: none; }
 .zoom-more select { font: inherit; }
@@ -63,7 +80,7 @@ body.zoomed.zoom-above .stage:fullscreen { align-items: stretch; }
 .lit .keyface.white { fill: #f6b48e; }
 .lit .keyface.black { fill: #4cc3b6; }
 @media (prefers-reduced-motion: reduce) { .btnface, .keyface { transition: none; } }
-.start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 13, .15); border-radius: 4.4% / 6.9%; }
+.start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 13, .15); border-radius: 5.9% / 9.8%; }
 .start button { font: 400 14px/1.4 var(--brand-mono); letter-spacing: .02em; text-transform: lowercase; padding: .6em 1.4em;
                 border: 1px solid var(--river); background: var(--river); color: var(--on-river); cursor: pointer; }
 .start button:focus-visible { outline: 3px solid #fdf9e4; outline-offset: 3px; }
@@ -127,6 +144,33 @@ main { transition: max-width .35s ease; }
 .vis-bar a { margin-left: auto; cursor: pointer; }
 .vis-bar button { font: 400 12.5px/1.4 var(--brand-mono); letter-spacing: .02em; text-transform: lowercase; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); border-radius: 0; min-height: 32px; cursor: pointer; padding: .2em .8em; }
 .vis iframe { flex: 1; min-height: 0; width: 100%; border: 0; border-top: 1px solid var(--rule); display: block; }
+#panel.decal .lbl { opacity: 0; }
+html.app .bar select { min-height: 44px; font-size: 14px; margin-left: .4rem; }
+/* ---- the app: the FM-1 alone, as large as the screen takes, on black. fitApp() sets --app-w, and turns the FM-1 a
+   quarter round on a phone held upright (html.app-turned), so it is played sideways without the phone's own rotation */
+.app-only, .install { display: none; }
+@media (pointer: coarse) { html:not(.app) .install { display: block; margin: 0 0 .8rem; color: var(--muted); font-size: 12.5px; } }
+html.app, html.app body { height: 100%; margin: 0; padding: 0; overflow: hidden; overscroll-behavior: none; background: #0e0d0c; }
+html.app .sitebar, html.app .wall, html.app .vis, html.app main > header, html.app .emu-head, html.app .turn, html.app .reader,
+html.app .help, html.app .zoom, html.app .cpu, html.app #shortcuts-l, html.app #zoom-btn, html.app .zoom-more, html.app #vis-open { display: none !important; }
+html.app main { max-width: none; margin: 0; padding: 0; transition: none; }
+html.app .stage { position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden; box-sizing: border-box;
+                  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+html.app .frame { position: absolute; left: 50%; top: 50%; width: var(--app-w, 100%); margin: 0; overflow: visible; transform: translate(-50%, -50%); }
+html.app .device { min-width: 0; }
+html.app-turned .frame { transform: translate(-50%, -50%) rotate(90deg); }
+html.app #screen { cursor: default; }
+html.app .app-only { display: block; }
+html.app #app-menu { position: fixed; z-index: 40; top: calc(env(safe-area-inset-top) + 6px); right: calc(env(safe-area-inset-right) + 6px);
+                     width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255, 244, 220, .12); color: #fbf0e4;
+                     font: 600 20px/1 var(--brand-mono, monospace); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+html.app #app-menu[aria-expanded="true"] { background: #fbf0e4; color: #24110a; }
+html.app .bar { position: fixed; z-index: 39; top: calc(env(safe-area-inset-top) + 56px); right: calc(env(safe-area-inset-right) + 6px);
+                max-width: min(300px, 80vw); margin: 0; padding: 12px 14px; flex-direction: column; align-items: stretch; gap: .6rem;
+                background: #f3ead7; color: #2b2219; border: 1px solid #2b2219; font-size: 14px; }
+html.app:not(.app-menu) .bar { display: none; }
+html.app .bar button, html.app .bar a.app-only { min-height: 44px; font-size: 14px; }
+html.app .bar a.app-only { display: grid; place-items: center; color: #2b2219; }
 </style>
 <!--AISLING-HEAD-->
 </head>
@@ -144,10 +188,11 @@ main { transition: max-width .35s ease; }
 
 <h2 class="sr" id="h-device">The FM-1</h2>
 <p class="turn">Turn your phone sideways for bigger controls.</p>
+<p class="install">As an app: in your browser's Share or menu, choose <b>Add to Home Screen</b>. Opened from there AISLING fills the screen and works with no connection.</p>
 <div class="stage" id="stage">
 <div class="frame">
 <div class="device" id="device" role="group" aria-labelledby="h-device" aria-describedby="device-help" tabindex="-1">
-  <svg id="panel" viewBox="0 0 1000 640" aria-hidden="true" focusable="false"></svg>
+  <svg id="panel" viewBox="0 0 1615 965" aria-hidden="true" focusable="false"></svg>
   <canvas id="screen" width="240" height="240" title="Click to zoom in" role="img" aria-label="The FM-1's screen. What it shows is read out: see Screen reader, below the FM-1."></canvas>
   <div class="controls" id="controls" inert></div>
   <div class="start" id="start"><button id="go" type="button">Switch on</button></div>
@@ -157,12 +202,14 @@ main { transition: max-width .35s ease; }
 </div>
 <p class="sr" id="device-help">Knobs: turn with the arrow keys, Page Up and Page Down turn faster. Buttons and keys: Space or Enter presses, held as long as you hold it; Shift with Space keeps a button held until you press it again. Keys: Left and Right arrows move between them.</p>
 
-<div class="bar">
+<button id="app-menu" class="app-only" type="button" aria-expanded="false" aria-controls="bar" aria-label="Menu">≡</button>
+<div class="bar" id="bar">
   <span id="status" role="status">Off. Sound starts when you switch it on.</span>
   <span class="cpu" id="cpu"></span>
   <button id="mute" type="button" aria-pressed="false" disabled>Mute</button>
   <button id="reset" type="button" title="Forget your scale and sound, and start again from the factory settings">Factory reset</button>
-  <label><input type="checkbox" id="shortcuts" checked> Keyboard shortcuts</label>
+  <button id="turn-btn" type="button" aria-pressed="false" title="The FM-1 a quarter turn round, its keys down the left-hand side">Turn</button>
+  <label id="shortcuts-l"><input type="checkbox" id="shortcuts" checked> Keyboard shortcuts</label>
   <button id="zoom-btn" type="button" aria-pressed="false" aria-controls="zoom" title="The FM-1's screen, large, beside the panel, so the knobs stay in reach">Zoom screen</button>
   <span class="zoom-more" id="zoom-more" hidden>
     <button id="zoom-full" type="button" title="The panel and the big screen, the whole monitor. Esc to leave">Full screen</button>
@@ -175,6 +222,12 @@ main { transition: max-width .35s ease; }
     </select></label>
   </span>
   <button id="vis-open" type="button" aria-expanded="false" aria-controls="vis" title="AISLING's visualiser, painting what the emulator plays">Visualiser</button>
+  <label id="decal-l">Decal <select id="decal">
+    <option value="">None</option><option value="swatch">Swatch</option><option value="flightdeck">Flight Deck</option>
+    <option value="kinetic">Kinetic</option><option value="neonrain">Neon Rain</option><option value="synthwave">Synthwave</option>
+    <option value="ticker">Ticker</option><option value="map-001">Map 001</option><option value="map-042">Map 042</option>
+    <option value="map-076">Map 076</option><option value="map-108">Map 108</option></select></label>
+  <a class="app-only" href="./">The emulator's page, with how to play it</a>
 </div>
 
 <section class="reader" aria-labelledby="h-reader">
@@ -357,6 +410,8 @@ const STORE_KEY = "aisling-emu-store", PREFS_KEY = "aisling-emu-prefs";
 // the keys' notes: key i is the pitch class (5 + i) % 12 (ui.c leds()), the firmware's spelling, said in words
 const NOTE = ["C", "C sharp", "D", "E flat", "E", "F", "F sharp", "G", "A flat", "A", "B flat", "B"];
 const $ = (id) => document.getElementById(id);
+const APP = document.documentElement.classList.contains("app");
+let turned = false;       // the FM-1 a quarter turn clockwise, its top at the screen's right: the Turn button, or the app on a screen held upright
 const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); } catch { return {}; } })();
 const savePrefs = () => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* private window */ } };
 
@@ -375,59 +430,72 @@ function text(parent, x, y, s, size, fill = LABEL, weight = 600) {
 }
 
 // ---------------------------------------------------------------- the panel (a picture: aria-hidden)
-el("rect", { x: 4, y: 4, width: 992, height: 632, rx: 44, fill: BODY });
+// Drawn to the FM-1's own measurements (161.5 x 96.5 mm, here ten units to the mm), so that a decal's art, made for
+// the real panel, lies on it as it would on the FM-1: its holes round the knobs and the trays.
+el("rect", { x: 6, y: 6, width: 1603, height: 953, rx: 95, fill: BODY });
+// the decal: where the vinyl lies, 1.5 mm in from the case's edge
+const clip = el("clipPath", { id: "skin" });
+el("rect", { x: 15, y: 15, width: 1585, height: 935, rx: 80 }, clip);
+const decalImg = el("image", { id: "decal-art", x: 0, y: 0, width: 1615, height: 965, preserveAspectRatio: "none", "clip-path": "url(#skin)", visibility: "hidden" });
+// its holes (the case showing through): 0.75 mm round a tray, 10 mm across at a knob
+const hole = (x, y, w, h, r) => el("rect", { x: x - 7.5, y: y - 7.5, width: w + 15, height: h + 15, rx: r + 7.5, fill: BODY });
 const knobs = {};
 function knob(x, y, r, label, role) {
+  el("circle", { cx: x, cy: y, r: 50, fill: BODY });
   const g = el("g", { class: "ctl knob" });
-  el("circle", { cx: x, cy: y, r: r + 5, fill: KNOB_FOOT }, g);
-  el("circle", { cx: x, cy: y, r, fill: KNOB, stroke: KNOB_EDGE, "stroke-width": 2 }, g);
-  const ind = el("line", { x1: x, y1: y - r + 5, x2: x, y2: y - r + 15, stroke: BTN_INK, "stroke-width": 3, "stroke-linecap": "round" }, g);
-  text(g, x, y - r - 12, label, 17);
-  el("circle", { cx: x, cy: y, r: r + 14, fill: "transparent" }, g);
+  el("circle", { cx: x, cy: y, r: r + 8, fill: KNOB_FOOT }, g);
+  el("circle", { cx: x, cy: y, r, fill: KNOB, stroke: KNOB_EDGE, "stroke-width": 3 }, g);
+  const ind = el("line", { x1: x, y1: y - r + 8, x2: x, y2: y - r + 24, stroke: BTN_INK, "stroke-width": 4.5, "stroke-linecap": "round" }, g);
+  text(g, x, y - 70, label, 25).classList.add("lbl");     // a decal prints the names itself
+  el("circle", { cx: x, cy: y, r: r + 22, fill: "transparent" }, g);
   knobs[label] = { g, ind, x, y, angle: 0, role, label };
   return knobs[label];
 }
-knob(105, 100, 24, "MASTER", "master");
-knob(215, 100, 24, "SELECT", ENC.SELECT);
-knob(105, 205, 24, "PRESETS", ENC.PRESETS);
-knob(215, 205, 24, "ALGORITHM", ENC.ALGORITHM);
-for (let i = 0; i < 4; i++) knob(610 + i * 104, 100, 22, `KNOB${i + 1}`, ENC[`KNOB${i + 1}`]);
+knob(135.5, 152, 37, "MASTER", "master");
+knob(306.5, 152, 37, "SELECT", ENC.SELECT);
+knob(135.5, 321, 37, "PRESETS", ENC.PRESETS);
+knob(306.5, 321, 37, "ALGORITHM", ENC.ALGORITHM);
+for (let i = 0; i < 4; i++) knob(908.8 + i * 181.7, 152, 37, `KNOB${i + 1}`, ENC[`KNOB${i + 1}`]);
 
 const buttons = {};
 function button(x, y, w, h, label, two) {
   const g = el("g", { class: "ctl" });
-  el("rect", { x, y, width: w, height: h, rx: 9, fill: BTNC, stroke: BTN_EDGE, "stroke-width": 1.5, class: "btnface" }, g);
-  if (two) { text(g, x + w / 2, y + h / 2 - 1, label, 12, BTN_INK); text(g, x + w / 2, y + h / 2 + 12, two, 12, BTN_INK); }
-  else text(g, x + w / 2, y + h / 2 + 5, label, 15, BTN_INK);
+  el("rect", { x, y, width: w, height: h, rx: 14, fill: BTNC, stroke: BTN_EDGE, "stroke-width": 2.4, class: "btnface" }, g);
+  if (two) { text(g, x + w / 2, y + h / 2 - 2, label, 19, BTN_INK); text(g, x + w / 2, y + h / 2 + 19, two, 19, BTN_INK); }
+  else text(g, x + w / 2, y + h / 2 + 8, label, 24, BTN_INK);
   buttons[label] = { g, bit: BTN[label], label };
 }
-el("rect", { x: 58, y: 258, width: 210, height: 58, rx: 14, fill: TRAY });
-button(72, 268, 82, 38, "OCT-"); button(170, 268, 82, 38, "OCT+");
-el("rect", { x: 300, y: 44, width: 236, height: 236, rx: 26, fill: "#111214" });
-el("rect", { x: 568, y: 160, width: 400, height: 140, rx: 18, fill: TRAY });
+hole(88.5, 411, 255, 82, 18);
+el("rect", { x: 88.5, y: 411, width: 255, height: 82, rx: 18, fill: TRAY });
+button(98.5, 419, 112, 66, "OCT-"); button(221.5, 419, 112, 66, "OCT+");
+hole(414.5, 69, 385.5, 385.5, 56);
+el("rect", { x: 414.5, y: 69, width: 385.5, height: 385.5, rx: 56, fill: "#111214" });
+hole(857.5, 264, 649, 229.5, 33);
+el("rect", { x: 857.5, y: 264, width: 649, height: 229.5, rx: 33, fill: TRAY });
 const ROW1 = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO"], ROW2 = ["HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"];
 for (let i = 0; i < 6; i++) {
-  button(582 + i * 63, 174, 54, 48, ROW1[i]);
-  if (ROW2[i] === "PLAY") button(582 + i * 63, 236, 54, 48, "PLAY", "STOP"); else button(582 + i * 63, 236, 54, 48, ROW2[i]);
+  button(871.5 + i * 105.2, 278, 95, 95, ROW1[i]);
+  if (ROW2[i] === "PLAY") button(871.5 + i * 105.2, 384, 95, 95, "PLAY", "STOP"); else button(871.5 + i * 105.2, 384, 95, 95, ROW2[i]);
 }
 
 const keys = [];
 (function keybed(x0, y0, w, h) {
-  el("rect", { x: x0, y: y0, width: w, height: h, rx: 18, fill: TRAY });
-  const pitch = (w - 24) / 16, kw = pitch * 0.78;
+  hole(x0, y0, w, h, 66);
+  el("rect", { x: x0, y: y0, width: w, height: h, rx: 66, fill: TRAY });
+  const pad = 22, pitch = (w - 2 * pad) / 16, kw = pitch * 0.78;
   for (let i = 0; i < 16; i++) {
     const g = el("g", { class: "ctl" });
-    el("rect", { x: x0 + 12 + i * pitch + (pitch - kw) / 2, y: y0 + h * 0.43, width: kw, height: h * 0.52, rx: kw / 2, fill: KEY_W, stroke: BTN_EDGE, "stroke-width": 1.5, class: "keyface white" }, g);
-    el("rect", { x: x0 + 12 + (i + 0.5) * pitch - 3, y: y0 + h * 0.55, width: 6, height: h * 0.28, rx: 3, fill: SLIT }, g);
+    el("rect", { x: x0 + pad + i * pitch + (pitch - kw) / 2, y: y0 + h * 0.43, width: kw, height: h * 0.52, rx: kw / 2, fill: KEY_W, stroke: BTN_EDGE, "stroke-width": 2.4, class: "keyface white" }, g);
+    el("rect", { x: x0 + pad + (i + 0.5) * pitch - 4.5, y: y0 + h * 0.55, width: 9, height: h * 0.28, rx: 4.5, fill: SLIT }, g);
     keys[WHITE_K[i]] = { g };
   }
   BLACK_AFTER.forEach((a, k) => {
     const g = el("g", { class: "ctl" });
-    el("rect", { x: x0 + 12 + (a + 1) * pitch - kw / 2, y: y0 + h * 0.06, width: kw, height: h * 0.33, rx: kw / 2, fill: KEY_B, stroke: BTN_EDGE, "stroke-width": 1.5, class: "keyface black" }, g);
-    el("rect", { x: x0 + 12 + (a + 1) * pitch - 3, y: y0 + h * 0.12, width: 6, height: h * 0.21, rx: 3, fill: SLIT }, g);
+    el("rect", { x: x0 + pad + (a + 1) * pitch - kw / 2, y: y0 + h * 0.06, width: kw, height: h * 0.33, rx: kw / 2, fill: KEY_B, stroke: BTN_EDGE, "stroke-width": 2.4, class: "keyface black" }, g);
+    el("rect", { x: x0 + pad + (a + 1) * pitch - 4.5, y: y0 + h * 0.12, width: 9, height: h * 0.21, rx: 4.5, fill: SLIT }, g);
     keys[BLACK_K[k]] = { g };
   });
-})(36, 340, 928, 270);
+})(51, 549, 1504.5, 360);
 
 // ---------------------------------------------------------------- touch targets: the controls themselves
 // The drawing is only a picture (pointer-events: none, aria-hidden). Each control gets an HTML target over it,
@@ -438,7 +506,7 @@ const device = $("device"), controls = $("controls");
 function hit(c, cls, attrs, parent = controls) {
   const b = c.g.getBBox(), d = document.createElement("div");
   d.className = "hit" + (cls ? " " + cls : "");
-  Object.assign(d.style, { left: `${b.x / 10}%`, top: `${b.y / 6.4}%`, width: `${b.width / 10}%`, height: `${b.height / 6.4}%` });
+  Object.assign(d.style, { left: `${b.x / 16.15}%`, top: `${b.y / 9.65}%`, width: `${b.width / 16.15}%`, height: `${b.height / 9.65}%` });
   for (const [k, v] of Object.entries(attrs)) d.setAttribute(k, v);
   d.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
   parent.appendChild(d);
@@ -557,6 +625,15 @@ keys.forEach((k, i) => {
     keyHeldBy.set("p" + e.pointerId, i);
     syncKeys();
   });
+  // slide to the next key: the finger that went down on a key plays whichever key it is over
+  k.hit.addEventListener("pointermove", (e) => {
+    const id = "p" + e.pointerId, was = keyHeldBy.get(id);
+    if (was === undefined) return;
+    const over = keys.findIndex((x) => { const r = x.hit.getBoundingClientRect(); return e.clientX >= r.left && e.clientX < r.right && e.clientY >= r.top && e.clientY < r.bottom; });
+    if (over < 0 || over === was) return;
+    keyHeldBy.set(id, over);
+    syncKeys();
+  });
   keyHold(k.hit, keyHeldBy, i, syncKeys, false);
   // the keys are one stop: the arrows move along them (a roving tabindex)
   k.hit.addEventListener("keydown", (e) => {
@@ -601,18 +678,20 @@ function turn(k, n) {
   }
   drawKnob(k);
 }
+// how far up the FM-1 a pointer is: up the screen, or (turned) towards the screen's right
+const upOf = (e) => turned ? e.clientX : -e.clientY;
 for (const k of Object.values(knobs)) {
   if (k.role === "master") { k.angle = -135 + 270 * master / 4096; drawKnob(k); showMaster(k); }
   let drag = null, wheel = 0;
   k.hit.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     k.hit.setPointerCapture(e.pointerId);
-    drag = { y: e.clientY, acc: 0 };
+    drag = { y: upOf(e), acc: 0 };
   });
   k.hit.addEventListener("pointermove", (e) => {
     if (!drag) return;
-    drag.acc += drag.y - e.clientY;
-    drag.y = e.clientY;
+    drag.acc += upOf(e) - drag.y;
+    drag.y = upOf(e);
     const step = k.role === "master" ? 3 : 7;
     const n = Math.trunc(drag.acc / step);
     if (n) { drag.acc -= n * step; turn(k, n); }
@@ -812,7 +891,13 @@ async function switchOn() {
   go.textContent = "Starting...";
   status.textContent = "Starting.";
   try {
+    // an iPhone plays a page's sound through its ringer, silent with the switch at the side: as "playback" it sounds anyway
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch { /* an older Safari */ }
     const ac = new AudioContext({ sampleRate: 44100, latencyHint: "interactive" });
+    // Safari starts the sound only inside the tap itself: now, before the files are waited for (and again at any
+    // later touch, should it have stopped: a call, another app)
+    ac.resume().catch(() => {});
+    for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, () => { if (ac.state !== "running") ac.resume().catch(() => {}); }, true);
     const [wasm] = await Promise.all([fetch("amb.wasm").then((r) => { if (!r.ok) throw new Error(`amb.wasm: ${r.status}`); return r.arrayBuffer(); }),
                                       ac.audioWorklet.addModule("worklet.js")]);
     node = new AudioWorkletNode(ac, "amb", { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
@@ -839,12 +924,14 @@ async function switchOn() {
     $("start").hidden = true;
     controls.inert = false;
     $("mute").disabled = false;
-    status.textContent = ac.sampleRate === 44100 ? "On." : `On (the browser runs audio at ${ac.sampleRate} Hz).`;
+    status.textContent = ac.state !== "running" ? "On, but the browser has not started the sound: touch the FM-1."
+      : ac.sampleRate === 44100 ? "On." : `On (the browser runs audio at ${ac.sampleRate} Hz).`;
     syncButtons(); syncKeys();
     readerMode();
     if (visShown()) send({ type: "midi", on: true });
     // the button pressed is gone: the focus goes to the FM-1 it switched on, not back to the top of the page
     device.focus({ preventScroll: true });
+    if (APP) keepAwake();
   } catch (err) {
     node = null;
     go.disabled = false;
@@ -1010,14 +1097,76 @@ $("zoom-full").addEventListener("click", async () => {
 });
 document.addEventListener("fullscreenchange", fitZoom);
 $("zoom-btn").addEventListener("click", () => setZoom(!zoomOn));
-$("screen").addEventListener("click", () => setZoom(!zoomOn));
+$("screen").addEventListener("click", () => { if (!APP) setZoom(!zoomOn); });
 $("screen-zoom").addEventListener("click", () => { setZoom(false); if (node) device.focus({ preventScroll: true }); });
 addEventListener("resize", fitZoom);
 
+// ---------------------------------------------------------------- the decals
+// CU_STE's skins for the FM-1's top (decals/<name>.webp: each design's own art, at the panel's size), laid on the drawing
+function setDecal(name) {
+  const sel = $("decal"), ok = [...sel.options].some((o) => o.value === name) ? name : "";
+  sel.value = ok;
+  svg.classList.toggle("decal", !!ok);
+  decalImg.setAttribute("visibility", ok ? "visible" : "hidden");
+  if (ok) decalImg.setAttribute("href", `decals/${ok}.webp`);
+  prefs.decal = ok; savePrefs();
+}
+$("decal").addEventListener("change", (e) => { prefs.decalSet = true; setDecal(e.target.value); });
+// Flight Deck until a choice is made (None included: an empty choice from before there was a default doesn't count)
+setDecal(prefs.decal || (prefs.decalSet ? "" : "flightdeck"));
+
 setVisH(+prefs.visH || 45);
-if (prefs.vis) showVis(true);
 setLook(prefs.look || "colour");
-if (prefs.zoom) setZoom(true);
+if (!APP) {
+  if (prefs.vis) showVis(true);
+  if (prefs.zoom) setZoom(true);
+}
+
+// ---------------------------------------------------------------- the app
+// Kept for the next visit and for no connection at all (sw.js: the network first, what it last had otherwise).
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
+// the screen stays on while AISLING plays (where the browser lets it); asked again each time the app comes back
+let wake = null;
+async function keepAwake() {
+  try { if (navigator.wakeLock && document.visibilityState === "visible") wake = await navigator.wakeLock.request("screen"); } catch { /* not allowed: the phone sleeps as usual */ }
+}
+// the FM-1 (1615 x 965) as large as the screen takes inside its safe area, turned when that makes it larger on a
+// screen taller than it is wide
+function fitApp() {
+  const st = $("stage"), cs = getComputedStyle(st);
+  const w = st.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+        h = st.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  turned = typeof prefs.turn === "boolean" ? prefs.turn : h > w;
+  document.documentElement.classList.toggle("app-turned", turned);
+  $("turn-btn").setAttribute("aria-pressed", String(turned));
+  document.documentElement.style.setProperty("--app-w", Math.floor(turned ? Math.min(h, w / .5975) : Math.min(w, h / .5975)) + "px");
+}
+// Turn: on the page it is off until asked for; in the app it overrides what the screen's shape chose, until the
+// phone itself is turned
+function setTurn(on) {
+  if (APP || on) prefs.turn = on; else delete prefs.turn;   // the page keeps only "turned": off there must not hold the app flat
+  savePrefs();
+  if (APP) return fitApp();
+  turned = on;
+  document.documentElement.classList.toggle("turned", on);
+  $("turn-btn").setAttribute("aria-pressed", String(on));
+  fitZoom();
+}
+$("turn-btn").addEventListener("click", () => {
+  setTurn(!turned);
+  if (!APP && turned) device.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+});
+if (!APP && prefs.turn === true) setTurn(true);
+if (APP) {
+  fitApp();
+  addEventListener("resize", fitApp);
+  addEventListener("orientationchange", () => { delete prefs.turn; savePrefs(); fitApp(); });
+  document.addEventListener("visibilitychange", () => { if (node && document.visibilityState === "visible") keepAwake(); });
+  const menu = $("app-menu"), open = (on) => { document.documentElement.classList.toggle("app-menu", on); menu.setAttribute("aria-expanded", on ? "true" : "false"); };
+  menu.addEventListener("click", () => open(menu.getAttribute("aria-expanded") !== "true"));
+  device.addEventListener("pointerdown", () => open(false), true);
+  addEventListener("keydown", (e) => { if (e.key === "Escape") open(false); });
+}
 </script>
 </body>
 </html>

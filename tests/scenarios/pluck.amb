@@ -33,9 +33,13 @@ said VOICE Dulcimer
 expect par33 7
 turn ALGO 1
 wait 300
+said VOICE Patch
+expect par33 8
+turn ALGO 1
+wait 300
 said VOICE 2600
 expect par33 0
-turn ALGO -1
+turn ALGO -2
 wait 300
 said VOICE Dulcimer
 expect par33 7
@@ -48,13 +52,17 @@ wait 300
 expect view 4
 spin ALGO -2
 wait 300
+said VOICE Patch
+expect par35 10
+spin ALGO -1
+wait 300
 said VOICE Bodhran
 expect par35 9
-spin ALGO 1
+spin ALGO 2
 wait 300
 said VOICE 2600
 expect par35 0
-spin ALGO -1
+spin ALGO -2
 wait 300
 said VOICE Bodhran
 expect par35 9

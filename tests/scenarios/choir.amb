@@ -12,9 +12,13 @@ said VOICE Organ
 expect par22 0
 turn ALGO -1
 wait 300
+said VOICE Patch
+expect par22 6
+turn ALGO -1
+wait 300
 said VOICE Choir
 expect par22 5
-turn ALGO 1
+turn ALGO 2
 wait 300
 said VOICE Organ
 expect par22 0

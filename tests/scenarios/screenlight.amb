@@ -1,7 +1,7 @@
 # 1.4.1: the screen, dark or light: KNOB 3 on the Journey page (GLO, a third time). Saved, as Lights; the colours
 # follow at the next frame; the held effects' lettering reads on both
 wait 300
-expect light 0
+expect light 2
 expect pfcontrast 0
 tap GLO
 wait 300
@@ -35,7 +35,15 @@ tap GLO
 wait 300
 tap GLO
 wait 600
-turn K3 -2
+turn K3 -1
+wait 200
+expect light 0
+# (packs) a turn more: Auto, as the piece is. The eight are light (1.6)
+turn K3 -1
+wait 200
+expect light 2
+expect lit 1
+turn K3 1
 wait 200
 expect light 0
 wait 600

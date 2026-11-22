@@ -38,14 +38,14 @@ SR = (0x7D, 0x53, 0x52)
 PORT_RE = re.compile(r"FM-1|DUB-1", re.I)     # by name: nothing goes to any other device
 
 HELLO, BYE, BEAT, SET, VIEW, PIECE, PLAY, HOLD, PERF, FORGET, KEYS, BUTTONS = range(1, 13)
-UNDO, REDO, SAVE, VOICE, COPY, SWAP, RESET, OPEN, READ, BEGIN, WRITE, COMMIT = range(13, 25)
+UNDO, REDO, SAVE, VOICE, COPY, SWAP, RESET, OPEN, READ, BEGIN, WRITE, COMMIT, BANK, PATCH = range(13, 27)
 R_HELLO, R_ACK, R_STATE, R_VALS, R_CHUNK = 65, 66, 67, 68, 69
 ST_OK, ST_BAD, ST_REFUSED, ST_SUM, ST_BUSY, ST_NONE = range(6)
 ST_NAME = ["ok", "bad", "refused", "sum", "busy", "none"]
 GAVE_UP = -1
 SAY = 16
 
-A_PROJ, A_SLOT, A_FLASH = 0, 1, 9             # area 1 + piece: a piece
+A_PROJ, A_SLOT, A_FLASH, A_PACK = 0, 1, 9, 10  # area 1 + piece: a piece; (packs) 10: the sound pack installed
 VER, CHUNK = 1, 128
 RESEND, TRIES = 0.2, 25
 NPIECES, NPARS, PROJ_FORMAT, PROJ_LEN, SLOT_LEN = 8, 133, 3, 3112, 352
@@ -107,8 +107,14 @@ def unpack(s):
 
 def parse_hello(a):
     n = a[9]
-    return dict(ver=a[0], format=a[1], proj=get14u(a, 2), slot=get14u(a, 4), npars=get14u(a, 6), npieces=a[8],
-                version=bytes(a[10:10 + n]).decode("ascii", "replace"))
+    h = dict(ver=a[0], format=a[1], proj=get14u(a, 2), slot=get14u(a, 4), npars=get14u(a, 6), npieces=a[8],
+             version=bytes(a[10:10 + n]).decode("ascii", "replace"), level=1, bank=0, pack=None)
+    at = 10 + n                                # (packs) after the version: level, bank, the pack's version and name
+    if len(a) >= at + 5:
+        h["level"], h["bank"] = a[at], a[at + 1]
+        if a[at + 4]:
+            h["pack"] = "%s v%d" % (bytes(a[at + 5:at + 5 + a[at + 4]]).decode("ascii", "replace"), get14u(a, at + 2))
+    return h
 
 
 def parse_state(a):
@@ -338,6 +344,17 @@ class Link:
 
     def piece(self, i):
         return self.req(PIECE, [i])[0]
+
+    def patch(self, layer, vals):
+        """(1.6) layer's Patch (0 Drone, 1 Sequence, 2 Lead, 3 Sequence 2), 16 numbers as amb.h's en_patch: the layer
+        plays it at once, and it is kept nowhere. vals None: the piece's own voice and patch back. 5 (none): not in
+        the pack's bank."""
+        if vals is None:
+            return self.req(PATCH, [layer | 8] + [0] * 32)[0]
+        vals = list(vals)
+        if len(vals) != 16:
+            raise ValueError("a patch is 16 numbers")
+        return self.req(PATCH, [layer] + [b for v in vals for b in put14(int(v) & 0x3FFF)])[0]
 
     def set_playing(self, on, wait=8.0):
         if self.state and self.state["playing"] == on:
@@ -754,11 +771,17 @@ def main():
     sub.add_parser("state")
     sub.add_parser("play")
     sub.add_parser("stop")
+    s = sub.add_parser("pack", help="(packs) the sound pack: what is on the FM-1, or install FILE.aispack, remove, or bank 0|1")
+    s.add_argument("do", nargs="?", default="show", help="show, a .aispack file to install, remove, or bank")
+    s.add_argument("n", nargs="?", type=int, default=1, help="with bank: 0 the eight, 1 the pack's")
     for name in ("backup", "verify", "restore", "test"):
         s = sub.add_parser(name)
         s.add_argument("dir")
         if name == "backup":
             s.add_argument("--force", action="store_true", help="overwrite a backup already there")
+    s = sub.add_parser("patch", help="(1.6) hear a Patch on a pack's piece: LAYER and its 16 numbers; nothing is kept")
+    s.add_argument("layer", help="drone, seq, lead, seq2 (or 0..3)")
+    s.add_argument("vals", help="16 numbers, as 2,50,0,12,0,0,40,60,0,0,0,20,50,30,0,0 (amb.h: en_patch); or off: the piece's own back")
     s = sub.add_parser("soak")
     s.add_argument("--minutes", type=float, default=10, help="minutes a piece, link idle")
     s.add_argument("--poll", type=float, default=0, help="then minutes a piece, an editor reading all it can")
@@ -782,6 +805,28 @@ def main():
         elif a.what in ("play", "stop"):
             code = 0 if lk.set_playing(a.what == "play") else 1
             print(show_state(lk.state))
+        elif a.what == "pack":                 # (the FM-1 takes or drops a pack only at rest: it is stopped first)
+            if a.do == "bank":
+                st, _ = lk.req(BANK, [1 if a.n else 0])
+            elif a.do != "show":
+                data = b"" if a.do == "remove" else open(a.do, "rb").read()
+                if lk.state and lk.state["playing"]:
+                    lk.set_playing(False)
+                st = lk.write_area(A_PACK, data, rest_wait=30)
+            else:
+                st = ST_OK
+            print("level %d, bank %d, pack: %s  (%s)" % (lk.hello["level"], lk.hello["bank"], lk.hello["pack"] or "none",
+                                                          ST_NAME[st] if 0 <= st < 6 else "gave up"))
+            if a.do != "show" and st == ST_OK:
+                got = lk.read_area(A_PACK)
+                print("now on it: %s" % ("%d bytes, %s" % (len(got), bytes(got[12:32]).split(b"\0")[0].decode()) if got else "no pack"))
+            code = 0 if st == ST_OK else 1
+        elif a.what == "patch":
+            names = {"drone": 0, "seq": 1, "lead": 2, "seq2": 3}
+            st = lk.patch(names[a.layer] if a.layer in names else int(a.layer), None if a.vals == "off" else [int(v) for v in a.vals.split(",")])
+            print("patch: %s" % (("the piece's own" if a.vals == "off" else "heard") if st == ST_OK else "not in the pack's bank" if st == ST_NONE
+                                 else ST_NAME[st] if 0 <= st < 6 else "no answer"))
+            code = 0 if st == ST_OK else 1
         elif a.what == "backup":
             code = cmd_backup(a, lk)
         elif a.what == "verify":

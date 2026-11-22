@@ -5,7 +5,7 @@
 
   tools/build.py [--release X.Y[-suffix]] [--board fm1|smk37]
 
-Outputs in build/: amb.bin (app), loader/ota.bin (update loader, Felucca's, unchanged),
+Outputs in build/: amb.bin (app), loader/ota.bin (update loader: Felucca's, with a screen, loader/ldr_ui.c),
 amb.fwsc (package). See BUILDING.md for the toolchain and the SDK.
 --board smk37 builds for the M-VAVE SMK-37 Elite into build/smk37/ (the same names), so neither
 board's build overwrites the other's. The FM-1 (the default) builds exactly as without the option.

@@ -164,7 +164,7 @@ AISLING writes three parts of it and never writes the rest:
 | 0x9D000–0xBFFFF | the stock firmware's settings | an update's staging, in the top five sectors (0xBB000–0xBFFFF) |
 | 0xC0000–0xC0FFF | Bluetooth pairings | never written |
 | 0xC1000–0xC1FFF | the keys' velocity calibration, made for each unit | never written |
-| 0xC2000–0xEAFFF | the stock presets | AISLING's saved pieces and panel, 0xC2000–0xC5FFF |
+| 0xC2000–0xEAFFF | the stock presets | AISLING's saved pieces and panel, 0xC2000–0xC9FFF (the sound pack in the upper half, from 1.6) |
 | 0xEB000–0xF3FFF | (not in the package) | not written |
 | 0xF4000–0xFDFFF | the stock firmware's resources | never written |
 | 0xFE000–0xFFFFF | (not in the package), and the key and address at 0xFF000 | never written |
@@ -280,7 +280,7 @@ firmware the Elite has three MIDI ports and the installer uses the one ending "-
 **Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again, makes its
 sounds, and its controls work. Its first presets hold AISLING's saved pieces, though: a fader showed a stale value
 until it was moved. `tools/fm1_rescue.py --write --presets BACKUP.bin` puts the four preset sectors AISLING uses
-(0xC2000–0xC5FFF) back from the unit's own backup; it checks the flash chip's ID and that the backup's bootloader area
+(0xC2000–0xC9FFF) back from the unit's own backup; it checks the flash chip's ID and that the backup's bootloader area
 and velocity calibration equal the flash's, and writes only the app area and those sectors. That route has not been
 needed yet, so it is untried on an Elite.
 

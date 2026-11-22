@@ -525,7 +525,8 @@ static const char *mode_name(void)
 /* the modes as they're stepped through (ALGORITHM, the Key page's Mode): the most common first; AISLING's two
  * hexatonics last, so the eight keep their places. (The values kept are the engine's, MODE_*) */
 static const uint8_t MODE_ORDER[EN_NMODES] = {MODE_AEOLIAN, MODE_IONIAN, MODE_DORIAN, MODE_MIXOLYDIAN, MODE_PENT_MIN,
-                                              MODE_PENT_MAJ, MODE_PHRYGIAN, MODE_LYDIAN, MODE_HEX_MAJ, MODE_HEX_MIN};
+                                              MODE_PENT_MAJ, MODE_PHRYGIAN, MODE_LYDIAN, MODE_HEX_MAJ, MODE_HEX_MIN,
+                                              MODE_BLUES};
 static int mode_pos(int m)
 {
     int i;
@@ -567,8 +568,8 @@ static int knob_get(int k)
         return proj.par[k] + (k == P_SEQ2OCT ? s2_shift() : 0);
     if (k == K_LEDS)
         return proj.leds;
-    if (k == K_SCR)
-        return proj.light != 0;
+    if (k == K_SCR)                              /* (packs) the knob: Auto, Dark, Light; kept: 2, 0, 1 */
+        return (proj.light + 1) % 3;
     if (k == K_CPU)
         return (int)plat_cpu_pct();
     if (k == K_SLOT)
@@ -613,7 +614,7 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = 50;
     } else {
         *lo = 0;
-        *hi = k == K_SCR ? 1 : k == K_DAY ? NDAY - 1 : k == K_JRP ? NPIECES - 1 : k == K_JRIN ? 1 : k == K_CHORUS ? 100 : k == K_PLAY ? 1 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
+        *hi = k == K_SCR ? 2 : k == K_DAY ? NDAY - 1 : k == K_JRP ? NPIECES - 1 : k == K_JRIN ? 1 : k == K_CHORUS ? 100 : k == K_PLAY ? 1 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
             : k == K_LANE ? EN_NDRUM - 1 : k == K_LCH ? 100 : 0;
     }
 }
@@ -641,7 +642,7 @@ static void knob_text(int k, char *b)
         *b++ = '%';
         *b = 0;
     } else if (k == K_JRP || k == K_JRIN || k == K_DAY || k == K_SCR) {
-        const char *n = k == K_SCR ? (v ? "Light" : "Dark") : k == K_DAY ? DAY_NAME[v] : k == K_JRP ? piece_name(v) : v ? "In" : "Out";
+        const char *n = k == K_SCR ? (v == 2 ? "Light" : v ? "Dark" : "Auto") : k == K_DAY ? DAY_NAME[v] : k == K_JRP ? piece_name(v) : v ? "In" : "Out";
         while ((*b++ = *n++))
             ;
     } else if (k == K_SLOT) {
@@ -726,7 +727,7 @@ static void knob_set(int k, int v)
     } else if (k == K_LEDS) {
         proj.leds = (uint8_t)v;
     } else if (k == K_SCR) {                     /* (kpal follows it at the next frame: pal_sync) */
-        proj.light = (uint8_t)(v != 0);
+        proj.light = (uint8_t)(((v < 0 ? 0 : v > 2 ? 2 : v) + 2) % 3);   /* (packs: 2, as the piece is) */
     } else if (k == K_SLOT) {
         ui.slot = (uint8_t)v;
         return;                                  /* (only where the page looks: nothing saved) */
@@ -901,7 +902,7 @@ static void mac_home(void)                       /* (the user, 2026-10-28) a pie
 static void set_piece(int i)                    /* the piece playing kept as it is; piece i as it was left */
 {
     mac_home();
-    project_piece(i);
+    project_piece(i);                            /* (after a change of bank: nothing kept, project.c's bank_stale) */
     project_apply();
     oct_home_take();
     en_seed(plat_ms());
@@ -910,6 +911,26 @@ static void set_piece(int i)                    /* the piece playing kept as it 
     sp_piece();                                  /* a screen reader: the piece with its key and tempo */
     mark_dirty();
     undo_clear();                                /* (0.5) another piece: nothing to go back to */
+}
+static void set_piece_bank(int b, int i)        /* (packs) piece i of bank b (0 the eight, 1 the pack's) */
+{
+    if (project_bank(b))
+        memset(ui.sig, 0, sizeof ui.sig);        /* (other names, perhaps another screen: all drawn again) */
+    set_piece(i);
+}
+static void set_piece_ring(int e)               /* PRESET's turn by e: past the eighth, the pack's first, and round.
+                                                  * (1.6) A place the pack left empty is passed over. */
+{
+    const int all = NPIECES * (pack_have() ? 2 : 1), d = e < 0 ? -1 : 1, was = proj.piece + NPIECES * bank;
+    int n = was, k;
+    for (e = e < 0 ? -e : e; e > 0; e--)
+        for (k = 0; k < all; k++) {              /* (the eight are never empty: it ends) */
+            n = (n + d + all) % all;
+            if (!piece_empty(n / NPIECES, n % NPIECES))
+                break;
+        }
+    if (n != was)
+        set_piece_bank(n / NPIECES, n % NPIECES);
 }
 
 /* ----------------------------------------------------------- PERFORM --- */
@@ -1669,11 +1690,11 @@ static void midi_in(void)
         }
         else if ((st & 0xF0u) == 0xB0u)
             cc_in((int)n, (int)v);               /* (1.2) */
-        else if ((st & 0xF0u) == 0xC0u && n < NPIECES) {   /* (1.1, Penumbra's idea) program change 0-7, any
+        else if ((st & 0xF0u) == 0xC0u && n < NPIECES * (pack_have() ? 2u : 1u)) {   /* (packs: 8-15 the pack's) */   /* (1.1, Penumbra's idea) program change 0-7, any
                                                   * channel: that piece, as PRESET turned to it. The one playing:
                                                   * nothing (a DAW sends it at every clip's start; not grown again) */
-            if ((int)n != proj.piece)
-                set_piece((int)n);
+            if ((int)n != proj.piece + NPIECES * bank)
+                set_piece_bank((int)n / NPIECES, (int)n % NPIECES);
             ui.act_t = plat_ms();                /* (a touch, as a note: the sleep timer waits) */
         }
     }
@@ -1740,7 +1761,7 @@ static void nudge(int layer, int how)
         set_voice(VOICE[layer], v);
         en_param_text(VOICE[layer], proj.par[VOICE[layer]], vn);
     }
-    en_piece(proj.piece, rec, &pool);
+    piece_recipe(proj.piece, rec, &pool);
     for (j = 0; j < 6; j++) {                    /* (the values to choose from, each once) */
         int q, dup = 0;
         for (q = 0; q < np; q++)
@@ -1828,7 +1849,7 @@ static int jr_next(void)                         /* the set list's next piece af
 {
     int i;
     for (i = 1; i < NPIECES; i++)
-        if (!(ui.jr_out >> (proj.piece + i) % NPIECES & 1u))
+        if (!(ui.jr_out >> (proj.piece + i) % NPIECES & 1u) && !piece_empty(bank, (proj.piece + i) % NPIECES))
             return (proj.piece + i) % NPIECES;
     return -1;
 }
@@ -2358,7 +2379,7 @@ static void input(void)
         ui.turn_t = plat_ms();
     }
     if ((e = plat_enc(EN_PRESET)) != 0) {
-        set_piece(proj.piece + (int)e);
+        set_piece_ring((int)e);
         ui.turn_t = plat_ms();
     }
     if ((btn >> B_GLO & 1u) && !ui.reset_done && plat_ms() - ui.down_t[B_GLO] > RESET_HOLD) {
@@ -3134,7 +3155,7 @@ static uint16_t pkey_col(int k)
 }
 /* (1.4.1) the held effect's band: the key's colour; on the light screen a shade deeper, so the white lettering on
  * it reads (4.5:1, the host's expect pfcontrast) */
-static uint16_t pflash_col(int k) { return proj.light ? mix(pkey_col(k), K_BAININ, 4) : pkey_col(k); }
+static uint16_t pflash_col(int k) { return screen_light() ? mix(pkey_col(k), K_BAININ, 4) : pkey_col(k); }
 static int pflash_up(void) { return ui.perf && (ui.pheld | ui.pcc | UI_PPAD); }
 /* (1.4) a key's amount under full, in 63rds (1..63), or 0: full, or not sounding. Only a CC makes less than full */
 static int pk_under(int k)
@@ -4193,6 +4214,8 @@ static void speak_dump(void)
                     proj.par[k] = (int16_t)x;
                 else if (k == K_SLOT)
                     ui.slot = (uint8_t)x;
+                else if (k == K_SCR)
+                    proj.light = (uint8_t)((x + 2) % 3);
                 else if (k == K_DAY)
                     ui.day = (uint8_t)(x == hi ? 0 : x);   /* (left off) */
                 else if (k == K_JRP)
@@ -4205,8 +4228,6 @@ static void speak_dump(void)
                     ui.lane = (uint8_t)x;
                 else if (k == K_LCH)
                     proj.par[P_SCH0 + lane_seq(ui.lane)] = (int16_t)x;
-                else if (k == K_SCR)
-                    proj.light = (uint8_t)x;
                 else
                     proj.leds = (uint8_t)x;
                 sp_n = 0;
@@ -4438,7 +4459,7 @@ static int sleep_input(void)
 
 static void pal_sync(void)
 {
-    const uint16_t *want = KPAL[proj.light != 0];
+    const uint16_t *want = KPAL[screen_light()];
     if (kpal != want) {
         kpal = want;
         memset(ui.sig, 0, sizeof ui.sig);        /* every band drawn again */

@@ -7,11 +7,13 @@ effects on its keys, and comes out of the FM-1's 3.5 mm socket. The same sound g
 computer can record it. It is AISLING with its voices taken out: no harps, no drone, no flute, only what the computer
 sends.
 
-**Status.** 1.0, the first release. FX-1 has run on one FM-1 and played a computer's sound cleanly through its
-effects; it has gone on over AISLING and over the stock firmware, and AISLING back over it; what each control does was
-measured in AISLING's simulator (see [What has been tried](#8-what-has-been-tried)). Its package is on
-[the 1.0 release](https://github.com/stephencummins/fx1-aisling/releases/tag/v1.0), and it installs from Chrome or Edge
-on [its install page](https://aisling.stephen8n.com/fx1/install/) (new: FX-1 has so far gone on from the command line).
+**Status.** 1.1. It is 1.0 with a light screen to choose (Journey's Screen) and the knob strip's dividers moved
+clear of the names, as in AISLING 1.4.1; the sound is 1.0's. FX-1 1.0 has run on one FM-1 and played a computer's
+sound cleanly through its effects; it has gone on over AISLING and over the stock firmware, and AISLING back over it;
+what each control does was measured in AISLING's simulator. 1.1 has gone on one FM-1 over AISLING 1.4.1, its
+screen looked right, and a computer's sound played through its effects (see [What has been tried](#8-what-has-been-tried)). Its package is on
+[the 1.1 release](https://github.com/stephencummins/fx1-aisling/releases/tag/v1.1), and it installs from Chrome or
+Edge on [its install page](https://aisling.stephen8n.com/fx1/install/) (FX-1 has so far gone on from the command line).
 
 AISLING FX-1 is by CÚ_STE ([www.stephen8n.com](https://www.stephen8n.com)), from AISLING's own source, in a repository
 of its own: [github.com/stephencummins/fx1-aisling](https://github.com/stephencummins/fx1-aisling). GPL-3.0. It is
@@ -44,22 +46,22 @@ computer with a USB data cable, press Install, allow the page to use MIDI device
 Done. It is AISLING's web installer with FX-1's package; FX-1 has not yet been put on with it, only from the command
 line.
 
-**From the command line**: download `aislingfx-1.0.fwsc` from
-[the 1.0 release](https://github.com/stephencummins/fx1-aisling/releases/tag/v1.0) and put it on with the installer in
+**From the command line**: download `aislingfx-1.1.fwsc` from
+[the 1.1 release](https://github.com/stephencummins/fx1-aisling/releases/tag/v1.1) and put it on with the installer in
 the source, which needs Python 3 with mido and python-rtmidi. Connect the FM-1 by USB first:
 
 ```
 git clone https://github.com/stephencummins/fx1-aisling
 pip3 install mido python-rtmidi
-python3 fx1-aisling/tools/fm1_install.py aislingfx-1.0.fwsc
+python3 fx1-aisling/tools/fm1_install.py aislingfx-1.1.fwsc
 ```
 
 To build it yourself, the toolchain is AISLING's (see
 [BUILDING.md](https://github.com/stephencummins/fx1-aisling/blob/main/BUILDING.md)), with one flag: in the clone,
-`./build.sh --fx` makes `build/aislingfx-dev.fwsc`, and `./build.sh --release 1.0 --fx` makes 1.0.
+`./build.sh --fx` makes `build/aislingfx-dev.fwsc`, and `./build.sh --release 1.1 --fx` makes 1.1.
 
 The FM-1 then starts as **AISLING FX-1**: the launch screen says so, and so does its name over USB. Its identity is
-its own, FM-1_391 and six digits (F, X and 1 on a phone's keys: 1.0 is FM-1_391010000, and a build that is not a
+its own, FM-1_391 and six digits (F, X and 1 on a phone's keys: 1.1 is FM-1_391010100, and a build that is not a
 release FM-1_391000000), so The Firmware Hub and AISLING's web installer don't take it for AISLING. Without `--fx`
 the same source builds AISLING.
 
@@ -149,7 +151,9 @@ are the ones that change the computer's sound:
 
 PERFORM's knobs: **Filter** is HOME's Filter; **Wet** turns up the echo's send, a little; **Chorus** thickens and
 widens the whole sound; **Energy** changes nothing here. On the Journey page (GLO a third time), the Day setting
-adds a slow drift to the echo and, now and then, Fras's bleeps.
+adds a slow drift to the echo and, now and then, Fras's bleeps, and **Screen** (KNOB 3, new in 1.1) is Dark, the
+colours on black, or Light, the same colours deeper, on white. The turn redraws the whole screen at once: set it
+between pieces of music rather than in the middle of one.
 
 ## 6. Saving
 
@@ -157,7 +161,7 @@ AISLING saves by itself when it rests; FX-1 always counts as playing, so it does
 (or SAVE) for half a second, or turn Setup's Save.
 
 - **Saved**: the Echo and the Reverb, the Space and Echo pages (Echo time, Feedback, Blur, Tone, Width, Size), MIDI
-  out, Lights, and the piece.
+  out, Lights, Screen, and the piece.
 - **Not saved**: the Filter, PERFORM's Wet, Energy and Chorus, the sleep timer and the Day. The Dry knob is 100 at
   every start.
 
@@ -199,13 +203,23 @@ settings.
 **In the simulator** (the whole app run on a computer, fed a tone, bursts and noise, each change measured against
 the same run without it): every control and key above, the saving, and the sleep timer.
 
+**1.1** is 1.0 with the Screen setting and the knob strip's dividers. Its package has gone on one FM-1 over AISLING 1.4.1 from the
+command line (16 Nov 2026): the Mac listed it as a sound output and input, the screen looked right, and the
+computer's sound came out through the effects. The same screen code ran in AISLING 1.4.1 on that FM-1: both screens looked right, and turning Screen while a full piece
+played took the processor to its limit for a moment, with no dropout. In the simulator, FX-1's own tests and
+AISLING's pass on 1.1. It has also gone on a newer FM-1 (the second flash chip, `0xB36014`) over AISLING 1.5 from the
+command line (20 Nov 2026), and works there. AISLING 1.5 then went back over it: its saved pieces were as they were, byte for byte, and its
+sound pack was still installed.
+
 **Not yet:**
+
+- 1.1's package on an FM-1.
 
 - How late the sound comes out of the socket (the latency).
 - A long session on the FM-1, and more than one kind of computer.
 - The keys' effects on music, by ear, on the FM-1.
 - A save in FX-1 on the FM-1, then AISLING reading it (the source says it takes FX-1's settings as the piece's).
-- A newer FM-1 (the second flash chip), and installing over the stock V15.
+- Installing over the stock V15.
 - Installing from [the install page](https://aisling.stephen8n.com/fx1/install/) (it does what `tools/fm1_install.py`
   does, and is how AISLING is installed).
 

@@ -11,6 +11,8 @@
  *   FL_PLAIN_LO        XIP reads from here up are plain, not decrypted (fl_plain_window_init)
  *   FL_PROJ_SECTOR     storage.c's objects: copy A, and copy B in the next sector
  *   FL_PANEL_SECTOR
+ *   FL_PACK_SECTOR     (packs) the sound pack installed, and its bank's project: A and B likewise
+ *   FL_PROJB_SECTOR
  *   FL_STORE_OK(off, n)       the store's window
  *   FL_LDR_RANGE_OK(off, n)   the loader's: the app area and the update records
  *   FL_RANGE_OK(off, n)       the app's: the store and the staging (the loader sets its own)
@@ -41,6 +43,8 @@
 #define FL_OTA_HI       0x000E5000u
 #define FL_PROJ_SECTOR  0x000FC000u                /* AMB-1: the project in Felucca's FL_GLOB ... */
 #define FL_PANEL_SECTOR 0x000DC000u                /* ... the panel calibration in its user-preset area */
+#define FL_PACK_SECTOR  0x00097000u                /* (packs) the sound pack installed ... */
+#define FL_PROJB_SECTOR 0x00099000u                /* ... and its bank's project */
 /* Felucca's own store (projects, user samples; settings) */
 #define FL_STORE_OK(off, n) (FL_IN(off, n, FL_DATA_LO, FL_DATA_HI) || FL_IN(off, n, FL_GLOB_LO, FL_GLOB_HI))
 /* the loader may write the app area and erase update records; never the head */
@@ -53,7 +57,8 @@
 #define FL_RANGE_OK(off, n) (FL_STORE_OK(off, n) || FL_IN(off, n, FL_OTA_LO, FL_OTA_HI))
 #endif
 
-_Static_assert(FL_STORE_OK(FL_PROJ_SECTOR, 0x2000u) && FL_STORE_OK(FL_PANEL_SECTOR, 0x2000u),
+_Static_assert(FL_STORE_OK(FL_PROJ_SECTOR, 0x2000u) && FL_STORE_OK(FL_PANEL_SECTOR, 0x2000u) &&
+               FL_STORE_OK(FL_PACK_SECTOR, 0x2000u) && FL_STORE_OK(FL_PROJB_SECTOR, 0x2000u),
                "fl_map.h: storage.c's objects (A and B) lie in the store");
 _Static_assert(FL_IN(FL_OTA_HI - 0x100u, 0x100u, FL_REC_LO, FL_REC_HI) && !(FL_OTA_HI & 0xFFFu),
                "fl_map.h: the loader finds the app's update record (ota.c OTA_RES) and clears it");

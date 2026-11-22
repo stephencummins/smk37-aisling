@@ -1,7 +1,9 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
 # DUB-1 in the browser: the host simulator compiled to WebAssembly (Emscripten), plus its page.
-#   [EN_VERSION=0.1] web/emu/build.sh  ->  build/emu/{index.html, worklet.js, amb.wasm, visualiser.html, reader/}
+#   [EN_VERSION=0.1] web/emu/build.sh  ->  build/emu/{index.html, worklet.js, amb.wasm, visualiser.html, reader/,
+#                                                     manifest.webmanifest, sw.js, icons/}: the last three make it an app
+#                                                     (from the home screen, or index.html?app: the FM-1 alone, full screen, offline)
 # visualiser.html: AISLING's visualiser (web/visualiser/), the page's drawer, painting what the emulator plays.
 # reader/: the screen reader's words and voice, from Charles Vestal's fm1-reader (github.com/charlesvestal/fm1-reader):
 # words.js and tts.js (MIT, its LICENSE), and the voice, tts_worker.js and espeak/ (eSpeak NG in WebAssembly, with the
@@ -20,7 +22,9 @@ emcc -O2 -ffp-contract=off -std=gnu99 -Wall -Wno-unused-function -Wno-unused-par
     -DEN_HOST -DEN_WEB "-DEN_VERSION=\"$(printf %s "${EN_VERSION:-DEV}" | tr a-z A-Z)\"" -Ifirmware/src -Ifirmware/src/dsp -Ibuild/gen \
     --no-entry -sSTANDALONE_WASM -sSTACK_SIZE=1048576 -sINITIAL_MEMORY=33554432 -sFILESYSTEM=0 \
     -o build/emu/amb.wasm web/emu/amb_web.c firmware/src/dsp/amb.c
-cp web/emu/index.html web/emu/worklet.js build/emu/
+cp web/emu/index.html web/emu/worklet.js web/emu/manifest.webmanifest web/emu/sw.js build/emu/
+mkdir -p build/emu/decals && cp web/emu/decals/*.webp build/emu/decals/    # the skins' art, for the Decal menu
+python3 tools/make_app_icons.py build/emu/icons    # the home-screen icons: the site's harp
 cp docs/card.png build/emu/card.png    # make_artifact.py's harp; on the site, the bar has it (tools/site_brand.py)
 cp web/visualiser/index.html build/emu/visualiser.html
 PIN=web/emu/reader.pin

@@ -1,12 +1,14 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* The engine alone, to a WAV: for listening to changes quickly (no UI, no screen).
  *
- *   en_render OUT.wav SECS [piece=N] [NAME=V ...] [freeze=T0-T1] [seed=S] [log]
+ *   en_render OUT.wav SECS [pack=FILE] [piece=N] [NAME=V ...] [patch=L:v,v,..] [mute=M] [freeze=T0-T1] [seed=S] [log]
+ *
+ * pack=FILE takes piece N from a sound pack (tools/make_pack.py's .aispack) instead of the engine's own eight.
  *
  * piece=N takes piece N's recipe (0..7) first; NAME=V sets a parameter by its name as amb.c's table
  * has it, spaces as underscores (Echo_time=2, Cutoff=60); freeze=T0-T1 holds from T0 to T1 seconds;
  * NAME=V@T sets it at T seconds instead; fx=N@T0-T1 holds effect N (EN_FX_*, 0..31) from T0 to T1; mv=M@T0-T1 holds the moves M (1 Rise, 2 Close); amt=N:CC@T sets effect N's amount (32 Rise, 33 Close) as its CC, 64..127, at T seconds (1.4); log prints each bar's section and stabs, and the chord as it moves.
- *   cc -O2 -ffp-contract=off -D_GNU_SOURCE -DEN_HOST -Ifirmware/src/dsp -o build/host/en_render host/en_render.c \
+ *   cc -O2 -ffp-contract=off -D_GNU_SOURCE -DEN_HOST -Ifirmware/src/dsp -Ifirmware/src/app -o build/host/en_render host/en_render.c \
  *      firmware/src/dsp/amb.c -lm */
 #define EN_HOST 1
 #include <stdio.h>
@@ -14,6 +16,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "amb.h"
+#include "pack.h"
 
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2) { (void)st, (void)d1, (void)d2; }
 
@@ -61,6 +64,25 @@ int main(int argc, char **argv)
         if (!strncmp(argv[i], "piece=", 6))
             piece = atoi(argv[i] + 6);
     en_piece(piece, par, &pool);
+    for (i = 3; i < argc; i++)
+        if (!strncmp(argv[i], "pack=", 5)) {
+            static uint8_t pk[PK_MAX + 1];
+            pk_piece_t pc;
+            FILE *pf = fopen(argv[i] + 5, "rb");
+            const int len = pf ? (int)fread(pk, 1, sizeof pk, pf) : 0;
+            const int why = pk_check(pk, len);
+            if (pf)
+                fclose(pf);
+            if (why || pk_piece(pk, len, piece, &pc)) {
+                fprintf(stderr, "%s: not a pack this engine plays (%d)\n", argv[i] + 5, why);
+                return 2;
+            }
+            pk_air(&pc);
+            pk_patch(&pc);
+            pk_recipe(&pc, par, &pool);
+            if (logit || 1)
+                fprintf(stderr, "%s: %s\n", pk_name(pk), (const char *)pc.name);
+        }
     for (i = 0; i < P_NPARAMS; i++)
         if (i != P_TUNE && i != P_MIDI)
             en_set(i, par[i]);
@@ -80,11 +102,26 @@ int main(int argc, char **argv)
             am[nam].t = 0;
             sscanf(a + 4, "%d:%d@%lf", &am[nam].p, &am[nam].v, &am[nam].t);
             nam++;
+        } else if (!strncmp(a, "mute=", 5)) {      /* (1.6) mute=M: EN_M_*'s sum (1 Drone, 2 Seq, 4 Lead, 24 Seq2, 32 Noise) */
+            en_mute((uint32_t)atoi(a + 5));
+        } else if (!strncmp(a, "patch=", 6)) {     /* (1.6) patch=L:v,v,.. a layer's Patch (0 Drone, 1 Seq, 2 Lead,
+                                                    * 3 Seq2), amb.h's sixteen bytes in decimal; fewer: the rest plain */
+            uint8_t pb[EN_PATCH_N];
+            const int l = atoi(a + 6);
+            const char *c = strchr(a, ':');
+            int k = 0;
+            en_patch(l, 0);
+            en_patch_get(l, pb);
+            while (c && k < EN_PATCH_N) {
+                pb[k++] = (uint8_t)atoi(c + 1);
+                c = strchr(c + 1, ',');
+            }
+            en_patch(l, pb);
         } else if (!strncmp(a, "chorus=", 7)) {    /* (1.3) PERFORM's Chorus, 0..100, from the start */
             en_chorus(atoi(a + 7));
         } else if (!strncmp(a, "seed=", 5)) {
             seed = (unsigned)atoi(a + 5);
-        } else if (eq && strncmp(a, "piece=", 6)) {
+        } else if (eq && strncmp(a, "piece=", 6) && strncmp(a, "pack=", 5) && strncmp(a, "patch=", 6) && strncmp(a, "mute=", 5)) {
             int p = find_param(a, (int)(eq - a));
             const char *at = strchr(eq, '@');
             if (p < 0) {

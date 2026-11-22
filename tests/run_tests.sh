@@ -38,6 +38,7 @@ run usbtap sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-prom
 run golden sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -DEN_HOST -Ifirmware/src/dsp \
     -o $OUT/golden_test tests/host/golden_test.c firmware/src/dsp/amb.c -lm && $OUT/golden_test"
 run seq sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -Ifirmware/src/dsp -o $OUT/seq_test tests/host/seq_test.c firmware/src/dsp/seq.c && $OUT/seq_test"
+run loader-screen sh -c "$CC -O2 -Wall -Wextra -Werror -o $OUT/ldr_ui_test tests/host/ldr_ui_test.c && $OUT/ldr_ui_test"
 run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/storage_test"
 # the SMK-37 Elite's flash map; the control builds it with the FM-1's map, which must fail
 run smk-flash sh -c "$CC -O2 -Wall -Wextra -Wno-unused-function -Werror -DAISLING_BOARD_SMK37=1 -o $OUT/smk_flash_test tests/smk_flash_test.c && $OUT/smk_flash_test && \
@@ -99,11 +100,13 @@ fi
 run host-build sh host/build_host.sh
 if command -v node >/dev/null 2>&1; then
     run visualiser node tests/host/vis_test.mjs web/visualiser/index.html
+    run packfile sh -c "python3 tools/make_pack.py packs/saints-sinners.json >/dev/null && node tests/web/packfile_test.mjs"   # the page's pack reader against pk_check
 fi
 if command -v emcc >/dev/null 2>&1; then
     run emu sh -c "sh web/emu/build.sh >/dev/null && node tests/host/emu_test.mjs build/emu/amb.wasm"
     run app sh -c "sh web/app/build.sh >/dev/null && node tests/host/app_test.mjs build/app/amb.wasm"
 fi
+run pack python3 tools/make_pack.py packs/saints-sinners.json   # (scenario pack installs it)
 for s in tests/scenarios/*.amb; do
     n=$(basename "$s" .amb)
     mkdir -p "build/scenarios/$n"

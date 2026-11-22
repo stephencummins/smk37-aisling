@@ -29,6 +29,10 @@
  *   BEGIN area           to write
  *   WRITE off.2 data
  *   COMMIT sum.3         checked as flash is checked at boot, then taken
+ *   PATCH layer (v.2)x16 (1.6) a layer's Patch, to hear it as it is made: the layer plays Patch, and this one. In the
+ *                        engine only (the piece and its VOICE page are as they were), and only in the pack's bank
+ *                        (else NONE). layer + 8: no more of it, the piece's own voice and patch back, as choosing the
+ *                        piece again brings them
  *
  * FM-1 -> host, seq 0 unless it answers one
  *   HELLO ver format proj.2 slot.2 npars.2 npieces len version-text
@@ -48,12 +52,16 @@
 #define LK_VALS_N 30u
 
 enum { LK_HELLO = 1, LK_BYE, LK_BEAT, LK_SET, LK_VIEW, LK_PIECE, LK_PLAY, LK_HOLD, LK_PERF, LK_FORGET, LK_KEYS, LK_BUTTONS,
-       LK_UNDO, LK_REDO, LK_SAVE, LK_VOICE, LK_COPY, LK_SWAP, LK_RESET, LK_OPEN, LK_READ, LK_BEGIN, LK_WRITE, LK_COMMIT };
+       LK_UNDO, LK_REDO, LK_SAVE, LK_VOICE, LK_COPY, LK_SWAP, LK_RESET, LK_OPEN, LK_READ, LK_BEGIN, LK_WRITE, LK_COMMIT,
+       LK_BANK,                                  /* (packs) the bank: 0 the eight, 1 the pack's */
+       LK_PATCH };                               /* (1.6) a layer's Patch, heard live */
 enum { LKR_HELLO = 65, LKR_ACK, LKR_STATE, LKR_VALS, LKR_CHUNK };
 enum { LK_DIAG = 40, LK_DIAG_AN = 41, LKR_DIAG = 70, LKR_DIAG_AN = 71 };            /* (AISLING_SMK_DIAG builds only) */
 enum { LK_OK, LK_BAD, LK_REFUSED, LK_SUM, LK_BUSY, LK_NONE };
-/* areas: the project as it plays; pieces 1..8's slots (LK_A_SLOT + i); the bytes saved in flash */
-enum { LK_A_PROJ, LK_A_SLOT, LK_A_FLASH = LK_A_SLOT + NPIECES };
+/* areas: the project as it plays; pieces 1..8's slots (LK_A_SLOT + i); the bytes saved in flash; (packs) the sound
+ * pack installed (pack.h): read as it is; written whole, its length its header's, and kept at COMMIT, at rest (none
+ * of it written: the pack removed). The project, the slots and the flash are the bank's that plays */
+enum { LK_A_PROJ, LK_A_SLOT, LK_A_FLASH = LK_A_SLOT + NPIECES, LK_A_PACK };
 enum { LKF_PLAYING = 1, LKF_FROZEN = 2, LKF_DIRTY = 4, LKF_PERF = 8, LKF_SAVING = 16 };
 
 /* the knobs that aren't settings, sent as settings are (K_CPU is in STATE; K_NONE is nothing) */
@@ -75,8 +83,9 @@ static struct {
 static EN_POOL union {
     project_t p;
     slot_t s;
-    uint8_t b[sizeof(project_t)];
+    uint8_t b[PK_MAX];
 } lk_x;
+_Static_assert(sizeof(project_t) <= PK_MAX, "a transfer's room");
 static EN_POOL project_t lk_saved;               /* (a backup going back to flash, byte for byte) */
 
 static void put14(uint8_t *o, int v)             /* two pieces, low first; a negative's two's complement */
@@ -347,13 +356,31 @@ static void lk_hello(void)
     f[n++] = (uint8_t)lk_len(v);
     for (i = 0; v[i]; i++)
         f[n++] = (uint8_t)v[i] & 0x7Fu;
+    {                                            /* (packs) after the version: the engine's level, the bank, the
+                                                  * pack's version (.2) and name (len, text; 0: none installed) */
+        int pn;
+        const uint8_t *pk = pack_bytes(&pn);
+        const char *t = pack_title();
+        f[n++] = EN_LEVEL;
+        f[n++] = bank;
+        put14(f + n, pn ? pk_version(pk) & 0x3FFF : 0), n += 2u;
+        f[n++] = (uint8_t)lk_len(t);
+        for (i = 0; t[i]; i++)
+            f[n++] = (uint8_t)t[i] & 0x7Fu;
+    }
     lk_send(f, n);
 }
 
 static uint32_t lk_open(int area)                /* the bytes into lk_x; how many, or 0 */
 {
+    if (area == LK_A_PACK) {
+        int pn;
+        const uint8_t *pk = pack_bytes(&pn);
+        memcpy(lk_x.b, pk, (unsigned)pn);
+        return (uint32_t)pn;
+    }
     if (area == LK_A_FLASH) {
-        const int got = plat_store_load(OBJ_PROJ, &lk_x, sizeof lk_x);
+        const int got = plat_store_load(proj_obj(), &lk_x, sizeof(project_t));
         return got == (int)sizeof(project_t) ? (uint32_t)got : 0u;
     }
     keep();                                      /* the piece playing, into its slot, as saving does */
@@ -373,11 +400,30 @@ static int lk_commit(const uint8_t *a)
     const int area = lk.area;
     if (lk.mode != 'w')
         return LK_BAD;
+    if (area == LK_A_PACK) {                     /* (its length: its own header's; nothing written: none) */
+        const int pn = pk_len(lk_x.b);
+        if (pn > PK_MAX)
+            return LK_REFUSED;
+        lk.len = (uint16_t)pn;
+    }
     if (lk_sum(lk_x.b, lk.len) != (uint32_t)(a[0] | a[1] << 7 | a[2] << 14))
         return LK_SUM;
-    if (area == LK_A_FLASH && !lk_at_rest())
+    if ((area == LK_A_FLASH || area == LK_A_PACK) && !lk_at_rest())
         return LK_BUSY;                          /* (still open: ask again at rest) */
     lk.mode = 0;
+    if (area == LK_A_PACK) {                     /* the eight play; the pack kept (or gone), its bank its recipes */
+        if (lk.len && pk_check(lk_x.b, lk.len))
+            return LK_REFUSED;
+        if (bank)
+            set_piece_bank(0, proj.piece);
+        undo_clear();
+        if (pack_install(lk_x.b, lk.len) || project_save())
+            return LK_REFUSED;
+        ui.dirty = 0;
+        link_gen++;
+        memset(ui.sig, 0, sizeof ui.sig);
+        return LK_OK;
+    }
     if (area == LK_A_PROJ)
         return link_project_install(&lk_x.p, 1) ? LK_REFUSED : LK_OK;
     if (area == LK_A_FLASH) {                    /* a backup back, exactly: not the piece as it plays since */
@@ -385,7 +431,7 @@ static int lk_commit(const uint8_t *a)
         if (link_project_install(&lk_x.p, 1))
             return LK_REFUSED;
         undo_clear();
-        if (plat_store_save(OBJ_PROJ, &lk_saved, sizeof lk_saved))
+        if (plat_store_save(proj_obj(), &lk_saved, sizeof lk_saved))
             return LK_REFUSED;
         ui.dirty = 0;
         return LK_OK;
@@ -397,7 +443,7 @@ static int lk_do(int cmd, const uint8_t *a, uint32_t n)
 {
     static const uint8_t ARGS[] = {[LK_SET] = 4, [LK_VIEW] = 2, [LK_PIECE] = 1, [LK_PERF] = 2, [LK_KEYS] = 4, [LK_BUTTONS] = 2,
                                    [LK_VOICE] = 4, [LK_COPY] = 2, [LK_SWAP] = 2, [LK_RESET] = 1, [LK_OPEN] = 1, [LK_BEGIN] = 1,
-                                   [LK_WRITE] = 2, [LK_COMMIT] = 3};
+                                   [LK_WRITE] = 2, [LK_COMMIT] = 3, [LK_BANK] = 1, [LK_PATCH] = 1 + 2 * EN_PATCH_N};
     int k, v;
     if (cmd >= (int)sizeof ARGS || n < ARGS[cmd])
         return LK_BAD;
@@ -479,11 +525,41 @@ static int lk_do(int cmd, const uint8_t *a, uint32_t n)
         lk.ack_n = 5;
         break;
     }
+    case LK_BANK:
+        if (a[0] > 1u)
+            return LK_BAD;
+        if (a[0] && !pack_have())
+            return LK_NONE;
+        if (a[0] != bank) {
+            set_piece_bank(a[0], proj.piece);
+            link_gen++;
+        }
+        break;
+    case LK_PATCH: {
+        static const uint8_t VP[4] = {P_CVOICE, P_SVOICE, P_LVOICE, P_S2VOICE};
+        const int l = a[0] & 3, vp = VP[l];
+        uint8_t q[EN_PATCH_N];
+        if (a[0] & ~0x0Bu)
+            return LK_BAD;
+        if (!bank || !pack_have())
+            return LK_NONE;
+        if (a[0] & 8u) {
+            pack_patch_own(l);
+            en_set(vp, proj.par[vp]);
+            break;
+        }
+        for (k = 0; k < EN_PATCH_N; k++)         /* (each a byte, a negative's two's complement: en_patch clamps) */
+            q[k] = (uint8_t)get14u(a + 1 + 2 * k);
+        en_patch(l, q);
+        en_set(vp, en_param_info(vp)->hi);       /* (Patch: each family's last) */
+        break;
+    }
     case LK_BEGIN:
-        if (a[0] > LK_A_FLASH)
+        if (a[0] > LK_A_PACK)
             return LK_BAD;
         lk.mode = 'w', lk.area = a[0];
-        lk.len = (uint16_t)(a[0] >= LK_A_SLOT && a[0] < LK_A_FLASH ? sizeof(slot_t) : sizeof(project_t));
+        lk.len = (uint16_t)(a[0] == LK_A_PACK ? PK_MAX : a[0] >= LK_A_SLOT && a[0] < LK_A_FLASH ? sizeof(slot_t)
+                                                                                                   : sizeof(project_t));
         memset(lk_x.b, 0, sizeof lk_x.b);
         break;
     case LK_WRITE: {

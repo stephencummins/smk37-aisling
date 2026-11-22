@@ -55,3 +55,17 @@
     if ('ResizeObserver' in window) new ResizeObserver(set).observe(bar)
   }
 }
+// the bar's menus (site.css's .sitebar-group): one open at a time, shut by a click elsewhere or by Escape
+{
+  const groups = [...document.querySelectorAll('.sitebar-group')]
+  const shut = (but) => groups.forEach((g) => { if (g !== but) g.open = false })
+  groups.forEach((g) => g.addEventListener('toggle', () => { if (g.open) shut(g) }))
+  if (groups.length) {
+    document.addEventListener('click', (e) => { if (!e.target.closest('.sitebar-group')) shut() })
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return
+      const open = groups.find((g) => g.open)
+      if (open) { open.open = false; open.querySelector('summary').focus() }
+    })
+  }
+}
