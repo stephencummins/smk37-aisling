@@ -205,7 +205,7 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <main class="bench">
 <div class="strip">
 <p class="lab"><b>aisling</b> · Irish ambient for the M-VAVE SMK-37 Elite</p>
-<p class="lab">v1.4.1 · __BY__</p>
+<p class="lab">v1.6 · __BY__</p>
 </div>
 
 <div class="mg-cover">
@@ -269,18 +269,19 @@ ol.stages b.lead { font-weight: 600; color: var(--brand-ink); }
 <li><b>The way back</b> to M-VAVE's firmware is proven: off, and on again.</li>
 </ol>
 <p class="mg-go"><a class="btn go big" href="manual/#s11">How to install</a></p>
-<p class="mg-small"><a href="__REPO__/releases/latest">Download 1.4.1</a> · <a href="manual/">The manual</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
+<p class="mg-small"><a href="__REPO__/releases/latest">Download 1.6</a> · <a href="manual/">The manual</a> · <a href="__REPO__">Source</a> · <a href="__FM1__">The FM-1 version</a></p>
 </section>
 
 <section class="mg-fold" aria-label="More about AISLING on the Elite">
-<details><summary>1.4.1 <small>played and checked on one Elite</small></summary><div class="mg-in">
-<p><strong>1.4.1 has been played and checked on one Elite.</strong> It is the FM-1's AISLING 1.4.1 (the journey, the day
-and the weather, an effect's amount, the light screen) on the Elite's controls, and it passes the Elite's simulator.
-Its package was installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. It was then played and checked by hand on that Elite.
-The checking of each control was done with 1.3.1: in November 2026 AISLING 1.3.1 was installed on an SMK-37 Elite, played, taken
-off again with M-VAVE's own firmware, and installed again. 1.3.1's package is in its
-<a href="__REPO__/releases/tag/v1.3.1">release</a>; it installs from a computer for now, as the
-<a href="manual/#s11">manual</a> says, and it says what was checked and what is still open.</p>
+<details><summary>1.6 <small>on one Elite</small></summary><div class="mg-in">
+<p><strong>1.6 has been tested on one Elite.</strong> It is the FM-1's AISLING 1.6 on the Elite's controls: sound packs
+(Saints &amp; Sinners the first), Screen's Auto, a Blues scale and a Slide for the Lead, and Patch voices.
+1.6's package was installed on one Elite on 23 November 2026, from a computer, over a 1.5 build that was never released: it started and reported its identity, and the saved pieces were the same bytes before and after. By 26 November 2026 it had been tested on that Elite, all OK, and the Elite reported the Saints &amp; Sinners pack installed.
+Going to 1.6 straight from 1.4.1 hasn't been tried. A pack is kept in four more sectors of the stock presets, so take the
+<a href="manual/#s11">backup</a> first.</p>
+<p>The check of each control was done with 1.3.1: in November 2026 it was installed on an SMK-37 Elite, played, taken
+off again with M-VAVE's own firmware, and installed again. It installs from a computer for now, as the
+<a href="manual/#s11">manual</a> says, and the manual says what was checked and what is still open.</p>
 <p>It is for the <b>SMK-37 Elite</b> only (not the SMK-37 Pro), on M-VAVE's firmware V016.</p>
 </div></details>
 <details><summary>Where it stands <small>six done, the web installer next</small></summary><div class="mg-in">

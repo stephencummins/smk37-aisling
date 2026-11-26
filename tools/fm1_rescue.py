@@ -38,7 +38,7 @@ velocity calibration's "trimdat" at 0xC1224 (and an FM-1's must not), and only [
 written: never the head, the calibration (0xC0000-0xC1FFF) or the resources and key above 0xF4000.
 
 The Elite's presets: AISLING keeps its saved pieces in eight sectors of the stock presets (0xC2000-0xC9FFF; four, to 0xC5FFF, until 1.4.1),
-and stock's app alone does not bring those back. --presets BACKUP.bin, with --write, also puts those four
+and stock's app alone does not bring those back. --presets BACKUP.bin, with --write, also puts those eight
 sectors back from a backup this script saved before AISLING was installed. The backup must be this unit's
 own: its head and its velocity calibration (0xC1000-0xC1FFF, different on every unit) must equal the flash's.
 

@@ -2,7 +2,7 @@
 
 <img src="docs/card-smk37.png" width="240" height="240" alt="AISLING on the SMK-37: a gold 8-bit harp on green, with 37">
 
-**[Download 1.4.1](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
+**[Download 1.6](https://github.com/stephencummins/smk37-aisling/releases/latest)** ·
 **[Installing](docs/SMK37.md#11-installing-and-going-back)** ·
 **[Controls](https://aisling.stephen8n.com/smk37/controls/)** ·
 **[Manual](https://aisling.stephen8n.com/smk37/manual/)** ·
@@ -22,13 +22,11 @@ held, and its 4 faders set the mix.
 
 It is for the **SMK-37 Elite** only: not the SMK-37 Pro, and not the MKE-P37.
 
-**Status: 1.4.1.** This is AISLING 1.4.1, the FM-1's, on the Elite's controls: 1.4's journey, day and effect
-amounts, 1.4.1's light screen, and 1.3.2's shorter identity that the installers read whole. **1.4.1's package was
-installed on one Elite on 16 November 2026, over 1.3.1, from a computer: it started, reported its identity and played, and the saved pieces were the same bytes before and after. It was then played and checked by hand on that Elite** (1.3.2's was never on one): the hand checks that follow
-were done with 1.3.1. It has run on one Elite, in November 2026: installed over M-VAVE's V016, played, taken off again
-with M-VAVE's own package, installed again, and played for an hour with no dropouts. Every button, knob, key, pad,
-fader and light was checked by hand. [docs/SMK37.md](docs/SMK37.md#12-settled-on-an-elite-and-still-open) says what
-was checked and what is still open.
+**Status: 1.6.** This is AISLING 1.6, the FM-1's, on the Elite's controls: 1.5's sound packs and 1.6's Patch voices,
+on top of 1.4.1. **1.6's package was installed on one Elite on 23 November 2026, from a computer, over a 1.5 build that was never released: it started and reported its identity, and the saved pieces were the same bytes before and after. By 26 November 2026 it had been tested on that Elite, all OK, and the Elite reported the Saints & Sinners pack installed.** Going to 1.6 straight from 1.4.1 hasn't been tried. The check of every button, knob, key,
+pad, fader and light was done with 1.3.1, in November 2026: installed over M-VAVE's V016, played, taken off again with
+M-VAVE's own package, installed again, and played for an hour with no dropouts.
+[docs/SMK37.md](docs/SMK37.md#12-settled-on-an-elite-and-still-open) says what was checked and what is still open.
 
 ## Installing on the Elite
 
@@ -37,9 +35,9 @@ AISLING's web installer hasn't been tried on an Elite yet, so install from a com
 
 1. **First, a backup of the whole flash** ([section 11](docs/SMK37.md#11-installing-and-going-back)). It holds that
    unit's velocity calibration and its stock presets, and nothing else can bring those back.
-2. `python3 tools/fm1_install.py aisling-smk37-elite-1.4.1.fwsc --port "SMK-37 Elite"`, with the package from the
-   [release](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.4.1). Its identity is
-   `SMK-37 Elite_353141`; the installers refuse a package made for the other model.
+2. `python3 tools/fm1_install.py aisling-smk37-elite-1.6.fwsc --port "SMK-37 Elite"`, with the package from the
+   [release](https://github.com/stephencummins/smk37-aisling/releases/tag/v1.6). Its identity is
+   `SMK-37 Elite_353160`; the installers refuse a package made for the other model.
 
 **Going back:** the same command with M-VAVE's own `SMK-37 Elite_016.fwsc`. The Elite then runs V016 again.
 
@@ -127,6 +125,10 @@ after you change something, replaces theirs; they ignore AISLING's in the same w
 Installing another firmware may lose what AISLING saved. AISLING uses no samples.
 
 ## What's new in 1.6
+
+On the Elite, 1.5 and 1.6 arrive together, its first release since 1.4.1. The sound packs (below, under 1.5) and the
+Patch voices are the FM-1's, on K4 and the Elite's knobs. The update screen is the FM-1's only: the Elite's screen stays
+as it is while an update is written. FM-1 1.6.1's screen start-up change is not in this release. ([docs/SMK37.md](docs/SMK37.md#what-15-and-16-added-on-the-elite))
 
 - **Sounds of your own.** Each of the Drone, both Sequences and the Lead has one more voice, **Patch**: a sound made of sixteen numbers (two oscillators, FM, a sub, noise, the filter, the attack). A sound pack's piece brings its own, so a pack can have sounds the firmware doesn't. A pack with a patch needs 1.6; the others stay 1.5 packs.
 - **AISLING as a plugin.** The FM-1's engine, the same C, as a VST3, an Audio Unit and an app: load a pack, shape a piece's patches by ear in a DAW, and save them into the pack. With an FM-1 on USB it plays each patch on the FM-1 as you shape it. It is built from source ([plugin/](plugin/README.md)); there is no download yet.
